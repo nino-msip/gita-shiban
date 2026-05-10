@@ -296,6 +296,83 @@
             align-items: center;
             gap: 10px;
         }
+
+        /* ── Interval sub-tabs ── */
+        .interval-tabs {
+            display: none;
+            gap: 6px;
+            background: #1a1a2e;
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .interval-tab {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: #666;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .interval-tab.active {
+            background: #e8e8e8;
+            color: #0f0f1a;
+            font-weight: 700;
+        }
+
+        /* ── Map controls ── */
+        .root-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            max-width: 500px;
+        }
+
+        .root-btn {
+            padding: 7px 10px;
+            border-radius: 8px;
+            border: 1.5px solid #333;
+            background: #1e1e30;
+            color: #888;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            min-width: 42px;
+            text-align: center;
+        }
+
+        .root-btn:hover { border-color: #f5c842; color: #f5c842; }
+        .root-btn.active { background: #f5c842; color: #0f0f1a; border-color: #f5c842; }
+
+        /* ── Interval legend ── */
+        .iv-legend {
+            display: none;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            max-width: 620px;
+        }
+
+        .iv-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.7rem;
+            color: #aaa;
+        }
+
+        .iv-legend-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
@@ -307,6 +384,13 @@
     <button class="mode-tab active" onclick="switchMode('quiz1')">フレット → 音名</button>
     <button class="mode-tab"        onclick="switchMode('quiz2')">音名 → フレット</button>
     <button class="mode-tab"        onclick="switchMode('study')">確認モード</button>
+    <button class="mode-tab"        onclick="switchMode('interval')">度数</button>
+</div>
+
+<div class="interval-tabs" id="interval-tabs">
+    <button class="interval-tab active" onclick="setIntervalSubMode('quiz')">度数当て</button>
+    <button class="interval-tab"        onclick="setIntervalSubMode('find')">度数探し</button>
+    <button class="interval-tab"        onclick="setIntervalSubMode('map')">度数マップ</button>
 </div>
 
 <div class="stats">
@@ -327,12 +411,18 @@
     <div class="streak"      id="streak"></div>
 </div>
 
+<div id="map-controls" style="display:none; flex-direction:column; align-items:center; gap:10px;">
+    <div style="font-size:0.8rem; color:#666;">ルート音を選択</div>
+    <div class="root-picker" id="root-picker"></div>
+</div>
+
 <div class="fretboard-container">
     <div class="fretboard-inner" id="fretboard-inner"></div>
 </div>
 
+<div class="iv-legend" id="iv-legend"></div>
 <div class="choices-grid" id="choices-grid"></div>
-<button class="next-btn" id="next-btn" onclick="nextQuestion()">次の問題 →</button>
+<button class="next-btn" id="next-btn" onclick="onNextBtn()">次の問題 →</button>
 
 <script>
 const NOTES       = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -341,11 +431,31 @@ const OPEN_NOTES  = [4, 11, 7, 2, 9, 4];         // E B G D A E
 const DOT_FRETS   = new Set([3,5,7,9,12]);
 const NUM_FRETS   = 12;
 
+const INTERVALS = [
+    { name: 'ルート',   semitones: 0,  short: 'R',  color: '#f5c842' },
+    { name: '短2度',    semitones: 1,  short: 'b2', color: '#ff6b6b' },
+    { name: '長2度',    semitones: 2,  short: '2',  color: '#ffa94d' },
+    { name: '短3度',    semitones: 3,  short: 'b3', color: '#74c0fc' },
+    { name: '長3度',    semitones: 4,  short: '3',  color: '#69db7c' },
+    { name: '完全4度',  semitones: 5,  short: '4',  color: '#da77f2' },
+    { name: '減5/増4',  semitones: 6,  short: 'b5', color: '#f783ac' },
+    { name: '完全5度',  semitones: 7,  short: '5',  color: '#ff8787' },
+    { name: '短6度',    semitones: 8,  short: 'b6', color: '#63e6be' },
+    { name: '長6度',    semitones: 9,  short: '6',  color: '#4dabf7' },
+    { name: '短7度',    semitones: 10, short: 'b7', color: '#cc5de8' },
+    { name: '長7度',    semitones: 11, short: '7',  color: '#ff922b' },
+];
+
 let mode    = 'quiz1';
 let ok = 0, ng = 0, streak = 0;
 let showOpenStrings = false;
-let q       = null;   // { s, f, note, hadWrong }
+let q       = null;
 let done    = false;
+
+let intervalSubMode = 'quiz';
+let ivQ     = null;
+let ivFound = null;
+let mapRoot = 0;
 
 // ── Audio ──
 const BASE_FREQS = [329.63, 246.94, 196.00, 146.83, 110.00, 82.41]; // E4 B3 G3 D3 A2 E2
@@ -437,6 +547,7 @@ function buildFretboard() {
             cell.addEventListener('click', () => {
                 playNote(s, f);
                 if (mode === 'quiz2') onFretClick(s, f);
+                else if (mode === 'interval' && intervalSubMode === 'find') onIntervalFindClick(s, f);
             });
 
             const ind = document.createElement('div');
@@ -484,7 +595,7 @@ function addFretCells(parent, make) {
 function switchMode(m) {
     mode = m;
     document.querySelectorAll('.mode-tab').forEach((btn, i) => {
-        btn.classList.toggle('active', ['quiz1','quiz2','study'][i] === m);
+        btn.classList.toggle('active', ['quiz1','quiz2','study','interval'][i] === m);
     });
 
     ok = ng = streak = 0;
@@ -494,12 +605,26 @@ function switchMode(m) {
     setResult('', '');
     document.getElementById('streak').textContent = '';
     document.getElementById('next-btn').classList.remove('show');
+    document.getElementById('choices-grid').innerHTML = '';
+
+    const intervalTabs = document.getElementById('interval-tabs');
+    const mapControls  = document.getElementById('map-controls');
+    const ivLegend     = document.getElementById('iv-legend');
+
+    intervalTabs.style.display = m === 'interval' ? 'flex' : 'none';
 
     if (m === 'study') {
         document.getElementById('quiz-area').style.display = 'none';
-        document.getElementById('choices-grid').innerHTML = '';
+        mapControls.style.display = 'none';
+        ivLegend.style.display    = 'none';
+    } else if (m === 'interval') {
+        mapControls.style.display = 'none';
+        ivLegend.style.display    = 'none';
+        setIntervalSubMode(intervalSubMode);
     } else {
         document.getElementById('quiz-area').style.display = 'flex';
+        mapControls.style.display = 'none';
+        ivLegend.style.display    = 'none';
         nextQuestion();
     }
 }
@@ -592,8 +717,9 @@ function clearIndicators() {
     document.querySelectorAll('.note-ind').forEach(el => {
         el.textContent = '';
         el.className = mode === 'study' ? 'note-ind show visible' : 'note-ind';
+        el.style.background = '';
+        el.style.color = '';
     });
-    // restore study mode text for non-open strings
     if (mode === 'study') {
         for (let s = 0; s < 6; s++)
             for (let f = 1; f <= NUM_FRETS; f++) {
@@ -601,7 +727,7 @@ function clearIndicators() {
                 if (ind) ind.textContent = getNote(s, f);
             }
     }
-    applyOpenStringsState();
+    if (mode !== 'interval') applyOpenStringsState();
 }
 
 function applyOpenStringsState() {
@@ -675,6 +801,255 @@ function shuffle(a) {
         const j = Math.floor(Math.random() * (i + 1));
         [a[i], a[j]] = [a[j], a[i]];
     }
+}
+
+function onNextBtn() {
+    if (mode === 'interval') nextIntervalQuestion();
+    else nextQuestion();
+}
+
+/* ── Interval mode ── */
+function setIntervalSubMode(sub) {
+    intervalSubMode = sub;
+    document.querySelectorAll('.interval-tab').forEach((btn, i) => {
+        btn.classList.toggle('active', ['quiz','find','map'][i] === sub);
+    });
+
+    const mapControls = document.getElementById('map-controls');
+    const ivLegend    = document.getElementById('iv-legend');
+    const quizArea    = document.getElementById('quiz-area');
+    const nextBtn     = document.getElementById('next-btn');
+
+    ok = ng = streak = 0;
+    updateStats();
+
+    if (sub === 'map') {
+        quizArea.style.display   = 'none';
+        nextBtn.classList.remove('show');
+        document.getElementById('choices-grid').innerHTML = '';
+        mapControls.style.display = 'flex';
+        ivLegend.style.display    = 'flex';
+        buildMapControls();
+        buildIntervalMap();
+    } else {
+        quizArea.style.display    = 'flex';
+        mapControls.style.display = 'none';
+        ivLegend.style.display    = 'none';
+        nextIntervalQuestion();
+    }
+}
+
+function nextIntervalQuestion() {
+    done = false;
+    ivFound = new Set();
+    setResult('', '');
+    document.getElementById('streak').textContent = '';
+    document.getElementById('next-btn').classList.remove('show');
+    document.getElementById('choices-grid').innerHTML = '';
+    clearIndicators();
+
+    if (intervalSubMode === 'quiz') startIvQuiz();
+    else if (intervalSubMode === 'find') startIvFind();
+}
+
+/* ① 度数当てクイズ */
+function startIvQuiz() {
+    const s1 = Math.floor(Math.random() * 6);
+    const f1 = Math.floor(Math.random() * 9);
+    const iv = INTERVALS[1 + Math.floor(Math.random() * 11)];
+
+    const rootNote   = (OPEN_NOTES[s1] + f1) % 12;
+    const targetNote = (rootNote + iv.semitones) % 12;
+
+    const candidates = [];
+    for (let ss = 0; ss < 6; ss++)
+        for (let ff = 0; ff <= 12; ff++)
+            if ((OPEN_NOTES[ss] + ff) % 12 === targetNote && !(ss === s1 && ff === f1))
+                candidates.push({ ss, ff, dist: Math.abs(ff - f1) + Math.abs(ss - s1) * 3 });
+    candidates.sort((a, b) => a.dist - b.dist);
+    const { ss: s2, ff: f2 } = candidates[Math.floor(Math.random() * Math.min(4, candidates.length))];
+
+    ivQ = { s1, f1, s2, f2, iv };
+
+    showIvInd(s1, f1, 'R', INTERVALS[0].color);
+
+    const tgt = document.getElementById(`ni-${s2}-${f2}`);
+    tgt.textContent = '?';
+    tgt.className   = 'note-ind target pop';
+    tgt.style.background = '';
+    tgt.style.color = '';
+
+    document.getElementById('quiz-prompt').textContent = 'R（ルート）から★まで何度？';
+    document.getElementById('quiz-note').textContent   = '';
+
+    renderIvChoices(makeIvChoices(iv.semitones));
+    playNote(s1, f1);
+    setTimeout(() => playNote(s2, f2), 450);
+}
+
+function makeIvChoices(correct) {
+    const wrong = INTERVALS.filter(iv => iv.semitones !== correct && iv.semitones > 0);
+    shuffle(wrong);
+    const arr = [INTERVALS.find(iv => iv.semitones === correct), ...wrong.slice(0, 3)];
+    shuffle(arr);
+    return arr;
+}
+
+function renderIvChoices(choices) {
+    const grid = document.getElementById('choices-grid');
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+    choices.forEach(iv => {
+        const btn = document.createElement('button');
+        btn.className   = 'choice-btn';
+        btn.textContent = iv.name;
+        btn.style.fontSize = '0.82rem';
+        btn.onclick = () => onIvChoice(iv.semitones, btn);
+        grid.appendChild(btn);
+    });
+}
+
+function onIvChoice(selected, btn) {
+    if (done) return;
+    done = true;
+    const correct = ivQ.iv.semitones;
+    const isOk    = selected === correct;
+
+    document.querySelectorAll('.choice-btn').forEach(b => {
+        b.disabled = true;
+        const iv = INTERVALS.find(iv => iv.name === b.textContent);
+        if (iv && iv.semitones === correct) b.classList.add('correct');
+    });
+    if (!isOk) btn.classList.add('wrong');
+
+    showIvInd(ivQ.s2, ivQ.f2, ivQ.iv.short, ivQ.iv.color);
+    recordScore(isOk);
+    document.getElementById('next-btn').classList.add('show');
+}
+
+/* ② 度数探しクイズ */
+function startIvFind() {
+    const rootNoteIdx   = Math.floor(Math.random() * 12);
+    const useful        = [2, 3, 4, 5, 7, 10];
+    const semitones     = useful[Math.floor(Math.random() * useful.length)];
+    const iv            = INTERVALS[semitones];
+    const targetNoteIdx = (rootNoteIdx + semitones) % 12;
+
+    let total = 0;
+    for (let ss = 0; ss < 6; ss++)
+        for (let ff = 0; ff <= 12; ff++)
+            if ((OPEN_NOTES[ss] + ff) % 12 === targetNoteIdx) total++;
+
+    ivQ = { rootNoteIdx, targetNoteIdx, iv, total };
+    ivFound = new Set();
+
+    for (let ss = 0; ss < 6; ss++)
+        for (let ff = 0; ff <= 12; ff++)
+            if ((OPEN_NOTES[ss] + ff) % 12 === rootNoteIdx)
+                showIvInd(ss, ff, 'R', INTERVALS[0].color);
+
+    document.getElementById('quiz-prompt').textContent =
+        `${NOTES[rootNoteIdx]} からの ${iv.name} を全部探せ！`;
+    document.getElementById('quiz-note').textContent = NOTES[targetNoteIdx];
+
+    updateFindCounter();
+
+    // play first root note
+    for (let ss = 0; ss < 6; ss++) {
+        for (let ff = 0; ff <= 12; ff++) {
+            if ((OPEN_NOTES[ss] + ff) % 12 === rootNoteIdx) { playNote(ss, ff); break; }
+        }
+        break;
+    }
+}
+
+function onIntervalFindClick(s, f) {
+    if (done) return;
+    const note = (OPEN_NOTES[s] + f) % 12;
+    const key  = `${s}-${f}`;
+
+    if (note === ivQ.targetNoteIdx) {
+        if (!ivFound.has(key)) {
+            ivFound.add(key);
+            showIvInd(s, f, ivQ.iv.short, ivQ.iv.color);
+            updateFindCounter();
+
+            if (ivFound.size === ivQ.total) {
+                done = true;
+                ok++; streak++;
+                updateStats();
+                setResult(true, `全${ivQ.total}ポジション発見！`);
+                document.getElementById('next-btn').classList.add('show');
+            }
+        }
+    } else if (note !== ivQ.rootNoteIdx) {
+        ng++; streak = 0; updateStats();
+        const ind = document.getElementById(`ni-${s}-${f}`);
+        ind.textContent = NOTES[note];
+        ind.className   = 'note-ind wrong pop';
+        ind.style.background = ''; ind.style.color = '';
+        setTimeout(() => {
+            if (!done) { ind.textContent = ''; ind.className = 'note-ind'; }
+        }, 600);
+        setResult(false, `${NOTES[note]} は違います`);
+    }
+}
+
+function updateFindCounter() {
+    const el = document.getElementById('streak');
+    el.textContent  = `${ivFound.size} / ${ivQ.total} ポジション発見`;
+    el.style.color  = '#888';
+}
+
+/* ③ 度数マップ */
+function buildMapControls() {
+    const picker = document.getElementById('root-picker');
+    picker.innerHTML = '';
+    NOTES.forEach((note, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'root-btn' + (i === mapRoot ? ' active' : '');
+        btn.textContent = note;
+        btn.onclick = () => {
+            mapRoot = i;
+            document.querySelectorAll('.root-btn').forEach((b, j) => b.classList.toggle('active', j === i));
+            buildIntervalMap();
+        };
+        picker.appendChild(btn);
+    });
+
+    const legend = document.getElementById('iv-legend');
+    legend.innerHTML = '';
+    INTERVALS.forEach(iv => {
+        const item  = document.createElement('div');
+        item.className = 'iv-legend-item';
+        const dot   = document.createElement('div');
+        dot.className = 'iv-legend-dot';
+        dot.style.background = iv.color;
+        const lbl   = document.createElement('span');
+        lbl.textContent = `${iv.short}=${iv.name}`;
+        item.appendChild(dot);
+        item.appendChild(lbl);
+        legend.appendChild(item);
+    });
+}
+
+function buildIntervalMap() {
+    clearIndicators();
+    for (let ss = 0; ss < 6; ss++)
+        for (let ff = 0; ff <= 12; ff++) {
+            const semitones = ((OPEN_NOTES[ss] + ff) - mapRoot + 144) % 12;
+            const iv = INTERVALS[semitones];
+            showIvInd(ss, ff, iv.short, iv.color);
+        }
+}
+
+function showIvInd(s, f, text, color) {
+    const ind = document.getElementById(`ni-${s}-${f}`);
+    if (!ind) return;
+    ind.textContent      = text;
+    ind.className        = 'note-ind show';
+    ind.style.background = color;
+    ind.style.color      = '#0f0f1a';
 }
 
 // init
