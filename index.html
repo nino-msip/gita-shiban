@@ -677,6 +677,8 @@ function switchMode(m) {
     document.getElementById('next-btn').classList.remove('show');
     document.getElementById('choices-grid').innerHTML = '';
 
+    document.getElementById('iv-explanation').classList.remove('show');
+
     const intervalTabs = document.getElementById('interval-tabs');
     const mapControls  = document.getElementById('map-controls');
     const ivLegend     = document.getElementById('iv-legend');
