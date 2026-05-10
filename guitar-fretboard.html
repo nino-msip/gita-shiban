@@ -384,6 +384,41 @@
             border-top: 1px solid #2a2a45;
         }
 
+        .iv-ex-strings {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #2a2a45;
+        }
+
+        .iv-ex-strings-label {
+            font-size: 0.72rem;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        .iv-ex-str-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 4px;
+        }
+
+        .iv-ex-str-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 5px 2px;
+            border-radius: 6px;
+            background: #13131f;
+            border: 1px solid #222;
+        }
+
+        .iv-ex-str-cell.is-root { border-color: #f5c842; background: rgba(245,200,66,0.07); }
+
+        .iv-ex-str-name { font-size: 0.6rem; color: #555; }
+        .iv-ex-str-note { font-size: 0.82rem; font-weight: 700; color: #e8e8e8; }
+        .iv-ex-str-iv   { font-size: 0.68rem; font-weight: 700; }
+
         /* ── Interval legend ── */
         .iv-legend {
             display: none;
@@ -1120,11 +1155,32 @@ function showIvExplanation({ s1, f1, s2, f2, iv }) {
 
     const tip = TIPS[iv.semitones] || `${iv.name} = ${iv.semitones}半音`;
 
+    // 同一フレット各弦の度数
+    const rootNoteIdx = (OPEN_NOTES[s1] + f1) % 12;
+    const strLabels   = ['1弦','2弦','3弦','4弦','5弦','6弦'];
+    let strCells = '';
+    for (let ss = 0; ss < 6; ss++) {
+        const noteIdx   = (OPEN_NOTES[ss] + f1) % 12;
+        const semitones = (noteIdx - rootNoteIdx + 12) % 12;
+        const ivs       = INTERVALS[semitones];
+        const isRoot    = ss === s1;
+        strCells += `
+            <div class="iv-ex-str-cell ${isRoot ? 'is-root' : ''}">
+                <span class="iv-ex-str-name">${strLabels[ss]}</span>
+                <span class="iv-ex-str-note">${NOTES[noteIdx]}</span>
+                <span class="iv-ex-str-iv" style="color:${ivs.color}">${isRoot ? 'R' : ivs.short}</span>
+            </div>`;
+    }
+
     const el = document.getElementById('iv-explanation');
     el.innerHTML = `
         <div class="iv-ex-title">${rootNote} → ${targetNote}（${iv.name} / ${iv.semitones}半音）</div>
         <div class="iv-ex-pos">${posDesc.replace(/\n/g, '<br>')}</div>
         <div class="iv-ex-tip">💡 ${tip}</div>
+        <div class="iv-ex-strings">
+            <div class="iv-ex-strings-label">フレット ${f1} での各弦の度数（ルートから）</div>
+            <div class="iv-ex-str-grid">${strCells}</div>
+        </div>
     `;
     el.classList.add('show');
 }
