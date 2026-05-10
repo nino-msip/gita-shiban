@@ -1158,9 +1158,14 @@ function showIvExplanation({ s1, f1, s2, f2, iv }) {
     // 同一フレット各弦の度数（ルート弦から順に並べる）
     const rootNoteIdx = (OPEN_NOTES[s1] + f1) % 12;
     const strLabels   = ['1弦','2弦','3弦','4弦','5弦','6弦'];
+    // ルート弦から1弦方向へ、折り返して6弦方向へ
+    const strOrder = [];
+    for (let i = s1; i >= 0; i--) strOrder.push(i);
+    for (let i = 5; i > s1; i--) strOrder.push(i);
+
     let strCells = '';
     for (let i = 0; i < 6; i++) {
-        const ss        = (s1 + i) % 6;
+        const ss        = strOrder[i];
         const noteIdx   = (OPEN_NOTES[ss] + f1) % 12;
         const semitones = (noteIdx - rootNoteIdx + 12) % 12;
         const ivs       = INTERVALS[semitones];
