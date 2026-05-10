@@ -1155,15 +1155,16 @@ function showIvExplanation({ s1, f1, s2, f2, iv }) {
 
     const tip = TIPS[iv.semitones] || `${iv.name} = ${iv.semitones}半音`;
 
-    // 同一フレット各弦の度数
+    // 同一フレット各弦の度数（ルート弦から順に並べる）
     const rootNoteIdx = (OPEN_NOTES[s1] + f1) % 12;
     const strLabels   = ['1弦','2弦','3弦','4弦','5弦','6弦'];
     let strCells = '';
-    for (let ss = 0; ss < 6; ss++) {
+    for (let i = 0; i < 6; i++) {
+        const ss        = (s1 + i) % 6;
         const noteIdx   = (OPEN_NOTES[ss] + f1) % 12;
         const semitones = (noteIdx - rootNoteIdx + 12) % 12;
         const ivs       = INTERVALS[semitones];
-        const isRoot    = ss === s1;
+        const isRoot    = i === 0;
         strCells += `
             <div class="iv-ex-str-cell ${isRoot ? 'is-root' : ''}">
                 <span class="iv-ex-str-name">${strLabels[ss]}</span>
