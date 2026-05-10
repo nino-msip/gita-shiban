@@ -350,6 +350,40 @@
         .root-btn:hover { border-color: #f5c842; color: #f5c842; }
         .root-btn.active { background: #f5c842; color: #0f0f1a; border-color: #f5c842; }
 
+        /* ── Interval explanation ── */
+        .iv-explanation {
+            display: none;
+            max-width: 520px;
+            width: 100%;
+            background: #1a1a2e;
+            border: 1px solid #2a2a45;
+            border-radius: 12px;
+            padding: 14px 18px;
+            line-height: 1.7;
+        }
+
+        .iv-explanation.show { display: block; }
+
+        .iv-ex-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #f5c842;
+            margin-bottom: 6px;
+        }
+
+        .iv-ex-pos {
+            font-size: 0.82rem;
+            color: #ccc;
+            margin-bottom: 6px;
+        }
+
+        .iv-ex-tip {
+            font-size: 0.82rem;
+            color: #74c0fc;
+            padding-top: 6px;
+            border-top: 1px solid #2a2a45;
+        }
+
         /* ── Interval legend ── */
         .iv-legend {
             display: none;
@@ -421,6 +455,7 @@
 </div>
 
 <div class="iv-legend" id="iv-legend"></div>
+<div class="iv-explanation" id="iv-explanation"></div>
 <div class="choices-grid" id="choices-grid"></div>
 <button class="next-btn" id="next-btn" onclick="onNextBtn()">次の問題 →</button>
 
@@ -846,6 +881,7 @@ function nextIntervalQuestion() {
     document.getElementById('streak').textContent = '';
     document.getElementById('next-btn').classList.remove('show');
     document.getElementById('choices-grid').innerHTML = '';
+    document.getElementById('iv-explanation').classList.remove('show');
     clearIndicators();
 
     if (intervalSubMode === 'quiz') startIvQuiz();
@@ -922,7 +958,11 @@ function onIvChoice(selected, btn) {
     });
     if (!isOk) btn.classList.add('wrong');
 
+    // Rの位置に音名を表示
+    showIvInd(ivQ.s1, ivQ.f1, getNote(ivQ.s1, ivQ.f1), INTERVALS[0].color);
     showIvInd(ivQ.s2, ivQ.f2, ivQ.iv.short, ivQ.iv.color);
+
+    showIvExplanation(ivQ);
     recordScore(isOk);
     document.getElementById('next-btn').classList.add('show');
 }
@@ -1041,6 +1081,52 @@ function buildIntervalMap() {
             const iv = INTERVALS[semitones];
             showIvInd(ss, ff, iv.short, iv.color);
         }
+}
+
+function showIvExplanation({ s1, f1, s2, f2, iv }) {
+    const rootNote   = getNote(s1, f1);
+    const targetNote = getNote(s2, f2);
+    const strNames   = ['1弦(E)', '2弦(B)', '3弦(G)', '4弦(D)', '5弦(A)', '6弦(E)'];
+
+    // 位置関係の説明
+    let posDesc;
+    if (s1 === s2) {
+        const d = f2 - f1;
+        posDesc = `同じ弦（${strNames[s1]}）で ${d > 0 ? '+' : ''}${d} フレット`;
+    } else {
+        const sd = s2 - s1;
+        const fd = f2 - f1;
+        const dir = sd > 0 ? '低' : '高';
+        // B弦(index 1)とG弦(index 2)の間は4半音
+        const crossBG = (Math.min(s1,s2) === 1 && Math.max(s1,s2) === 2);
+        const tuningNote = crossBG ? '※G-B弦間は4半音（他の弦間は5半音）' : '';
+        posDesc = `${strNames[s1]} → ${strNames[s2]}（${Math.abs(sd)}本${dir}い弦）、フレット差 ${fd >= 0 ? '+' : ''}${fd}${tuningNote ? '\n' + tuningNote : ''}`;
+    }
+
+    // 度数ごとの汎用パターンTips
+    const TIPS = {
+        1:  '半音 = 常に1フレット隣り',
+        2:  '全音 = 常に2フレット隣り',
+        3:  '短3度 → 同弦+3、または1本低い弦−2フレット',
+        4:  '長3度 → 同弦+4、または1本低い弦−1フレット（G-B間は同フレット）',
+        5:  '完全4度 → 同弦+5 ＝ 隣の弦の同フレット（標準チューニングの基準）',
+        6:  'トライトーン（減5/増4） → 同弦+6、最も不安定な響き',
+        7:  '完全5度 → 同弦+7、または1本低い弦+2フレット（G-B間は+3）',
+        8:  '短6度 → 同弦+8',
+        9:  '長6度 → 同弦+9、または2本低い弦+2フレット',
+        10: '短7度 → 同弦+10、または1本低い弦+5フレット',
+        11: '長7度 → 同弦+11（オクターブの半音下）',
+    };
+
+    const tip = TIPS[iv.semitones] || `${iv.name} = ${iv.semitones}半音`;
+
+    const el = document.getElementById('iv-explanation');
+    el.innerHTML = `
+        <div class="iv-ex-title">${rootNote} → ${targetNote}（${iv.name} / ${iv.semitones}半音）</div>
+        <div class="iv-ex-pos">${posDesc.replace(/\n/g, '<br>')}</div>
+        <div class="iv-ex-tip">💡 ${tip}</div>
+    `;
+    el.classList.add('show');
 }
 
 function showIvInd(s, f, text, color) {
