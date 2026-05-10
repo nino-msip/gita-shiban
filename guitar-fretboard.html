@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ギター指板マスター</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            background: #0f0f1a;
+            color: #e8e8e8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px 16px;
+            gap: 18px;
+        }
+
+        h1 { font-size: 1.5rem; font-weight: 700; color: #f5c842; }
+
+        .mode-tabs {
+            display: flex;
+            gap: 6px;
+            background: #1e1e30;
+            padding: 5px;
+            border-radius: 12px;
+        }
+
+        .mode-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #888;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .mode-tab.active {
+            background: #f5c842;
+            color: #0f0f1a;
+            font-weight: 700;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+        }
+
+        .stat { color: #666; }
+        .stat strong { color: #e8e8e8; font-size: 1rem; }
+        .stat.accuracy strong { color: #f5c842; }
+
+        .quiz-area {
+            text-align: center;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .quiz-prompt { font-size: 0.95rem; color: #aaa; }
+        .quiz-note { font-size: 3rem; font-weight: 800; color: #f5c842; line-height: 1; }
+
+        .result-text { font-size: 1.05rem; font-weight: 600; min-height: 1.4em; }
+        .result-text.correct { color: #4ade80; }
+        .result-text.wrong   { color: #f87171; }
+
+        .streak { font-size: 0.85rem; color: #f5c842; font-weight: 600; min-height: 1.2em; }
+
+        /* ── Fretboard ── */
+        .fretboard-container {
+            width: 100%;
+            max-width: 920px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .fretboard-inner { min-width: 680px; }
+
+        /* fret number row */
+        .fret-num-row {
+            display: flex;
+            margin-bottom: 4px;
+        }
+
+        .fret-num-cell {
+            text-align: center;
+            font-size: 0.62rem;
+            color: #555;
+            flex: 1;
+        }
+
+        .fret-num-cell.open-col { flex: 0.6; }
+
+        /* main grid */
+        .fretboard-grid {
+            display: flex;
+            flex-direction: column;
+            background: #5c3a12;
+            border-radius: 6px;
+            padding: 8px 0;
+            border: 2px solid #3d2509;
+        }
+
+        .string-row {
+            display: flex;
+            align-items: center;
+            height: 44px;
+        }
+
+        .fret-cells {
+            display: flex;
+            flex: 1;
+            position: relative;
+        }
+
+        /* string line */
+        .fret-cells::before {
+            content: '';
+            position: absolute;
+            left: 0; right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            z-index: 0;
+            background: linear-gradient(to bottom, #aaa, #e0e0e0, #aaa);
+        }
+
+        .string-row:nth-child(1) .fret-cells::before { height: 1px; }
+        .string-row:nth-child(2) .fret-cells::before { height: 1.5px; }
+        .string-row:nth-child(3) .fret-cells::before { height: 2px; }
+        .string-row:nth-child(4) .fret-cells::before { height: 2.5px; }
+        .string-row:nth-child(5) .fret-cells::before { height: 3px; }
+        .string-row:nth-child(6) .fret-cells::before { height: 4px; }
+
+        .fret-cell {
+            flex: 1;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-right: 2px solid #c8a45e;
+            z-index: 1;
+        }
+
+        .fret-cell.open-col {
+            flex: 0.6;
+            border-right: 5px solid #999;
+        }
+
+        .fret-cell.clickable { cursor: pointer; }
+        .fret-cell.clickable:hover { background: rgba(255,255,255,0.05); }
+
+        /* dot row */
+        .dot-row {
+            display: flex;
+            margin-top: 3px;
+            height: 14px;
+        }
+
+        .dot-cell {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .dot-cell.open-col { flex: 0.6; }
+
+        .fret-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #7a5c1a;
+        }
+
+        /* ── Note indicator ── */
+        .note-ind {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.62rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s;
+        }
+
+        .note-ind.show    { opacity: 1; }
+        .note-ind.visible { opacity: 1; background: #e0e0e0; color: #222; }
+        .note-ind.target  { opacity: 1; background: #f5c842; color: #0f0f1a; box-shadow: 0 0 12px rgba(245,200,66,.7); }
+        .note-ind.correct { opacity: 1; background: #4ade80; color: #0f0f1a; box-shadow: 0 0 10px rgba(74,222,128,.5); }
+        .note-ind.wrong   { opacity: 1; background: #f87171; color: #0f0f1a; }
+        .note-ind.hint    { opacity: 1; background: rgba(74,222,128,.25); color: #4ade80; border: 1px solid #4ade80; }
+
+        @keyframes pop {
+            0%   { transform: scale(0.5); }
+            60%  { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .note-ind.pop { animation: pop 0.22s ease-out; }
+
+        /* ── Choices ── */
+        .choices-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .choice-btn {
+            padding: 14px 8px;
+            border-radius: 10px;
+            border: 2px solid #2a2a40;
+            background: #1e1e30;
+            color: #e8e8e8;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .choice-btn:hover:not(:disabled) { border-color: #f5c842; color: #f5c842; transform: translateY(-2px); }
+        .choice-btn.correct { background: #14532d; border-color: #4ade80; color: #4ade80; }
+        .choice-btn.wrong   { background: #7f1d1d; border-color: #f87171; color: #f87171; }
+        .choice-btn:disabled { cursor: default; transform: none; }
+
+        .next-btn {
+            padding: 12px 36px;
+            border-radius: 10px;
+            border: none;
+            background: #f5c842;
+            color: #0f0f1a;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: none;
+            transition: all 0.15s;
+        }
+
+        .next-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(245,200,66,.35); }
+        .next-btn.show { display: block; }
+
+        .open-toggle {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1.5px solid #444;
+            background: transparent;
+            color: #888;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .open-toggle.on {
+            border-color: #f5c842;
+            color: #f5c842;
+            background: rgba(245,200,66,.1);
+        }
+    </style>
+</head>
+<body>
+
+<h1>🎸 指板マスター</h1>
+
+<div class="mode-tabs">
+    <button class="mode-tab active" onclick="switchMode('quiz1')">フレット → 音名</button>
+    <button class="mode-tab"        onclick="switchMode('quiz2')">音名 → フレット</button>
+    <button class="mode-tab"        onclick="switchMode('study')">確認モード</button>
+</div>
+
+<div class="stats">
+    <div class="stat">正解 <strong id="s-ok">0</strong></div>
+    <div class="stat">不正解 <strong id="s-ng">0</strong></div>
+    <div class="stat accuracy">正解率 <strong id="s-acc">—</strong></div>
+</div>
+
+<button id="open-toggle-btn" class="open-toggle" onclick="toggleOpenStrings()">開放弦の音名を表示</button>
+
+<div class="quiz-area" id="quiz-area">
+    <div class="quiz-prompt" id="quiz-prompt">指板上の光っているフレットの音名は？</div>
+    <div class="quiz-note"   id="quiz-note"></div>
+    <div class="result-text" id="result-text"></div>
+    <div class="streak"      id="streak"></div>
+</div>
+
+<div class="fretboard-container">
+    <div class="fretboard-inner" id="fretboard-inner"></div>
+</div>
+
+<div class="choices-grid" id="choices-grid"></div>
+<button class="next-btn" id="next-btn" onclick="nextQuestion()">次の問題 →</button>
+
+<script>
+const NOTES       = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const STR_LABELS  = ['E','B','G','D','A','E'];   // high → low
+const OPEN_NOTES  = [4, 11, 7, 2, 9, 4];         // E B G D A E
+const DOT_FRETS   = new Set([3,5,7,9,12]);
+const NUM_FRETS   = 12;
+
+let mode    = 'quiz1';
+let ok = 0, ng = 0, streak = 0;
+let showOpenStrings = false;
+let q       = null;   // { s, f, note, hadWrong }
+let done    = false;
+
+const getNote = (s, f) => NOTES[(OPEN_NOTES[s] + f) % 12];
+
+/* ── Build DOM ── */
+function buildFretboard() {
+    const root = document.getElementById('fretboard-inner');
+    root.innerHTML = '';
+
+    // fret number row
+    const numRow = document.createElement('div');
+    numRow.className = 'fret-num-row';
+    addFretCells(numRow, f => {
+        const d = document.createElement('div');
+        d.className = 'fret-num-cell' + (f === 0 ? ' open-col' : '');
+        d.textContent = f === 0 ? '開放' : f;
+        return d;
+    });
+    root.appendChild(numRow);
+
+    // fretboard grid
+    const grid = document.createElement('div');
+    grid.className = 'fretboard-grid';
+
+    for (let s = 0; s < 6; s++) {
+        const row = document.createElement('div');
+        row.className = 'string-row';
+
+
+        const cells = document.createElement('div');
+        cells.className = 'fret-cells';
+
+        for (let f = 0; f <= NUM_FRETS; f++) {
+            const cell = document.createElement('div');
+            cell.className = 'fret-cell' + (f === 0 ? ' open-col' : '');
+
+            if (mode === 'quiz2') {
+                cell.classList.add('clickable');
+                cell.addEventListener('click', () => onFretClick(s, f));
+            }
+
+            const ind = document.createElement('div');
+            ind.className = 'note-ind';
+            ind.id = `ni-${s}-${f}`;
+            ind.textContent = mode === 'study' ? getNote(s, f) : '';
+
+            if (mode === 'study') ind.classList.add('show', 'visible');
+
+            cell.appendChild(ind);
+            cells.appendChild(cell);
+        }
+
+        row.appendChild(cells);
+        grid.appendChild(row);
+    }
+
+    root.appendChild(grid);
+
+    // dot row
+    const dotRow = document.createElement('div');
+    dotRow.className = 'dot-row';
+    addFretCells(dotRow, f => {
+        const d = document.createElement('div');
+        d.className = 'dot-cell' + (f === 0 ? ' open-col' : '');
+        if (DOT_FRETS.has(f)) {
+            const n = f === 12 ? 2 : 1;
+            for (let i = 0; i < n; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'fret-dot';
+                d.appendChild(dot);
+            }
+        }
+        return d;
+    });
+    root.appendChild(dotRow);
+    applyOpenStringsState();
+}
+
+function addFretCells(parent, make) {
+    for (let f = 0; f <= NUM_FRETS; f++) parent.appendChild(make(f));
+}
+
+/* ── Mode switch ── */
+function switchMode(m) {
+    mode = m;
+    document.querySelectorAll('.mode-tab').forEach((btn, i) => {
+        btn.classList.toggle('active', ['quiz1','quiz2','study'][i] === m);
+    });
+
+    ok = ng = streak = 0;
+    updateStats();
+    buildFretboard();
+
+    setResult('', '');
+    document.getElementById('streak').textContent = '';
+    document.getElementById('next-btn').classList.remove('show');
+
+    if (m === 'study') {
+        document.getElementById('quiz-area').style.display = 'none';
+        document.getElementById('choices-grid').innerHTML = '';
+    } else {
+        document.getElementById('quiz-area').style.display = 'flex';
+        nextQuestion();
+    }
+}
+
+/* ── Question ── */
+function nextQuestion() {
+    done = false;
+    setResult('', '');
+    document.getElementById('streak').textContent = '';
+    document.getElementById('next-btn').classList.remove('show');
+    clearIndicators();
+
+    const s = Math.floor(Math.random() * 6);
+    const f = Math.floor(Math.random() * (NUM_FRETS + 1));
+    q = { s, f, note: getNote(s, f), hadWrong: false };
+
+    if (mode === 'quiz1') {
+        setInd(s, f, 'target pop');
+        document.getElementById('quiz-prompt').textContent = 'この位置の音名は？';
+        document.getElementById('quiz-note').textContent = '';
+        renderChoices(makeChoices(q.note));
+    } else {
+        document.getElementById('quiz-prompt').textContent = 'この音をフレット上でクリック！';
+        document.getElementById('quiz-note').textContent = q.note;
+        document.getElementById('choices-grid').innerHTML = '';
+    }
+}
+
+/* ── Quiz 1: choice click ── */
+function renderChoices(choices) {
+    const grid = document.getElementById('choices-grid');
+    grid.innerHTML = '';
+    choices.forEach(note => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = note;
+        btn.onclick = () => onChoiceClick(note, btn);
+        grid.appendChild(btn);
+    });
+}
+
+function onChoiceClick(selected, btn) {
+    if (done) return;
+    done = true;
+
+    const isOk = selected === q.note;
+    document.querySelectorAll('.choice-btn').forEach(b => {
+        b.disabled = true;
+        if (b.textContent === q.note) b.classList.add('correct');
+    });
+    if (!isOk) btn.classList.add('wrong');
+
+    setInd(q.s, q.f, isOk ? 'correct pop' : 'wrong pop', q.note);
+    recordScore(isOk);
+    document.getElementById('next-btn').classList.add('show');
+}
+
+/* ── Quiz 2: fret click ── */
+function onFretClick(s, f) {
+    if (done) return;
+
+    const clicked = getNote(s, f);
+    if (clicked === q.note) {
+        done = true;
+        if (!q.hadWrong) { ok++; streak++; } else streak = 0;
+        updateStats();
+
+        // show correct position + all other positions as hint
+        for (let si = 0; si < 6; si++)
+            for (let fi = 0; fi <= NUM_FRETS; fi++)
+                if (getNote(si, fi) === q.note)
+                    setInd(si, fi, si === s && fi === f ? 'correct pop' : 'hint', getNote(si, fi));
+
+        setResult(true);
+        document.getElementById('next-btn').classList.add('show');
+    } else {
+        if (!q.hadWrong) { ng++; streak = 0; q.hadWrong = true; updateStats(); }
+
+        const ind = document.getElementById(`ni-${s}-${f}`);
+        ind.className = 'note-ind wrong pop';
+        setTimeout(() => { if (!done) ind.className = 'note-ind'; }, 600);
+
+        setResult(false, `${clicked} は違います。もう一度！`);
+    }
+}
+
+/* ── Helpers ── */
+function clearIndicators() {
+    document.querySelectorAll('.note-ind').forEach(el => {
+        el.textContent = '';
+        el.className = mode === 'study' ? 'note-ind show visible' : 'note-ind';
+    });
+    // restore study mode text for non-open strings
+    if (mode === 'study') {
+        for (let s = 0; s < 6; s++)
+            for (let f = 1; f <= NUM_FRETS; f++) {
+                const ind = document.getElementById(`ni-${s}-${f}`);
+                if (ind) ind.textContent = getNote(s, f);
+            }
+    }
+    applyOpenStringsState();
+}
+
+function applyOpenStringsState() {
+    for (let s = 0; s < 6; s++) {
+        const ind = document.getElementById(`ni-${s}-0`);
+        if (!ind) continue;
+        if (showOpenStrings) {
+            ind.textContent = getNote(s, 0);
+            ind.className = 'note-ind show visible';
+        } else {
+            ind.textContent = '';
+            ind.className = 'note-ind';
+        }
+    }
+}
+
+function toggleOpenStrings() {
+    showOpenStrings = !showOpenStrings;
+    const btn = document.getElementById('open-toggle-btn');
+    btn.textContent = showOpenStrings ? '開放弦の音名を非表示' : '開放弦の音名を表示';
+    btn.classList.toggle('on', showOpenStrings);
+    applyOpenStringsState();
+}
+
+function setInd(s, f, cls, text) {
+    const el = document.getElementById(`ni-${s}-${f}`);
+    if (el) {
+        if (text !== undefined) el.textContent = text;
+        el.className = `note-ind ${cls}`;
+        void el.offsetWidth; // restart animation
+    }
+}
+
+function setResult(isOk, msg) {
+    const el = document.getElementById('result-text');
+    if (typeof isOk === 'boolean') {
+        el.textContent = msg || (isOk ? '正解！' : '不正解...');
+        el.className = `result-text ${isOk ? 'correct' : 'wrong'}`;
+        const s = document.getElementById('streak');
+        s.textContent = streak >= 3 ? `🔥 ${streak} 連続正解！` : '';
+    } else {
+        el.textContent = '';
+        el.className = 'result-text';
+    }
+}
+
+function recordScore(isOk) {
+    if (isOk) { ok++; streak++; } else { ng++; streak = 0; }
+    updateStats();
+    setResult(isOk);
+}
+
+function updateStats() {
+    document.getElementById('s-ok').textContent  = ok;
+    document.getElementById('s-ng').textContent  = ng;
+    const total = ok + ng;
+    document.getElementById('s-acc').textContent =
+        total > 0 ? Math.round(ok / total * 100) + '%' : '—';
+}
+
+function makeChoices(correct) {
+    const others = NOTES.filter(n => n !== correct);
+    shuffle(others);
+    const arr = [correct, ...others.slice(0, 3)];
+    shuffle(arr);
+    return arr;
+}
+
+function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+}
+
+// init
+buildFretboard();
+nextQuestion();
+</script>
+</body>
+</html>
