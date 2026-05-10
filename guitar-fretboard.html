@@ -274,6 +274,28 @@
             color: #f5c842;
             background: rgba(245,200,66,.1);
         }
+
+        .mute-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1.5px solid #444;
+            background: transparent;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .mute-btn:hover { border-color: #888; }
+
+        .top-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -293,7 +315,10 @@
     <div class="stat accuracy">正解率 <strong id="s-acc">—</strong></div>
 </div>
 
-<button id="open-toggle-btn" class="open-toggle" onclick="toggleOpenStrings()">開放弦の音名を表示</button>
+<div class="top-controls">
+    <button id="open-toggle-btn" class="open-toggle" onclick="toggleOpenStrings()">開放弦の音名を表示</button>
+    <button id="mute-btn" class="mute-btn" onclick="toggleMute()" title="ミュート切替">🔊</button>
+</div>
 
 <div class="quiz-area" id="quiz-area">
     <div class="quiz-prompt" id="quiz-prompt">指板上の光っているフレットの音名は？</div>
@@ -321,6 +346,58 @@ let ok = 0, ng = 0, streak = 0;
 let showOpenStrings = false;
 let q       = null;   // { s, f, note, hadWrong }
 let done    = false;
+
+// ── Audio ──
+const BASE_FREQS = [329.63, 246.94, 196.00, 146.83, 110.00, 82.41]; // E4 B3 G3 D3 A2 E2
+let audioCtx = null;
+let muted = false;
+
+function getAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+}
+
+function playNote(s, f) {
+    if (muted) return;
+    const ctx = getAudioCtx();
+    const freq = BASE_FREQS[s] * Math.pow(2, f / 12);
+    const t = ctx.currentTime;
+
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const filter = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+    const gain2 = ctx.createGain();
+
+    osc1.type = 'triangle';
+    osc1.frequency.value = freq;
+    osc2.type = 'sawtooth';
+    osc2.frequency.value = freq;
+    gain2.gain.value = 0.12;
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(freq * 12, t);
+    filter.frequency.exponentialRampToValueAtTime(freq * 1.5, t + 0.5);
+
+    gain.gain.setValueAtTime(0.001, t);
+    gain.gain.linearRampToValueAtTime(0.55, t + 0.003);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
+
+    osc1.connect(filter);
+    osc2.connect(gain2);
+    gain2.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc1.start(t); osc2.start(t);
+    osc1.stop(t + 2); osc2.stop(t + 2);
+}
+
+function toggleMute() {
+    muted = !muted;
+    document.getElementById('mute-btn').textContent = muted ? '🔇' : '🔊';
+}
 
 const getNote = (s, f) => NOTES[(OPEN_NOTES[s] + f) % 12];
 
@@ -356,10 +433,11 @@ function buildFretboard() {
             const cell = document.createElement('div');
             cell.className = 'fret-cell' + (f === 0 ? ' open-col' : '');
 
-            if (mode === 'quiz2') {
-                cell.classList.add('clickable');
-                cell.addEventListener('click', () => onFretClick(s, f));
-            }
+            cell.classList.add('clickable');
+            cell.addEventListener('click', () => {
+                playNote(s, f);
+                if (mode === 'quiz2') onFretClick(s, f);
+            });
 
             const ind = document.createElement('div');
             ind.className = 'note-ind';
@@ -448,6 +526,7 @@ function nextQuestion() {
         document.getElementById('quiz-note').textContent = q.note;
         document.getElementById('choices-grid').innerHTML = '';
     }
+    setTimeout(() => playNote(q.s, q.f), 120);
 }
 
 /* ── Quiz 1: choice click ── */
