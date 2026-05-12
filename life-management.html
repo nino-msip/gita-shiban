@@ -752,6 +752,21 @@
       <div id="notion-status" style="margin-top:10px;font-size:0.8rem;color:var(--muted);"></div>
     </div>
 
+    <!-- ミッション別タスク生成 -->
+    <div class="card" style="border-left:3px solid var(--gold);">
+      <div class="card-title">🚀 ミッション別TODOを生成</div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;line-height:1.6;">
+        3つのミッションに基づいた具体的なタスクを一括追加します。<br>
+        Notionと連携済みの場合は自動的に同期されます。
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="seedTasks('all')">🎯 全ミッション追加</button>
+        <button class="btn btn-ghost" onclick="seedTasks('guitar')" style="color:var(--guitar);border-color:var(--guitar);">🎸 ギターのみ</button>
+        <button class="btn btn-ghost" onclick="seedTasks('diet')" style="color:var(--diet);border-color:var(--diet);">💪 ダイエットのみ</button>
+        <button class="btn btn-ghost" onclick="seedTasks('budget')" style="color:var(--budget);border-color:var(--budget);">💰 家計のみ</button>
+      </div>
+    </div>
+
     <!-- データ管理 -->
     <div class="card">
       <div class="card-title">データ管理</div>
@@ -1553,6 +1568,91 @@ function confirmReset() {
     db = defaultDB(); saveDB(db); renderDashboard();
     nav('dashboard'); toast('データをリセットしました');
   }
+}
+
+/* ═══════════════════════════════════════════
+   SEED TASKS
+═══════════════════════════════════════════ */
+const MISSION_TASKS = {
+  guitar: [
+    // 【日次習慣】
+    { name: '🎸 毎日スケール練習（30分）', note: '主要なメジャー・マイナースケールを各弦で練習', freq: 'daily' },
+    { name: '🎸 好きな曲のコピーを進める', note: '1曲ずつ完コピを目指す。フレーズ分解→ゆっくり→テンポアップ', freq: 'daily' },
+    // 【週次タスク】
+    { name: '🎸 音楽理論を学ぶ（週1時間）', note: 'コード理論・スケールの活用法・ダイアトニック', freq: 'weekly' },
+    { name: '🎸 演奏動画をSNSに投稿する', note: 'Instagram / TikTok / YouTube Shorts。継続が集客につながる', freq: 'weekly' },
+    { name: '🎸 セッション・ジャムに参加する', note: '地域のオープンセッションを探して参加。人脈を広げる', freq: 'weekly' },
+    // 【月次タスク】
+    { name: '🎸 ライブ出演の機会を調べる・申し込む', note: 'オープンマイク・バンドコンテスト・サポート募集', freq: 'monthly' },
+    { name: '🎸 自分の演奏を録音して課題を洗い出す', note: '録音を聴いて弱点を3つ書き出す', freq: 'monthly' },
+    { name: '🎸 バンドメンバー・コラボ相手を探す', note: 'SNS・音楽コミュニティ・スタジオ掲示板', freq: 'monthly' },
+    // 【プロジェクト】
+    { name: '🎸 オリジナル曲を1曲完成させる', note: 'コード進行→メロディ→アレンジ→録音の順で進める', freq: 'project' },
+    { name: '🎸 デモ音源（EP）をリリースする', note: 'SoundCloud / Bandcamp / Spotify for Artists に配信', freq: 'project' },
+    { name: '🎸 自分の強みジャンル・スタイルを定める', note: 'ブルース / ロック / フュージョン / 弾き語りなど方向性を決める', freq: 'project' },
+  ],
+  diet: [
+    // 【日次習慣】
+    { name: '💪 毎日体重を記録する（朝起きてすぐ）', note: '同じ条件（起床後・排泄後・裸）で計測すると正確', freq: 'daily' },
+    { name: '💪 食事内容をメモする', note: 'カロリーより「何を食べたか」を記録するだけでOK', freq: 'daily' },
+    { name: '💪 水を1.5L以上飲む', note: 'ペットボトル3本分が目安。代謝UP・満腹感に効果あり', freq: 'daily' },
+    // 【週次タスク】
+    { name: '💪 週3回以上の有酸素運動をする', note: '30分のウォーキング・ジョギング・自転車でOK', freq: 'weekly' },
+    { name: '💪 週1回の筋トレをする（自重OK）', note: 'スクワット・プッシュアップ・体幹トレ。基礎代謝を上げる', freq: 'weekly' },
+    { name: '💪 週末に来週の食事を計画する', note: '外食の頻度・コンビニ食の制限・自炊メニューを決める', freq: 'weekly' },
+    // 【月次タスク】
+    { name: '💪 体重グラフを振り返り目標ペースを確認する', note: '月1kg減が安全ペース。停滞期は食事・運動を見直す', freq: 'monthly' },
+    { name: '💪 体型写真を撮って変化を記録する', note: '数字では見えない変化を視覚化。モチベ維持に効果的', freq: 'monthly' },
+    // 【プロジェクト】
+    { name: '💪 目標体重・目標日をアプリに設定する', note: 'ダイエットページの「目標設定」から入力する', freq: 'project' },
+    { name: '💪 食事の「やめるもの1つ」を決める', note: '糖質の多い飲み物 / 夜の菓子 / コンビニスイーツなど1つに絞る', freq: 'project' },
+  ],
+  budget: [
+    // 【日次習慣】
+    { name: '💰 その日の支出をアプリに記録する', note: 'レシートを捨てる前にすぐ入力。習慣化が大事', freq: 'daily' },
+    // 【週次タスク】
+    { name: '💰 週次で収支バランスを確認する', note: '予算オーバーのカテゴリを特定して翌週に活かす', freq: 'weekly' },
+    { name: '💰 不要なサブスクを1つ解約・見直す', note: 'Netflix・音楽アプリ・アプリ課金など棚卸し', freq: 'weekly' },
+    // 【月次タスク】
+    { name: '💰 月初に今月の予算を設定する', note: '食費・交通費・娯楽費など項目別に上限を決める', freq: 'monthly' },
+    { name: '💰 固定費を見直す（通信費・保険・家賃）', note: '格安SIMへの乗り換え・不要な保険の解約を検討', freq: 'monthly' },
+    { name: '💰 ライブ・音楽活動の収支を確認する', note: 'ギター関連の収入（ライブ・レッスン・動画）と機材投資を把握', freq: 'monthly' },
+    { name: '💰 貯蓄額を確認し目標への進捗を記録する', note: '緊急資金（3ヶ月分）→ 投資・資産形成へのステップを意識', freq: 'monthly' },
+    // 【プロジェクト】
+    { name: '💰 家計の「固定費リスト」を作る', note: '家賃・光熱費・通信費・サブスクを一覧化して月額合計を把握', freq: 'project' },
+    { name: '💰 副収入の手段をリストアップする', note: 'ギターレッスン・音楽制作・動画収益・フリーランスなど', freq: 'project' },
+    { name: '💰 音楽収入で生活費をまかなう計画を立てる', note: '2028年目標：音楽収入が生活費の50%。逆算してマイルストーンを設定', freq: 'project' },
+  ]
+};
+
+const FREQ_LABEL = { daily:'日次', weekly:'週次', monthly:'月次', project:'プロジェクト' };
+const FREQ_DAYS  = { daily: 1, weekly: 7, monthly: 30, project: 90 };
+
+function seedTasks(cat) {
+  const cats = cat === 'all' ? ['guitar','diet','budget'] : [cat];
+  let added = 0;
+  const existing = new Set(db.tasks.map(t => t.name));
+
+  cats.forEach(c => {
+    MISSION_TASKS[c].forEach(t => {
+      if (existing.has(t.name)) return; // 重複スキップ
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + FREQ_DAYS[t.freq]);
+      const task = {
+        id: uid(), name: t.name, cat: c,
+        date: dueDate.toISOString().slice(0,10),
+        note: `[${FREQ_LABEL[t.freq]}] ${t.note}`,
+        done: false, createdAt: new Date().toISOString()
+      };
+      db.tasks.unshift(task);
+      sendWebhook('tasks', task);
+      added++;
+    });
+  });
+
+  saveDB(db);
+  nav('tasks');
+  toast(`${added}件のタスクを追加しました ✅`);
 }
 
 /* ═══════════════════════════════════════════
