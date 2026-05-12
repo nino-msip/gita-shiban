@@ -381,6 +381,71 @@ body {
 .overlay-text { font-size:3rem; font-weight:900; animation:ov-pop 2s ease-out forwards; text-shadow:0 0 60px currentColor; }
 @keyframes ov-pop { 0%{transform:scale(0.2) rotate(-8deg)} 24%{transform:scale(1.22) rotate(3deg)} 40%{transform:scale(0.96) rotate(0deg)} 100%{transform:scale(1) rotate(0deg)} }
 
+/* ══ String Level Dots ═══════════════════════════════════════ */
+.ss-str-sub { font-size: 0.6rem; color: #33335a; margin: -4px 0 8px; text-align: center; }
+.ss-lv-dots { display: flex; gap: 5px; margin: 4px 0 2px; }
+.ss-lv-dot {
+    width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.58rem; font-weight: 800; line-height: 1;
+}
+.ss-lv-dot.done    { background: var(--ok); color: #04180a; }
+.ss-lv-dot.current { background: var(--gold); color: #181800; animation: dot-pulse 1.5s ease-in-out infinite; }
+.ss-lv-dot.locked  { background: #0e0e25; color: #22224a; border: 1.5px solid #1a1a38; }
+.ss-lv-current { font-size: 0.56rem; color: #8890b8; font-weight: 600; }
+.ss-lv-all-clear { font-size: 0.58rem; color: var(--gold2); font-weight: 800; animation: dot-pulse 1.8s ease-in-out infinite; }
+@keyframes dot-pulse { 0%,100%{ box-shadow:0 0 0 0 rgba(224,168,53,0.5) } 50%{ box-shadow:0 0 0 5px rgba(224,168,53,0) } }
+
+/* ══ Streak Bar ═══════════════════════════════════════════════ */
+.streak-bar {
+    display: none;
+    width: 100%; max-width: 520px;
+    background: linear-gradient(180deg,#0c0c26 0%,#080818 100%);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+}
+.streak-bar.visible { display: flex; }
+.streak-label { font-size: 0.6rem; color: #44448a; font-weight: 700; white-space: nowrap; }
+.streak-dots  { display: flex; gap: 7px; flex: 1; justify-content: center; }
+.streak-dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid #1e1e44;
+    background: #06061a;
+    transition: all 0.22s;
+}
+.streak-dot.filled {
+    background: var(--gold);
+    border-color: var(--gold2);
+    box-shadow: 0 0 10px rgba(224,168,53,0.65);
+}
+.streak-target { font-size: 0.62rem; color: #33335a; font-weight: 700; white-space: nowrap; }
+
+/* ══ Explanation Panel ════════════════════════════════════════ */
+.explanation-panel {
+    display: none;
+    width: 100%; max-width: 520px;
+    background: linear-gradient(180deg,#060620 0%,#04041a 100%);
+    border: 1.5px solid #181842;
+    border-radius: 12px;
+    padding: 12px 15px 13px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+}
+.explanation-panel.visible { display: block; }
+.exp-title { font-size: 0.58rem; color: #33337a; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 7px; }
+.exp-chain { display: flex; flex-direction: column; gap: 3px; }
+.exp-row { display: flex; align-items: baseline; gap: 5px; font-size: 0.73rem; color: #5a5a8a; flex-wrap: wrap; }
+.exp-anchor  { color: var(--gold); font-weight: 800; }
+.exp-arrow   { color: #2a2a50; }
+.exp-int     { font-size: 0.6rem; color: #33335a; }
+.exp-open    { color: #7a7ab8; font-weight: 700; }
+.exp-steps   { font-size: 0.65rem; color: #33335a; margin-top: 6px; font-family: monospace; line-height: 1.6; }
+.exp-answer  { color: var(--ok); font-weight: 900; font-size: 0.85rem; }
+.exp-special { font-size: 0.6rem; color: #f87171; margin-top: 3px; }
+
 /* ══ iPhone / 小画面対応 ═══════════════════════════════════════ */
 @media (max-width: 430px) {
     body { gap: 6px; }
@@ -414,7 +479,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.22</span>
+        <span class="version-tag">v1.23</span>
         <span class="app-title">⚔️ 指板バトル</span>
     </div>
     <div class="header-btns">
@@ -430,9 +495,10 @@ body {
         <div class="ss-hero-sub">ステージごとにベストスコアが記録されます</div>
     </div>
 
-    <!-- 弦別 -->
+    <!-- 弦別（レベル制） -->
     <div class="ss-section">
-        <div class="ss-section-title">🎸 弦別ステージ</div>
+        <div class="ss-section-title">🎸 弦別ステージ（レベル制）</div>
+        <div class="ss-str-sub">5連続正解で次のレベルへ自動進行</div>
         <div class="ss-grid ss-grid-3" id="ss-string-grid"></div>
     </div>
 
@@ -502,6 +568,19 @@ body {
     </div>
 
     <div class="choices-grid" id="choices-grid"></div>
+
+    <!-- 連続正解バー（弦ステージのみ表示） -->
+    <div class="streak-bar" id="streak-bar">
+        <span class="streak-label">連続正解</span>
+        <div class="streak-dots" id="streak-dots"></div>
+        <span class="streak-target" id="streak-target">0/5</span>
+    </div>
+
+    <!-- 解説パネル -->
+    <div class="explanation-panel" id="explanation-panel">
+        <div class="exp-title">💡 音の導き方</div>
+        <div id="explanation-content" class="exp-chain"></div>
+    </div>
 </div>
 
 <script>
@@ -516,31 +595,78 @@ const STR_OPEN   = ['High E','B','G','D','A','Low E'];
 const STR_COLORS = ['#e74c3c','#e8853d','#f1c40f','#2ecc71','#3498db','#9b59b6'];
 const getNote    = (s,f) => NOTES[(OPEN_NOTES[s]+f)%12];
 
-// ── ステージ定義 ───────────────────────────────────────────────
+// ── ステージ定義（フレット別・特別） ──────────────────────────
 const STAGE_DEFS = [
-    // 弦別（6弦→1弦順で表示）
-    { id:'str6', grid:'string', label:'6弦', sub:'Low E',  color:STR_COLORS[5], filter:(s,f)=>s===5 },
-    { id:'str5', grid:'string', label:'5弦', sub:'A',      color:STR_COLORS[4], filter:(s,f)=>s===4 },
-    { id:'str4', grid:'string', label:'4弦', sub:'D',      color:STR_COLORS[3], filter:(s,f)=>s===3 },
-    { id:'str3', grid:'string', label:'3弦', sub:'G',      color:STR_COLORS[2], filter:(s,f)=>s===2 },
-    { id:'str2', grid:'string', label:'2弦', sub:'B',      color:STR_COLORS[1], filter:(s,f)=>s===1 },
-    { id:'str1', grid:'string', label:'1弦', sub:'High E', color:STR_COLORS[0], filter:(s,f)=>s===0 },
-    // フレット別（ドットポジション準拠）
     { id:'fret_lo',  grid:'fret', label:'開放〜3F', sub:'ローポジション', color:'#4ade80', filter:(s,f)=>f<=3 },
     { id:'fret_mid', grid:'fret', label:'5〜7F',   sub:'ミドルポジション', color:'#60a5fa', filter:(s,f)=>f>=5&&f<=7 },
     { id:'fret_hi',  grid:'fret', label:'9〜12F',  sub:'ハイポジション', color:'#a78bfa', filter:(s,f)=>f>=9 },
-    // 特別
     { id:'natural', grid:'special', label:'ナチュラル', sub:'C D E F G A B', color:'#f5d070', filter:(s,f)=>!getNote(s,f).includes('#') },
     { id:'sharp',   grid:'special', label:'シャープ',   sub:'C# D# F# G# A#', color:'#f87171', filter:(s,f)=>getNote(s,f).includes('#') },
     { id:'all',     grid:'special', label:'全域',       sub:'全弦・全フレット', color:'#e0a835', filter:()=>true },
 ];
+
+// ── 弦ステージ（レベル制） ──────────────────────────────────
+const STR_LV_RANGES = [[0,3],[5,7],[9,12]];
+const STR_LV_LABELS = ['開放〜3F','5〜7F','9〜12F'];
+const STR_CLEAR_TARGET = 5;
+
+const STR_LV_KEY = i => `fbattle_strlv_${i}`;
+function getStrLv(i) { return Math.min(+localStorage.getItem(STR_LV_KEY(i))||0, 3); }
+function setStrLv(i,v){ localStorage.setItem(STR_LV_KEY(i), v); }
+
+function makeStrStage(strIdx) {
+    const lv = getStrLv(strIdx);
+    const effectiveLv = Math.min(lv, 2);
+    const [min,max] = STR_LV_RANGES[effectiveLv];
+    return {
+        id: `str${6-strIdx}`,
+        strIdx,
+        isStrStage: true,
+        label: STR_JP[strIdx],
+        sub: lv>=3 ? '全レベルクリア！' : `Lv${effectiveLv+1} ${STR_LV_LABELS[effectiveLv]}`,
+        color: STR_COLORS[strIdx],
+        filter: lv>=3 ? (s,f)=>s===strIdx : (s,f)=>s===strIdx&&f>=min&&f<=max,
+        lv, effectiveLv,
+    };
+}
 
 const HI_KEY = id => `fbattle_hi_${id}`;
 let gStage = STAGE_DEFS.find(s=>s.id==='all');
 
 // ── ステージ選択UI構築 ─────────────────────────────────────────
 function buildStageSelect() {
-    const gridMap = { string:'ss-string-grid', fret:'ss-fret-grid', special:'ss-special-grid' };
+    // 弦別ステージ（レベル制カード）
+    const strGrid = document.getElementById('ss-string-grid');
+    for (let i=5; i>=0; i--) {  // 6弦(5)→1弦(0)
+        const st = makeStrStage(i);
+        const lv = getStrLv(i);
+        const hi = +localStorage.getItem(HI_KEY(st.id)) || 0;
+        const allClear = lv >= 3;
+
+        let dotsHtml = '';
+        for (let d=0; d<3; d++) {
+            const cls = d < lv ? 'done' : (d === Math.min(lv,2) ? 'current' : 'locked');
+            dotsHtml += `<span class="ss-lv-dot ${cls}">${d+1}</span>`;
+        }
+
+        const btn = document.createElement('button');
+        btn.className = 'ss-btn';
+        btn.style.setProperty('--c', st.color);
+        btn.innerHTML = `
+            <span class="ss-label">${st.label}</span>
+            <span class="ss-sub">${STR_OPEN[i]}</span>
+            <div class="ss-lv-dots">${dotsHtml}</div>
+            ${allClear
+                ? `<span class="ss-lv-all-clear">★ 全クリア</span>`
+                : `<span class="ss-lv-current">Lv${Math.min(lv,2)+1}: ${STR_LV_LABELS[Math.min(lv,2)]}</span>`
+            }
+            <span class="ss-best ${hi>0?'has-score':''}">${hi>0?'BEST '+hi.toLocaleString():'—'}</span>`;
+        btn.onclick = () => selectStrStage(i);
+        strGrid.appendChild(btn);
+    }
+
+    // フレット別・特別ステージ
+    const gridMap = { fret:'ss-fret-grid', special:'ss-special-grid' };
     STAGE_DEFS.forEach(st => {
         const grid = document.getElementById(gridMap[st.grid]);
         const hi = +localStorage.getItem(HI_KEY(st.id)) || 0;
@@ -556,17 +682,23 @@ function buildStageSelect() {
     });
 }
 
+function selectStrStage(strIdx) {
+    gStage = makeStrStage(strIdx);
+    document.getElementById('stage-bar-name').textContent = `${gStage.label}（${gStage.sub}）`;
+    document.getElementById('stage-select').style.display = 'none';
+    document.getElementById('game-area').style.display = 'flex';
+    startGame();
+}
+
 function selectStage(id) {
     gStage = STAGE_DEFS.find(s=>s.id===id);
     document.getElementById('stage-bar-name').textContent = `${gStage.label}（${gStage.sub}）`;
     document.getElementById('stage-select').style.display = 'none';
-    const ga = document.getElementById('game-area');
-    ga.style.display = 'flex';
+    document.getElementById('game-area').style.display = 'flex';
     startGame();
 }
 
 function showStageSelect() {
-    // ステージボタンのベストスコア更新
     document.getElementById('ss-string-grid').innerHTML = '';
     document.getElementById('ss-fret-grid').innerHTML = '';
     document.getElementById('ss-special-grid').innerHTML = '';
@@ -736,6 +868,7 @@ let gScore=0, gLevel=1, gXP=0, gXPNext=200;
 let gLives=3, gCombo=0, gWave=0;
 let gEnemyHP=0, gEnemyMaxHP=0, gEnemy=null;
 let gBusy=false, gAnswered=false, gQ=null;
+let gConsecutive=0;
 
 function getStageHi() { return +localStorage.getItem(HI_KEY(gStage.id)) || 0; }
 function setStageHi(v){ localStorage.setItem(HI_KEY(gStage.id), v); }
@@ -836,6 +969,15 @@ function setSpeechBubble(text) {
 function startGame() {
     gScore=0; gLevel=1; gXP=0; gXPNext=200;
     gLives=3; gCombo=0; gWave=0; gBusy=false;
+    gConsecutive=0;
+    document.getElementById('explanation-panel').classList.remove('visible');
+    const sb = document.getElementById('streak-bar');
+    if (gStage.isStrStage) {
+        sb.classList.add('visible');
+        updateStreakBar();
+    } else {
+        sb.classList.remove('visible');
+    }
     buildFretboard(); updateHUD(); spawnEnemy();
 }
 
@@ -883,6 +1025,7 @@ function spawnEnemy() {
 function askQuestion() {
     if (gBusy) return;
     gAnswered=false; clearInds();
+    document.getElementById('explanation-panel').classList.remove('visible');
     const [s,f] = randomSF();
     gQ={s, f, note:getNote(s,f)};
     setSpeechBubble(buildQuestionText(s,f));
@@ -916,6 +1059,9 @@ function onAnswer(selected,btn) {
     if (!isOk) btn.classList.add('ng');
     setInd(gQ.s,gQ.f,isOk?'correct pop':'wrong pop',gQ.note);
 
+    // 解説パネルを表示
+    showExplanation(gQ.s, gQ.f);
+
     if (isOk) {
         gCombo++;
         const mult=Math.min(1+(gCombo-1)*0.3,3.5);
@@ -936,6 +1082,38 @@ function onAnswer(selected,btn) {
         enemyHit(); updateCombo(); updateHUD();
         gEnemyHP--; updateEnemyHP();
 
+        // 弦ステージ：連続正解カウント
+        if (gStage.isStrStage) {
+            gConsecutive++;
+            updateStreakBar();
+            if (gConsecutive >= STR_CLEAR_TARGET) {
+                gBusy=true;
+                const nextLv = gStage.effectiveLv + 1;
+                const strIdx = gStage.strIdx;
+                setStrLv(strIdx, nextLv);
+                const isAllClear = nextLv >= 3;
+                setTimeout(()=>{
+                    sfxStageClear();
+                    if (isAllClear) {
+                        showOverlay(`${gStage.label} 全クリア！★`,'#f5d070','rgba(245,208,112,0.12)',()=>{});
+                        burstFireworks();
+                    } else {
+                        showOverlay(`Lv${nextLv} へ進む！`,'#4ade80','rgba(74,222,128,0.10)',()=>{});
+                    }
+                    setTimeout(()=>{
+                        gStage = makeStrStage(strIdx);
+                        document.getElementById('stage-bar-name').textContent = `${gStage.label}（${gStage.sub}）`;
+                        gConsecutive=0;
+                        updateStreakBar();
+                        document.getElementById('explanation-panel').classList.remove('visible');
+                        gBusy=false;
+                        askQuestion();
+                    }, 2200);
+                }, 480);
+                return;
+            }
+        }
+
         if (gEnemyHP<=0) {
             gBusy=true;
             setSpeechBubble('やられた…！');
@@ -944,18 +1122,23 @@ function onAnswer(selected,btn) {
         } else {
             setSpeechBubble('ぐっ…！');
             setResult('正解！','ok');
-            setTimeout(()=>askQuestion(),780);
+            setTimeout(()=>askQuestion(),1200);
         }
     } else {
+        // 弦ステージ：不正解でリセット
+        if (gStage.isStrStage) {
+            gConsecutive=0;
+            updateStreakBar();
+        }
         gCombo=0; gLives=Math.max(0,gLives-1);
         updateCombo(); updateHUD(); sfxMiss(); playerHit();
         setSpeechBubble('フハハ！ 違うぞ！');
         if (gLives===0) {
             gLives=3; setResult('ピンチ！ 復活！','miss');
-            setTimeout(()=>askQuestion(),1350);
+            setTimeout(()=>askQuestion(),1600);
         } else {
             setResult(`不正解… 正解は ${gQ.note}`,'miss');
-            setTimeout(()=>askQuestion(),900);
+            setTimeout(()=>askQuestion(),1400);
         }
     }
 }
@@ -1025,6 +1208,66 @@ function updateHUD() {
 function setResult(text,cls=''){
     const el=document.getElementById('result-line');
     el.textContent=text; el.className=`result-line ${cls}`;
+}
+
+// ── 連続正解バー ───────────────────────────────────────────────
+function updateStreakBar() {
+    const dots = document.getElementById('streak-dots');
+    const tgt  = document.getElementById('streak-target');
+    dots.innerHTML = '';
+    for (let i=0; i<STR_CLEAR_TARGET; i++) {
+        const d = document.createElement('div');
+        d.className = 'streak-dot' + (i < gConsecutive ? ' filled' : '');
+        dots.appendChild(d);
+    }
+    tgt.textContent = `${gConsecutive}/${STR_CLEAR_TARGET}`;
+}
+
+// ── 音の導き方解説 ────────────────────────────────────────────
+function buildIntervalExplanation(s, f) {
+    const note     = getNote(s, f);
+    const openNote = NOTES[OPEN_NOTES[s]];
+    const rows     = [];
+
+    // 弦関係の説明（6弦/5弦/1弦を軸に）
+    if (s === 5) {
+        rows.push(`<div class="exp-row"><span class="exp-anchor">6弦</span><span class="exp-int">は基準のE弦（最も低い弦）</span></div>`);
+    } else if (s === 4) {
+        rows.push(`<div class="exp-row"><span class="exp-anchor">6弦(E)</span><span class="exp-arrow"> → </span><span class="exp-anchor">5弦(A)</span><span class="exp-int"> ：完全4度(5半音)上</span></div>`);
+    } else if (s === 3) {
+        rows.push(`<div class="exp-row"><span class="exp-anchor">5弦(A)</span><span class="exp-arrow"> → </span><span class="exp-anchor">4弦(D)</span><span class="exp-int"> ：完全4度(5半音)上</span></div>`);
+    } else if (s === 2) {
+        rows.push(`<div class="exp-row"><span class="exp-anchor">5弦(A)</span><span class="exp-arrow"> → </span><span class="exp-anchor">4弦(D)</span><span class="exp-int"> ：完全4度上</span><span class="exp-arrow"> → </span><span class="exp-anchor">3弦(G)</span><span class="exp-int"> ：完全4度上</span></div>`);
+    } else if (s === 1) {
+        rows.push(`<div class="exp-row"><span class="exp-anchor">1弦(E)</span><span class="exp-arrow"> → </span><span class="exp-anchor">2弦(B)</span><span class="exp-int"> ：完全4度(5半音)下</span></div>`);
+        rows.push(`<div class="exp-special">※ 3弦→2弦のみ長3度(4半音)。他の隣接弦はすべて完全4度</div>`);
+    } else if (s === 0) {
+        rows.push(`<div class="exp-row"><span class="exp-anchor">1弦</span><span class="exp-int">は6弦と同じ音名のE弦（2オクターブ上）</span></div>`);
+    }
+
+    // フレット計算
+    if (f === 0) {
+        rows.push(`<div class="exp-steps"><span class="exp-open">${STR_JP[s]}開放 = </span><span class="exp-answer">${note}</span></div>`);
+    } else {
+        const open = OPEN_NOTES[s];
+        const stepNotes = [];
+        for (let i=1; i<=f; i++) stepNotes.push(NOTES[(open+i)%12]);
+        const display = stepNotes.length > 7
+            ? [...stepNotes.slice(0,4), '…', stepNotes[stepNotes.length-1]]
+            : stepNotes;
+        rows.push(`<div class="exp-steps">`
+            + `<span class="exp-open">${STR_JP[s]}開放(${openNote})</span>`
+            + ` + ${f}フレット：${openNote} → ${display.join(' → ')} = `
+            + `<span class="exp-answer">${note}</span>`
+            + `</div>`);
+    }
+
+    return rows.join('');
+}
+
+function showExplanation(s, f) {
+    document.getElementById('explanation-content').innerHTML = buildIntervalExplanation(s, f);
+    document.getElementById('explanation-panel').classList.add('visible');
 }
 
 // ── ビジュアルエフェクト ───────────────────────────────────────
