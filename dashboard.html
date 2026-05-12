@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MoritaSaki Entertainment — Dashboard</title>
+  <title>MoritaSaki Entertainment — Quick Reference</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -315,6 +315,44 @@
     }
     .notion-link:hover { background: var(--accent); color: #fff; }
 
+    /* ── Notion top bar ── */
+    .notion-bar {
+      background: #1c1a36;
+      border: 1px solid #3730a3;
+      border-radius: 10px;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .notion-bar-left { display: flex; align-items: center; gap: 10px; }
+    .notion-bar-badge {
+      font-size: 10px;
+      background: var(--accent);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 700;
+      letter-spacing: .05em;
+    }
+    .notion-bar-label { font-size: 13px; font-weight: 600; }
+    .notion-bar-sub   { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .notion-bar-btns  { display: flex; gap: 8px; }
+    .notion-btn {
+      font-size: 12px;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--accent);
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    .notion-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .notion-btn:hover   { opacity: .85; }
+
     /* ── Util ── */
     .flex-between { display: flex; justify-content: space-between; align-items: center; }
     .reset-btn {
@@ -334,9 +372,24 @@
 <div class="header">
   <div>
     <div class="header-title">MoritaSaki Entertainment</div>
-    <div class="header-name">Business Dashboard</div>
+    <div class="header-name">Quick Reference</div>
   </div>
   <div class="header-date" id="headerDate"></div>
+</div>
+
+<!-- Notion Primary Bar -->
+<div class="notion-bar">
+  <div class="notion-bar-left">
+    <span class="notion-bar-badge">主軸</span>
+    <div>
+      <div class="notion-bar-label">Notion ワークスペース</div>
+      <div class="notion-bar-sub">タスク管理・投稿カレンダー・KPI追跡はNotionで行います</div>
+    </div>
+  </div>
+  <div class="notion-bar-btns">
+    <a class="notion-btn" href="NOTION_SETUP.md" target="_blank">設定ガイド</a>
+    <a class="notion-btn primary" href="https://notion.so" target="_blank">Notionを開く →</a>
+  </div>
 </div>
 
 <!-- Row 1: Countdown + KPIs -->
@@ -382,48 +435,40 @@
 <!-- Row 2: Todos + Ticket Progress + Calendar preview -->
 <div class="grid-mid">
 
-  <!-- Weekly Todos -->
-  <div class="card">
-    <div class="flex-between" style="margin-bottom:12px">
-      <div class="card-label" style="margin-bottom:0">今週のタスク</div>
-      <button class="reset-btn" onclick="resetWeeklyTodos()">リセット</button>
+  <!-- Notion tasks redirect -->
+  <div class="card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;padding:32px 18px;text-align:center">
+    <div style="font-size:32px">✅</div>
+    <div>
+      <div style="font-weight:700;margin-bottom:4px">タスク管理</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.7">
+        週間・月間タスクの追加・確認は<br>NotionのタスクDBで行います
+      </div>
     </div>
-
-    <div class="todo-section">
-      <div class="todo-section-title">今すぐ（緊急）</div>
-      <div id="todos-urgent"></div>
-    </div>
-
-    <div class="todo-section">
-      <div class="todo-section-title">今週中</div>
-      <div id="todos-weekly"></div>
-    </div>
-
-    <div class="todo-add">
-      <input type="text" id="newTodoText" placeholder="タスクを追加..." onkeydown="if(event.key==='Enter')addTodo()">
-      <select id="newTodoPriority">
-        <option value="high">緊急</option>
-        <option value="medium" selected>今週</option>
-        <option value="low">月内</option>
-      </select>
-      <button onclick="addTodo()">追加</button>
-    </div>
+    <a class="notion-btn primary" href="https://notion.so" target="_blank" style="font-size:13px">Notionでタスクを確認 →</a>
+    <div style="font-size:11px;color:var(--muted)">初回設定は NOTION_SETUP.md を参照</div>
   </div>
 
-  <!-- Monthly Todos -->
+  <!-- Ticket + monthly placeholder -->
   <div class="card">
     <div class="flex-between" style="margin-bottom:12px">
-      <div class="card-label" style="margin-bottom:0">月間タスク</div>
-      <button class="reset-btn" onclick="resetMonthlyTodos()">リセット</button>
+      <div class="card-label" style="margin-bottom:0">月間KPI</div>
+      <a href="https://notion.so" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">Notionで詳細 →</a>
     </div>
-
-    <div class="todo-section">
-      <div class="todo-section-title">今月中</div>
-      <div id="todos-monthly"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+      <div style="background:var(--surface2);border-radius:8px;padding:12px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Spotify</div>
+        <div class="kpi-value editable" style="font-size:20px" id="kpiSpotify2" onclick="editKpi('spotify')">22,500</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">目標 50,000</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:12px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">X</div>
+        <div class="kpi-value editable" style="font-size:20px" id="kpiTwitter2" onclick="editKpi('twitter')">4,036</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">目標 12,000</div>
+      </div>
     </div>
 
     <!-- Ticket Progress -->
-    <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+    <div style="padding-top:14px;border-top:1px solid var(--border)">
       <div class="card-label">チケット進捗</div>
 
       <div class="ticket-row">
@@ -481,14 +526,18 @@
 
 </div>
 
-<!-- Bottom: Notion CTA -->
+<!-- Bottom: Quick links -->
 <div class="grid-bottom">
   <div class="notion-cta">
     <div class="notion-text">
-      <strong>より詳細な管理が必要になったら → Notion（推奨）</strong><br>
-      チームでの共有・コメント・データベース連携が必要なフェーズで導入。今は上記ダッシュボードで十分。
+      <strong>このページの役割：数値のクイック確認専用</strong><br>
+      チケット枚数・KPI・公演カウントダウンをオフラインで素早く確認するためのもの。
+      タスク・投稿草稿・詳細KPIはすべてNotionで管理します。
     </div>
-    <a class="notion-link" href="https://notion.so" target="_blank">Notionを開く →</a>
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <a class="notion-link" href="NOTION_SETUP.md" target="_blank">設定ガイド</a>
+      <a class="notion-link" href="https://notion.so" target="_blank" style="background:var(--accent);color:#fff">Notionへ →</a>
+    </div>
   </div>
 </div>
 
@@ -576,6 +625,10 @@ function renderKpi() {
   document.getElementById('kpiSpotify').textContent   = fmt(state.kpi.spotify);
   document.getElementById('kpiTwitter').textContent   = fmt(state.kpi.twitter);
   document.getElementById('kpiInstagram').textContent = fmt(state.kpi.instagram);
+  const s2 = document.getElementById('kpiSpotify2');
+  const t2 = document.getElementById('kpiTwitter2');
+  if (s2) s2.textContent = fmt(state.kpi.spotify);
+  if (t2) t2.textContent = fmt(state.kpi.twitter);
 
   const goal = 50000;
   const pct  = Math.round(state.kpi.spotify / goal * 100);
