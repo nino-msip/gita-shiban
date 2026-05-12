@@ -475,6 +475,47 @@ body {
 .exp-answer  { color: var(--ok); font-weight: 900; font-size: 0.85rem; }
 .exp-special { font-size: 0.6rem; color: #f87171; margin-top: 3px; }
 
+/* ══ Weakness Training Panel ══════════════════════════════════ */
+.weak-panel {
+    display: none;
+    width: 100%; max-width: 520px;
+    background: linear-gradient(180deg,#160606 0%,#0c0404 100%);
+    border: 1.5px solid #3a1515;
+    border-radius: 12px;
+    padding: 10px 14px 11px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+}
+.weak-panel.visible { display: block; }
+.weak-panel-title {
+    font-size: 0.58rem; color: #7a2525; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 7px;
+}
+.weak-targets { display: flex; flex-direction: column; gap: 5px; }
+.weak-target-row {
+    display: grid;
+    grid-template-columns: 58px 26px 1fr 36px;
+    align-items: center; gap: 6px;
+    padding: 2px 4px; border-radius: 5px;
+    transition: background 0.2s;
+}
+.weak-target-row.wt-active {
+    background: rgba(248,113,113,0.10);
+    outline: 1px solid rgba(248,113,113,0.22);
+}
+.wt-pos  { font-size: 0.68rem; color: #7a7ab8; font-weight: 700; }
+.wt-note { font-size: 0.7rem;  color: var(--gold); font-weight: 900; text-align: center; }
+.wt-bar-bg   { background: #0a0404; border-radius: 3px; overflow: hidden; height: 6px; }
+.wt-bar-fill { height: 100%; border-radius: 3px; transition: width 0.55s ease; }
+.wt-acc  { font-size: 0.62rem; font-weight: 700; text-align: right; }
+.weak-chip {
+    display: inline-block; vertical-align: middle;
+    background: linear-gradient(135deg, #f87171, #dc2626);
+    color: #fff; font-size: 0.5rem; font-weight: 900;
+    padding: 2px 6px; border-radius: 6px; letter-spacing: 0.06em;
+    margin-left: 5px;
+    animation: boss-pulse 1s ease-in-out infinite;
+}
+
 /* ══ iPhone / 小画面対応 ═══════════════════════════════════════ */
 @media (max-width: 430px) {
     body { gap: 6px; }
@@ -508,7 +549,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.25</span>
+        <span class="version-tag">v1.26</span>
         <span class="app-title">⚔️ 指板バトル</span>
     </div>
     <div class="header-btns">
@@ -619,6 +660,12 @@ body {
         <span class="streak-target" id="streak-target">0/5</span>
     </div>
 
+    <!-- 苦手ターゲットパネル（苦手特訓モード） -->
+    <div class="weak-panel" id="weak-panel">
+        <div class="weak-panel-title">⚠ 苦手ターゲット（集中攻略中）</div>
+        <div id="weak-targets" class="weak-targets"></div>
+    </div>
+
     <!-- 解説パネル -->
     <div class="explanation-panel" id="explanation-panel">
         <div class="exp-title">💡 音の導き方</div>
@@ -643,9 +690,10 @@ const STAGE_DEFS = [
     { id:'fret_lo',  grid:'fret', label:'開放〜3F', sub:'ローポジション', color:'#4ade80', filter:(s,f)=>f<=3 },
     { id:'fret_mid', grid:'fret', label:'5〜7F',   sub:'ミドルポジション', color:'#60a5fa', filter:(s,f)=>f>=5&&f<=7 },
     { id:'fret_hi',  grid:'fret', label:'9〜12F',  sub:'ハイポジション', color:'#a78bfa', filter:(s,f)=>f>=9 },
-    { id:'natural', grid:'special', label:'ナチュラル', sub:'C D E F G A B', color:'#f5d070', filter:(s,f)=>!getNote(s,f).includes('#') },
-    { id:'sharp',   grid:'special', label:'シャープ',   sub:'C# D# F# G# A#', color:'#f87171', filter:(s,f)=>getNote(s,f).includes('#') },
-    { id:'all',     grid:'special', label:'全域',       sub:'全弦・全フレット', color:'#e0a835', filter:()=>true },
+    { id:'natural',  grid:'special', label:'ナチュラル', sub:'C D E F G A B',   color:'#f5d070', filter:(s,f)=>!getNote(s,f).includes('#') },
+    { id:'sharp',    grid:'special', label:'シャープ',   sub:'C# D# F# G# A#', color:'#f87171', filter:(s,f)=>getNote(s,f).includes('#') },
+    { id:'all',      grid:'special', label:'全域',       sub:'全弦・全フレット', color:'#e0a835', filter:()=>true },
+    { id:'weakness', grid:'special', label:'苦手特訓',   sub:'弱点を集中攻略',  color:'#f87171', filter:()=>true, isWeakness:true },
 ];
 
 // ── 弦ステージ（レベル制） ──────────────────────────────────
@@ -722,11 +770,26 @@ function buildStageSelect() {
         const btn = document.createElement('button');
         btn.className = 'ss-btn';
         btn.style.setProperty('--c', st.color);
-        btn.innerHTML = `
-            <span class="ss-label">${st.label}</span>
-            <span class="ss-sub">${st.sub}</span>
-            <span class="ss-best ${hi>0?'has-score':''}">${hi>0?'BEST '+hi.toLocaleString():'—'}</span>`;
-        btn.onclick = () => selectStage(st.id);
+        if (st.isWeakness) {
+            const wc = getWeakPositionCount();
+            const hasData = wc >= 3;
+            btn.innerHTML = `
+                <span class="ss-label">${st.label}</span>
+                <span class="ss-sub">${hasData ? wc+'個の弱点を検出' : 'まずは他で練習！'}</span>
+                <span class="ss-best ${hi>0?'has-score':''}">${hi>0?'BEST '+hi.toLocaleString():'—'}</span>`;
+            if (!hasData) {
+                btn.style.opacity = '0.42';
+                btn.style.cursor = 'not-allowed';
+            } else {
+                btn.onclick = () => selectStage(st.id);
+            }
+        } else {
+            btn.innerHTML = `
+                <span class="ss-label">${st.label}</span>
+                <span class="ss-sub">${st.sub}</span>
+                <span class="ss-best ${hi>0?'has-score':''}">${hi>0?'BEST '+hi.toLocaleString():'—'}</span>`;
+            btn.onclick = () => selectStage(st.id);
+        }
         grid.appendChild(btn);
     });
 }
@@ -907,6 +970,7 @@ function buildQuestionText(s, f) {
 
 let gSFQueue = [];
 function randomSF() {
+    if (gStage.isWeakness) return randomSFWeighted();
     if (gSFQueue.length === 0) {
         const valid = [];
         for (let s=0; s<6; s++)
@@ -1033,6 +1097,8 @@ function startGame() {
     const sb = document.getElementById('streak-bar');
     if (gStage.isStrStage) { sb.classList.add('visible'); updateStreakBar(); }
     else sb.classList.remove('visible');
+    if (gStage.isWeakness) updateWeakPanel();
+    else document.getElementById('weak-panel').classList.remove('visible');
     buildFretboard(); updateHUD(); spawnEnemy();
 }
 
@@ -1106,6 +1172,74 @@ function renderWeaknessStats() {
     }).join('');
 }
 
+// ── 苦手特訓ロジック ───────────────────────────────────────────
+function getWeakPositionCount() {
+    const st = getStats();
+    return Object.values(st).filter(v => {
+        const tot = v.ok + v.ng;
+        return tot >= 3 && (v.ok/tot) < 0.8;
+    }).length;
+}
+
+function isWeakPosition(s, f) {
+    const st = getStats();
+    const data = st[`${s}_${f}`];
+    if (!data || data.ok + data.ng < 3) return false;
+    return (data.ok / (data.ok + data.ng)) < 0.75;
+}
+
+function randomSFWeighted() {
+    const st = getStats();
+    const pool = [];
+    for (let s=0; s<6; s++) {
+        for (let f=0; f<=NUM_FRETS; f++) {
+            const data = st[`${s}_${f}`];
+            let w;
+            if (!data || data.ok + data.ng < 1) {
+                w = 0.3;
+            } else {
+                const tot = data.ok + data.ng;
+                const acc = data.ok / tot;
+                const avgMs = data.totalMs / tot;
+                w = Math.pow(Math.max(0, 1 - acc), 2) * 10 + Math.min(avgMs/3500, 1.5) + 0.1;
+            }
+            pool.push([s, f, w]);
+        }
+    }
+    const total = pool.reduce((sum, [,,w]) => sum + w, 0);
+    let r = Math.random() * total;
+    for (const [s, f, w] of pool) {
+        r -= w;
+        if (r <= 0) return [s, f];
+    }
+    return [pool[pool.length-1][0], pool[pool.length-1][1]];
+}
+
+function updateWeakPanel(curS, curF) {
+    const panel = document.getElementById('weak-panel');
+    if (!gStage.isWeakness) { panel.classList.remove('visible'); return; }
+    const st = getStats();
+    const entries = Object.entries(st)
+        .map(([k,v]) => { const [s,f]=k.split('_').map(Number); const tot=v.ok+v.ng; return {s,f,tot,acc:v.ok/tot}; })
+        .filter(e => e.tot >= 3)
+        .sort((a,b) => a.acc - b.acc)
+        .slice(0, 5);
+    if (!entries.length) { panel.classList.remove('visible'); return; }
+    panel.classList.add('visible');
+    document.getElementById('weak-targets').innerHTML = entries.map(e => {
+        const lbl = e.f===0 ? `${STR_JP[e.s]} 開放` : `${STR_JP[e.s]} ${e.f}F`;
+        const pct = Math.round(e.acc * 100);
+        const col = pct<40 ? '#f87171' : pct<65 ? '#facc15' : '#4ade80';
+        const active = curS !== undefined && e.s === curS && e.f === curF;
+        return `<div class="weak-target-row${active?' wt-active':''}">
+            <span class="wt-pos">${lbl}</span>
+            <span class="wt-note">${getNote(e.s,e.f)}</span>
+            <div class="wt-bar-bg"><div class="wt-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+            <span class="wt-acc" style="color:${col}">${pct}%</span>
+        </div>`;
+    }).join('');
+}
+
 function spawnEnemy() {
     gWave++;
     gEnemy=pickEnemy(gWave);
@@ -1153,11 +1287,15 @@ function askQuestion() {
     document.getElementById('explanation-panel').classList.remove('visible');
     const [s,f] = randomSF();
     gQ={s, f, note:getNote(s,f)};
-    setSpeechBubble(buildQuestionText(s,f));
+    let qText = buildQuestionText(s,f);
+    if (gStage.isWeakness && isWeakPosition(s,f))
+        qText += '<span class="weak-chip">⚠ 弱点</span>';
+    setSpeechBubble(qText);
     setInd(s,f,'target pop');
     renderChoices(makeChoices(gQ.note));
     setTimeout(()=>playNote(s,f), 120);
     startTimerBar();
+    if (gStage.isWeakness) updateWeakPanel(s, f);
 }
 
 function makeChoices(correct) {
@@ -1180,6 +1318,8 @@ function onAnswer(selected,btn) {
     const elapsed = Date.now() - gQuestionTime;
     const timePts = Math.max(0, Math.floor((TIME_LIMIT - Math.min(elapsed,TIME_LIMIT)) / 100));
     const isOk=selected===gQ.note;
+    const prevStat = getStats()[`${gQ.s}_${gQ.f}`];
+    const prevAcc = (prevStat && prevStat.ok+prevStat.ng >= 2) ? prevStat.ok/(prevStat.ok+prevStat.ng) : null;
     updateStats(gQ.s, gQ.f, isOk, elapsed);
 
     document.querySelectorAll('.choice-btn').forEach(b=>{
@@ -1211,6 +1351,13 @@ function onAnswer(selected,btn) {
         if (crit) floatText('CRITICAL!!',cx,sr.top-46,'#fb923c','1.2rem');
         const elSec=(elapsed/1000).toFixed(1);
         if (timePts>0) floatText(`⚡+${timePts}`,cx,sr.top-62,'#60a5fa','0.9rem');
+        if (gStage.isWeakness && prevAcc !== null && prevAcc < 0.75) {
+            const ns = getStats()[`${gQ.s}_${gQ.f}`];
+            if (ns) {
+                const na = ns.ok/(ns.ok+ns.ng);
+                if (na > prevAcc) floatText(`📈 ${Math.round(prevAcc*100)}%→${Math.round(na*100)}%`,cx,sr.top-80,'#4ade80','0.82rem');
+            }
+        }
         document.getElementById('timer-label').textContent=elSec+'s';
 
         enemyHit(); updateCombo(); updateHUD();
@@ -1258,6 +1405,7 @@ function onAnswer(selected,btn) {
             }
         }
 
+        if (gStage.isWeakness) updateWeakPanel();
         if (gEnemyHP<=0) {
             gBusy=true;
             setSpeechBubble('やられた…！');
@@ -1289,6 +1437,7 @@ function onAnswer(selected,btn) {
                 updateStreakBar();
             }
         }
+        if (gStage.isWeakness) updateWeakPanel();
         gCombo=0; gLives=Math.max(0,gLives-1);
         updateCombo(); updateHUD(); sfxMiss(); playerHit();
         setSpeechBubble('フハハ！ 違うぞ！');
