@@ -1,0 +1,30 @@
+name: Auto Post to X
+
+on:
+  schedule:
+    # JST 12:00 = UTC 03:00
+    # JST 19:00 = UTC 10:00
+    # JST 20:00 = UTC 11:00
+    # JST 21:00 = UTC 12:00
+    - cron: "0 3,10,11,12 * * *"
+  workflow_dispatch: # 手動実行も可
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install tweepy
+
+      - name: Post scheduled content
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        run: python post_scheduler.py
