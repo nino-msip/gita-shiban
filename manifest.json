@@ -1,0 +1,20 @@
+{
+  "name": "Life OS — CEO Dashboard",
+  "short_name": "Life OS",
+  "description": "ギター・ダイエット・家計を一元管理するライフマネジメントアプリ",
+  "start_url": "/life-management.html",
+  "display": "standalone",
+  "background_color": "#0a0a14",
+  "theme_color": "#0a0a14",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0a14'/><text y='.9em' font-size='80' x='10'>🏠</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "productivity"],
+  "lang": "ja"
+}
