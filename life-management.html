@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life OS — CEO Dashboard</title>
+  <style>
+    :root {
+      --bg: #0a0a14;
+      --surface: #13131f;
+      --surface2: #1c1c2e;
+      --border: #2a2a40;
+      --text: #e8e8f0;
+      --muted: #6b6b88;
+      --gold: #f5c842;
+      --gold-dim: #c49e2a;
+      --guitar: #ff6b6b;
+      --diet: #51cf66;
+      --budget: #74c0fc;
+      --accent: #b197fc;
+      --danger: #ff4757;
+      --radius: 14px;
+      --font: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Noto Sans JP', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,10,20,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0; padding: 0 16px;
+      height: 56px; overflow-x: auto; scrollbar-width: none;
+    }
+    nav::-webkit-scrollbar { display: none; }
+    .nav-brand { font-size: 1rem; font-weight: 800; color: var(--gold); white-space: nowrap; margin-right: 16px; }
+    .nav-brand span { color: var(--muted); font-weight: 400; font-size: 0.75rem; }
+    .nav-tab {
+      flex-shrink: 0; padding: 8px 14px; border: none; background: transparent;
+      color: var(--muted); font-size: 0.82rem; font-weight: 500; cursor: pointer;
+      border-radius: 8px; transition: all 0.2s; white-space: nowrap;
+    }
+    .nav-tab:hover { color: var(--text); background: var(--surface2); }
+    .nav-tab.active { color: var(--gold); background: rgba(245,200,66,0.12); font-weight: 700; }
+
+    /* ── LAYOUT ── */
+    main { margin-top: 56px; padding: 20px 16px; max-width: 900px; margin-left: auto; margin-right: auto; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px;
+    }
+    .card-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    @media(max-width:600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+    .stack { display: flex; flex-direction: column; gap: 12px; }
+
+    /* ── KPI CARD ── */
+    .kpi {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px;
+      border-left: 3px solid var(--gold);
+    }
+    .kpi.guitar { border-left-color: var(--guitar); }
+    .kpi.diet   { border-left-color: var(--diet); }
+    .kpi.budget { border-left-color: var(--budget); }
+    .kpi-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .kpi-value { font-size: 1.8rem; font-weight: 800; margin: 4px 0 2px; }
+    .kpi-sub   { font-size: 0.75rem; color: var(--muted); }
+    .kpi-delta { font-size: 0.75rem; font-weight: 600; }
+    .kpi-delta.up   { color: var(--diet); }
+    .kpi-delta.down { color: var(--danger); }
+
+    /* ── MISSION BANNER ── */
+    .mission-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 18px;
+    }
+    .mission-icon { font-size: 1.8rem; }
+    .mission-title { font-size: 1.3rem; font-weight: 800; }
+    .mission-subtitle { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── PROGRESS BAR ── */
+    .progress-bar-wrap { background: var(--surface2); border-radius: 999px; height: 8px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease; }
+
+    /* ── FORM ELEMENTS ── */
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 0.78rem; color: var(--muted); }
+    input[type=text], input[type=number], input[type=date], select, textarea {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); padding: 9px 12px; font-size: 0.9rem; font-family: var(--font);
+      width: 100%; outline: none; transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--gold); }
+    textarea { resize: vertical; min-height: 80px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer;
+      font-size: 0.85rem; font-weight: 700; font-family: var(--font); transition: all 0.18s;
+    }
+    .btn-primary { background: var(--gold); color: #0a0a14; }
+    .btn-primary:hover { background: var(--gold-dim); }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-danger { background: rgba(255,71,87,0.12); color: var(--danger); border: 1px solid rgba(255,71,87,0.25); }
+
+    /* ── TIMELINE ── */
+    .timeline-item {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 10px 14px; background: var(--surface2); border-radius: 10px;
+    }
+    .tl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .tl-meta { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── TASK ── */
+    .task-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; background: var(--surface2); border-radius: 10px;
+      border-left: 3px solid transparent; transition: all 0.2s;
+    }
+    .task-item.guitar { border-left-color: var(--guitar); }
+    .task-item.diet   { border-left-color: var(--diet); }
+    .task-item.budget { border-left-color: var(--budget); }
+    .task-item.general { border-left-color: var(--accent); }
+    .task-item.done { opacity: 0.45; }
+    .task-cb { width: 18px; height: 18px; flex-shrink: 0; cursor: pointer; accent-color: var(--gold); }
+    .task-text { flex: 1; font-size: 0.88rem; }
+    .task-text.done { text-decoration: line-through; color: var(--muted); }
+    .task-tag { font-size: 0.68rem; padding: 2px 7px; border-radius: 999px; font-weight: 600; }
+    .task-tag.guitar { background: rgba(255,107,107,0.15); color: var(--guitar); }
+    .task-tag.diet   { background: rgba(81,207,102,0.15); color: var(--diet); }
+    .task-tag.budget { background: rgba(116,192,252,0.15); color: var(--budget); }
+    .task-tag.general { background: rgba(177,151,252,0.15); color: var(--accent); }
+
+    /* ── WEIGHT CHART ── */
+    canvas { border-radius: 10px; }
+
+    /* ── ROADMAP ── */
+    .roadmap-year {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+    }
+    .roadmap-year-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; cursor: pointer; user-select: none;
+      background: var(--surface2);
+    }
+    .roadmap-year-header:hover { background: var(--border); }
+    .roadmap-year-label { font-weight: 700; font-size: 0.95rem; }
+    .roadmap-year-tag { font-size: 0.72rem; color: var(--gold); font-weight: 600; }
+    .roadmap-year-body { padding: 14px 18px; display: none; }
+    .roadmap-year-body.open { display: block; }
+    .roadmap-goal { display: flex; gap: 10px; align-items: baseline; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    .roadmap-goal:last-child { border-bottom: none; }
+    .roadmap-goal-cat { font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; flex-shrink: 0; }
+    .roadmap-goal-cat.guitar { background: rgba(255,107,107,0.15); color: var(--guitar); }
+    .roadmap-goal-cat.diet   { background: rgba(81,207,102,0.15); color: var(--diet); }
+    .roadmap-goal-cat.budget { background: rgba(116,192,252,0.15); color: var(--budget); }
+
+    /* ── LOG TABLE ── */
+    .log-row {
+      display: grid; align-items: center;
+      padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 0.83rem;
+    }
+    .log-row:last-child { border-bottom: none; }
+    .log-date { color: var(--muted); font-size: 0.75rem; }
+
+    /* ── NOTION SYNC ── */
+    .notion-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 8px;
+      background: rgba(245,200,66,0.1); border: 1px solid rgba(245,200,66,0.3);
+      font-size: 0.75rem; color: var(--gold); font-weight: 600;
+    }
+
+    /* ── SECTION HEADER ── */
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .section-head h2 { font-size: 1rem; font-weight: 700; }
+
+    /* ── TAG ── */
+    .badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+    .badge-gold { background: rgba(245,200,66,0.15); color: var(--gold); }
+
+    /* ── HABIT TRACKER ── */
+    .habit-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .habit-row:last-child { border-bottom: none; }
+    .habit-name { flex: 1; font-size: 0.85rem; }
+    .habit-dots { display: flex; gap: 4px; }
+    .habit-dot {
+      width: 24px; height: 24px; border-radius: 6px; cursor: pointer;
+      background: var(--surface2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
+      transition: all 0.15s; user-select: none;
+    }
+    .habit-dot.done { background: var(--gold); border-color: var(--gold); color: #0a0a14; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 20px; font-size: 0.85rem; z-index: 999; transition: transform 0.3s ease;
+      white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── SCORE RING ── */
+    .score-ring-wrap { display: flex; align-items: center; gap: 18px; }
+    .score-ring-svg { flex-shrink: 0; }
+    .score-ring-info h3 { font-size: 1.5rem; font-weight: 800; }
+    .score-ring-info p { font-size: 0.78rem; color: var(--muted); }
+
+    /* ── DIVIDER ── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+    /* ── WEEKLY SCORE ── */
+    .week-score-bar { display: flex; gap: 4px; align-items: flex-end; height: 60px; }
+    .week-score-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .week-score-fill { width: 100%; border-radius: 4px 4px 0 0; background: var(--gold); opacity: 0.7; min-height: 4px; transition: height 0.4s; }
+    .week-score-day { font-size: 0.65rem; color: var(--muted); }
+
+    /* ── empty state ── */
+    .empty { text-align: center; padding: 32px 16px; color: var(--muted); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">Life OS <span>CEO</span></div>
+  <button class="nav-tab active" data-page="dashboard">🏠 ダッシュボード</button>
+  <button class="nav-tab" data-page="tasks">✅ タスク</button>
+  <button class="nav-tab" data-page="guitar">🎸 ギター</button>
+  <button class="nav-tab" data-page="diet">💪 ダイエット</button>
+  <button class="nav-tab" data-page="budget">💰 家計</button>
+  <button class="nav-tab" data-page="roadmap">🗺️ ロードマップ</button>
+  <button class="nav-tab" data-page="settings">⚙️ 設定</button>
+</nav>
+
+<main>
+
+<!-- ══════════════════════════════════════════
+     PAGE: DASHBOARD
+══════════════════════════════════════════ -->
+<div class="page active" id="page-dashboard">
+  <div class="stack">
+
+    <!-- CEO ヘッダー -->
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;">Life OS — CEO Report</div>
+        <div style="font-size:1.4rem;font-weight:800;" id="dashboard-date"></div>
+      </div>
+      <div id="dashboard-score-ring"></div>
+    </div>
+
+    <!-- 今日のミッション進捗 -->
+    <div class="card">
+      <div class="card-title">今日の達成スコア</div>
+      <div class="week-score-bar" id="week-bar"></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;">
+        <span style="font-size:0.65rem;color:var(--muted);">7日間</span>
+        <span style="font-size:0.65rem;color:var(--muted);" id="week-avg"></span>
+      </div>
+    </div>
+
+    <!-- KPI 3本柱 -->
+    <div class="grid-3">
+      <div class="kpi guitar">
+        <div class="kpi-label">🎸 ギター</div>
+        <div class="kpi-value" id="kpi-guitar-streak">0</div>
+        <div class="kpi-sub">練習継続日数</div>
+        <div class="kpi-delta" id="kpi-guitar-today"></div>
+      </div>
+      <div class="kpi diet">
+        <div class="kpi-label">💪 体重</div>
+        <div class="kpi-value" id="kpi-weight">—</div>
+        <div class="kpi-sub">最新記録 kg</div>
+        <div class="kpi-delta" id="kpi-weight-delta"></div>
+      </div>
+      <div class="kpi budget">
+        <div class="kpi-label">💰 今月収支</div>
+        <div class="kpi-value" id="kpi-budget">¥—</div>
+        <div class="kpi-sub">収入 − 支出</div>
+        <div class="kpi-delta" id="kpi-budget-sub"></div>
+      </div>
+    </div>
+
+    <!-- ハビットトラッカー（今日） -->
+    <div class="card">
+      <div class="section-head">
+        <h2>今日のハビット</h2>
+        <span class="badge badge-gold" id="habit-today-badge">0 / 0</span>
+      </div>
+      <div id="habit-today-list"></div>
+    </div>
+
+    <!-- 直近タスク -->
+    <div class="card">
+      <div class="section-head">
+        <h2>今日のタスク</h2>
+        <button class="btn btn-ghost" style="font-size:0.78rem;padding:5px 10px;" onclick="nav('tasks')">すべて見る →</button>
+      </div>
+      <div class="stack" id="dashboard-tasks"></div>
+    </div>
+
+    <!-- CEOメッセージ -->
+    <div class="card" style="border-left:3px solid var(--gold);">
+      <div class="card-title">📋 CEOからのレポート</div>
+      <div id="ceo-message" style="font-size:0.88rem;line-height:1.7;color:var(--text);"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: TASKS
+══════════════════════════════════════════ -->
+<div class="page" id="page-tasks">
+  <div class="stack">
+    <div class="section-head">
+      <h2>タスク管理</h2>
+      <button class="btn btn-primary" onclick="openTaskModal()">＋ 追加</button>
+    </div>
+
+    <!-- フィルター -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      <button class="btn btn-ghost task-filter active" data-filter="all" style="font-size:0.78rem;padding:5px 12px;">すべて</button>
+      <button class="btn btn-ghost task-filter" data-filter="guitar" style="font-size:0.78rem;padding:5px 12px;">🎸 ギター</button>
+      <button class="btn btn-ghost task-filter" data-filter="diet" style="font-size:0.78rem;padding:5px 12px;">💪 ダイエット</button>
+      <button class="btn btn-ghost task-filter" data-filter="budget" style="font-size:0.78rem;padding:5px 12px;">💰 家計</button>
+      <button class="btn btn-ghost task-filter" data-filter="general" style="font-size:0.78rem;padding:5px 12px;">📌 その他</button>
+    </div>
+
+    <div class="card">
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:10px;display:flex;gap:16px;">
+        <span id="task-count-open">— 未完了</span>
+        <span id="task-count-done">— 完了</span>
+      </div>
+      <div class="stack" id="task-list"></div>
+    </div>
+
+    <!-- 完了済み -->
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px;cursor:pointer;" onclick="toggleDone()">✅ 完了済み ▾</div>
+      <div class="stack" id="task-done-list" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- タスク追加モーダル -->
+<div id="task-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;">
+  <div class="card" style="width:min(400px,95vw);max-height:90vh;overflow-y:auto;">
+    <div style="font-weight:700;font-size:1rem;margin-bottom:16px;">タスクを追加</div>
+    <div class="stack">
+      <div class="field"><label>タスク名</label><input type="text" id="task-input-name" placeholder="例：Cメジャースケールを30分練習"></div>
+      <div class="grid-2">
+        <div class="field">
+          <label>カテゴリ</label>
+          <select id="task-input-cat">
+            <option value="guitar">🎸 ギター</option>
+            <option value="diet">💪 ダイエット</option>
+            <option value="budget">💰 家計</option>
+            <option value="general">📌 その他</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>期日</label>
+          <input type="date" id="task-input-date">
+        </div>
+      </div>
+      <div class="field"><label>メモ</label><textarea id="task-input-note" placeholder="詳細・メモ"></textarea></div>
+      <div class="grid-2">
+        <button class="btn btn-primary" onclick="saveTask()">保存</button>
+        <button class="btn btn-ghost" onclick="closeTaskModal()">キャンセル</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: GUITAR
+══════════════════════════════════════════ -->
+<div class="page" id="page-guitar">
+  <div class="stack">
+    <div class="mission-header">
+      <div class="mission-icon">🎸</div>
+      <div>
+        <div class="mission-title" style="color:var(--guitar);">ギタリスト ミッション</div>
+        <div class="mission-subtitle">プロギタリストとして成功する</div>
+      </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="grid-3">
+      <div class="kpi guitar">
+        <div class="kpi-label">連続練習</div>
+        <div class="kpi-value" id="guitar-streak">0</div>
+        <div class="kpi-sub">日</div>
+      </div>
+      <div class="kpi guitar">
+        <div class="kpi-label">今月 練習時間</div>
+        <div class="kpi-value" id="guitar-month-hours">0</div>
+        <div class="kpi-sub">時間</div>
+      </div>
+      <div class="kpi guitar">
+        <div class="kpi-label">累計練習</div>
+        <div class="kpi-value" id="guitar-total-hours">0</div>
+        <div class="kpi-sub">時間</div>
+      </div>
+    </div>
+
+    <!-- 練習ログ入力 -->
+    <div class="card">
+      <div class="card-title">練習を記録</div>
+      <div class="grid-2" style="gap:10px;margin-bottom:10px;">
+        <div class="field"><label>日付</label><input type="date" id="guitar-date"></div>
+        <div class="field"><label>練習時間（分）</label><input type="number" id="guitar-min" min="1" max="480" placeholder="60"></div>
+      </div>
+      <div class="field" style="margin-bottom:10px;"><label>練習内容</label>
+        <select id="guitar-type">
+          <option value="scale">スケール練習</option>
+          <option value="chord">コード練習</option>
+          <option value="song">曲練習</option>
+          <option value="theory">音楽理論</option>
+          <option value="improv">アドリブ・即興</option>
+          <option value="tech">テクニック強化</option>
+          <option value="live">ライブ・演奏</option>
+          <option value="other">その他</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:12px;"><label>メモ</label><textarea id="guitar-note" placeholder="今日の気づき・課題など"></textarea></div>
+      <button class="btn btn-primary" onclick="saveGuitarLog()">記録する</button>
+    </div>
+
+    <!-- 目標進捗 -->
+    <div class="card">
+      <div class="card-title">年間目標進捗</div>
+      <div class="stack" id="guitar-goals-progress"></div>
+    </div>
+
+    <!-- 練習ログ履歴 -->
+    <div class="card">
+      <div class="card-title">練習ログ</div>
+      <div id="guitar-log-list"><div class="empty">まだ記録がありません</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: DIET
+══════════════════════════════════════════ -->
+<div class="page" id="page-diet">
+  <div class="stack">
+    <div class="mission-header">
+      <div class="mission-icon">💪</div>
+      <div>
+        <div class="mission-title" style="color:var(--diet);">ダイエット ミッション</div>
+        <div class="mission-subtitle">理想の体型・健康を手に入れる</div>
+      </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="grid-3">
+      <div class="kpi diet">
+        <div class="kpi-label">現在体重</div>
+        <div class="kpi-value" id="diet-current-weight">—</div>
+        <div class="kpi-sub">kg</div>
+      </div>
+      <div class="kpi diet">
+        <div class="kpi-label">目標まで</div>
+        <div class="kpi-value" id="diet-to-go">—</div>
+        <div class="kpi-sub">kg</div>
+      </div>
+      <div class="kpi diet">
+        <div class="kpi-label">1ヶ月変化</div>
+        <div class="kpi-value" id="diet-month-change">—</div>
+        <div class="kpi-sub">kg</div>
+      </div>
+    </div>
+
+    <!-- 体重グラフ -->
+    <div class="card">
+      <div class="card-title">体重推移</div>
+      <canvas id="weight-chart" height="180"></canvas>
+    </div>
+
+    <!-- 体重入力 -->
+    <div class="card">
+      <div class="card-title">体重を記録</div>
+      <div class="grid-2" style="gap:10px;margin-bottom:12px;">
+        <div class="field"><label>日付</label><input type="date" id="diet-date"></div>
+        <div class="field"><label>体重 (kg)</label><input type="number" id="diet-weight" step="0.1" min="30" max="200" placeholder="70.0"></div>
+      </div>
+      <div class="field" style="margin-bottom:12px;"><label>メモ（食事・運動など）</label><textarea id="diet-note" placeholder="今日の食事や運動の記録"></textarea></div>
+      <button class="btn btn-primary" onclick="saveDietLog()">記録する</button>
+    </div>
+
+    <!-- 目標設定 -->
+    <div class="card">
+      <div class="card-title">目標設定</div>
+      <div class="grid-2" style="gap:10px;margin-bottom:12px;">
+        <div class="field"><label>目標体重 (kg)</label><input type="number" id="diet-goal-weight" step="0.1" min="30" max="200"></div>
+        <div class="field"><label>目標日</label><input type="date" id="diet-goal-date"></div>
+      </div>
+      <button class="btn btn-ghost" onclick="saveDietGoal()">目標を更新</button>
+    </div>
+
+    <!-- ログ一覧 -->
+    <div class="card">
+      <div class="card-title">体重ログ</div>
+      <div id="diet-log-list"><div class="empty">まだ記録がありません</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: BUDGET
+══════════════════════════════════════════ -->
+<div class="page" id="page-budget">
+  <div class="stack">
+    <div class="mission-header">
+      <div class="mission-icon">💰</div>
+      <div>
+        <div class="mission-title" style="color:var(--budget);">家計管理 ミッション</div>
+        <div class="mission-subtitle">財務の健全化・資産形成</div>
+      </div>
+    </div>
+
+    <!-- 月選択 -->
+    <div class="card" style="padding:12px 16px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="btn btn-ghost" style="padding:5px 10px;" onclick="changeMonth(-1)">◀</button>
+        <span style="font-weight:700;font-size:1rem;flex:1;text-align:center;" id="budget-month-label"></span>
+        <button class="btn btn-ghost" style="padding:5px 10px;" onclick="changeMonth(1)">▶</button>
+      </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="grid-3">
+      <div class="kpi budget">
+        <div class="kpi-label">収入</div>
+        <div class="kpi-value" id="budget-income-total">¥0</div>
+        <div class="kpi-sub">今月</div>
+      </div>
+      <div class="kpi budget">
+        <div class="kpi-label">支出</div>
+        <div class="kpi-value" id="budget-expense-total">¥0</div>
+        <div class="kpi-sub">今月</div>
+      </div>
+      <div class="kpi budget">
+        <div class="kpi-label">収支</div>
+        <div class="kpi-value" id="budget-balance">¥0</div>
+        <div class="kpi-sub">残高</div>
+      </div>
+    </div>
+
+    <!-- カテゴリ別支出 -->
+    <div class="card">
+      <div class="card-title">カテゴリ別支出</div>
+      <canvas id="budget-chart" height="160"></canvas>
+    </div>
+
+    <!-- 入力 -->
+    <div class="card">
+      <div class="card-title">取引を追加</div>
+      <div class="grid-2" style="gap:10px;margin-bottom:10px;">
+        <div class="field"><label>日付</label><input type="date" id="budget-date"></div>
+        <div class="field">
+          <label>種類</label>
+          <select id="budget-type">
+            <option value="expense">支出</option>
+            <option value="income">収入</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2" style="gap:10px;margin-bottom:10px;">
+        <div class="field"><label>金額 (¥)</label><input type="number" id="budget-amount" min="0" placeholder="5000"></div>
+        <div class="field">
+          <label>カテゴリ</label>
+          <select id="budget-cat">
+            <option value="食費">食費</option>
+            <option value="家賃">家賃・住居</option>
+            <option value="交通">交通費</option>
+            <option value="光熱費">光熱費</option>
+            <option value="娯楽">娯楽・趣味</option>
+            <option value="ギター">ギター機材</option>
+            <option value="服飾">服飾・美容</option>
+            <option value="医療">医療・健康</option>
+            <option value="給与">給与・報酬</option>
+            <option value="ライブ収入">ライブ収入</option>
+            <option value="その他">その他</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:12px;"><label>メモ</label><input type="text" id="budget-note" placeholder="詳細メモ"></div>
+      <button class="btn btn-primary" onclick="saveBudgetEntry()">追加</button>
+    </div>
+
+    <!-- 明細 -->
+    <div class="card">
+      <div class="card-title">今月の明細</div>
+      <div id="budget-log-list"><div class="empty">まだ記録がありません</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: ROADMAP
+══════════════════════════════════════════ -->
+<div class="page" id="page-roadmap">
+  <div class="stack">
+    <div class="section-head"><h2>🗺️ 10年ロードマップ</h2></div>
+    <div class="card" style="border-left:3px solid var(--gold);">
+      <div class="card-title">ビジョン</div>
+      <div style="font-size:0.9rem;line-height:1.8;" id="vision-text"></div>
+    </div>
+
+    <div class="stack" id="roadmap-list"></div>
+
+    <!-- カスタムゴール追加 -->
+    <div class="card">
+      <div class="card-title">マイルストーンを追加</div>
+      <div class="grid-2" style="gap:10px;margin-bottom:10px;">
+        <div class="field"><label>年</label><input type="number" id="rm-year" min="2025" max="2040" placeholder="2027"></div>
+        <div class="field">
+          <label>カテゴリ</label>
+          <select id="rm-cat">
+            <option value="guitar">🎸 ギター</option>
+            <option value="diet">💪 ダイエット</option>
+            <option value="budget">💰 家計</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:12px;"><label>目標内容</label><input type="text" id="rm-goal" placeholder="例：初の有料ライブ出演"></div>
+      <button class="btn btn-primary" onclick="saveRoadmapGoal()">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: SETTINGS
+══════════════════════════════════════════ -->
+<div class="page" id="page-settings">
+  <div class="stack">
+    <div class="section-head"><h2>⚙️ 設定</h2></div>
+
+    <!-- プロフィール -->
+    <div class="card">
+      <div class="card-title">プロフィール</div>
+      <div class="stack">
+        <div class="field"><label>あなたの名前</label><input type="text" id="cfg-name" placeholder="例：Nino"></div>
+        <div class="field"><label>ビジョン・10年目標</label><textarea id="cfg-vision" placeholder="10年後の理想の自分を描いてください..."></textarea></div>
+      </div>
+    </div>
+
+    <!-- ギター目標 -->
+    <div class="card">
+      <div class="card-title">🎸 ギター目標</div>
+      <div class="stack">
+        <div class="field"><label>今年の目標練習時間 (h)</label><input type="number" id="cfg-guitar-annual-goal" min="1" placeholder="300"></div>
+        <div class="field"><label>目標：毎日最低練習時間 (分)</label><input type="number" id="cfg-guitar-daily-min" min="1" placeholder="30"></div>
+      </div>
+    </div>
+
+    <!-- ダイエット目標 -->
+    <div class="card">
+      <div class="card-title">💪 ダイエット目標</div>
+      <div class="grid-2" style="gap:10px;">
+        <div class="field"><label>現在体重 (kg)</label><input type="number" id="cfg-weight-current" step="0.1" placeholder="70.0"></div>
+        <div class="field"><label>目標体重 (kg)</label><input type="number" id="cfg-weight-goal" step="0.1" placeholder="65.0"></div>
+      </div>
+    </div>
+
+    <!-- 家計目標 -->
+    <div class="card">
+      <div class="card-title">💰 家計目標</div>
+      <div class="stack">
+        <div class="field"><label>月の手取り目安 (¥)</label><input type="number" id="cfg-income-target" placeholder="200000"></div>
+        <div class="field"><label>毎月の貯蓄目標 (¥)</label><input type="number" id="cfg-saving-target" placeholder="30000"></div>
+      </div>
+    </div>
+
+    <!-- ハビット設定 -->
+    <div class="card">
+      <div class="card-title">習慣トラッカー設定</div>
+      <div class="stack" id="habit-config-list"></div>
+      <button class="btn btn-ghost" style="margin-top:10px;" onclick="addHabit()">＋ 習慣を追加</button>
+    </div>
+
+    <!-- Notion連携 -->
+    <div class="card">
+      <div class="card-title">Notion 連携</div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;line-height:1.6;">
+        Notion Integration Token を設定すると、タスクと日報をNotionデータベースに同期できます。
+        <br>Notion側で Integration を作成し、データベースに共有してください。
+      </div>
+      <div class="stack">
+        <div class="field"><label>Notion Integration Token</label><input type="text" id="cfg-notion-token" placeholder="secret_xxx..."></div>
+        <div class="field"><label>タスク DB ID</label><input type="text" id="cfg-notion-tasks-db" placeholder="32桁のデータベースID"></div>
+        <div class="field"><label>日報 DB ID</label><input type="text" id="cfg-notion-diary-db" placeholder="32桁のデータベースID"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="saveSettings()">設定を保存</button>
+          <button class="btn btn-ghost" onclick="testNotionConnection()">接続テスト</button>
+          <button class="btn btn-ghost" onclick="exportNotionTasks()">タスクをエクスポート</button>
+        </div>
+      </div>
+      <div id="notion-status" style="margin-top:10px;font-size:0.8rem;color:var(--muted);"></div>
+    </div>
+
+    <!-- データ管理 -->
+    <div class="card">
+      <div class="card-title">データ管理</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="exportData()">📥 エクスポート (JSON)</button>
+        <button class="btn btn-ghost" onclick="importData()">📤 インポート</button>
+        <button class="btn btn-danger" onclick="confirmReset()">🗑️ データリセット</button>
+      </div>
+      <input type="file" id="import-file" accept=".json" style="display:none;" onchange="handleImport(event)">
+    </div>
+
+    <button class="btn btn-primary" onclick="saveSettings()" style="width:100%;">すべての設定を保存</button>
+  </div>
+</div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   DATA LAYER
+═══════════════════════════════════════════ */
+const DB_KEY = 'life_os_v1';
+
+function loadDB() {
+  try { return JSON.parse(localStorage.getItem(DB_KEY)) || defaultDB(); }
+  catch { return defaultDB(); }
+}
+
+function defaultDB() {
+  return {
+    config: {
+      name: '',
+      vision: 'ギタリストとして成功し、音楽で生活できる人生を築く。健康な体で長く活動し、財務的にも自由な状態を実現する。',
+      guitar: { annualGoal: 300, dailyMin: 30 },
+      diet: { currentWeight: null, goalWeight: null, goalDate: null },
+      budget: { incomeTarget: 200000, savingTarget: 30000 },
+      notion: { token: '', tasksDb: '', diaryDb: '' }
+    },
+    habits: [
+      { id: 'h1', name: '🎸 ギター練習', cat: 'guitar' },
+      { id: 'h2', name: '💪 運動・ストレッチ', cat: 'diet' },
+      { id: 'h3', name: '📖 家計記録', cat: 'budget' },
+    ],
+    habitLogs: {},   // { 'YYYY-MM-DD': { h1: true, ... } }
+    tasks: [],
+    guitarLogs: [],  // { date, minutes, type, note }
+    dietLogs: [],    // { date, weight, note }
+    budgetEntries: [], // { date, type, amount, cat, note }
+    roadmap: [
+      { year: 2026, cat: 'guitar', goal: '月1本のライブ出演を達成する' },
+      { year: 2026, cat: 'diet',   goal: '目標体重まで減量する' },
+      { year: 2026, cat: 'budget', goal: '毎月の収支をプラスにする' },
+      { year: 2027, cat: 'guitar', goal: '自分のバンド・ユニットを結成する' },
+      { year: 2027, cat: 'budget', goal: 'ライブ収入を月3万円以上にする' },
+      { year: 2028, cat: 'guitar', goal: 'アルバム・音源をリリースする' },
+      { year: 2028, cat: 'budget', goal: '音楽収入で生活費の50%をまかなう' },
+      { year: 2030, cat: 'guitar', goal: '音楽を主たる収入源として自立する' },
+    ]
+  };
+}
+
+function saveDB(db) {
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+}
+
+let db = loadDB();
+
+/* ═══════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════ */
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  const tab = document.querySelector(`[data-page="${page}"]`);
+  if (el) el.classList.add('active');
+  if (tab) tab.classList.add('active');
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'tasks') renderTasks();
+  if (page === 'guitar') renderGuitar();
+  if (page === 'diet') renderDiet();
+  if (page === 'budget') renderBudget();
+  if (page === 'roadmap') renderRoadmap();
+  if (page === 'settings') renderSettings();
+}
+
+document.querySelectorAll('.nav-tab').forEach(t => {
+  t.addEventListener('click', () => nav(t.dataset.page));
+});
+
+/* ═══════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════ */
+function today() { return new Date().toISOString().slice(0, 10); }
+function fmt(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+function fmtMoney(v) { return '¥' + Number(v).toLocaleString(); }
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+/* ═══════════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════════ */
+function renderDashboard() {
+  const d = new Date();
+  const days = ['日','月','火','水','木','金','土'];
+  document.getElementById('dashboard-date').textContent =
+    `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
+
+  // Guitar streak
+  const streak = calcGuitarStreak();
+  document.getElementById('kpi-guitar-streak').textContent = streak;
+  const todayLog = db.guitarLogs.find(l => l.date === today());
+  document.getElementById('kpi-guitar-today').textContent = todayLog
+    ? `✅ 今日 ${todayLog.minutes}分練習済み` : '⏳ 今日未記録';
+  document.getElementById('kpi-guitar-today').className = 'kpi-delta ' + (todayLog ? 'up' : '');
+
+  // Weight
+  const latestWeight = db.dietLogs.slice().sort((a,b) => b.date.localeCompare(a.date))[0];
+  if (latestWeight) {
+    document.getElementById('kpi-weight').textContent = latestWeight.weight;
+    const prev = db.dietLogs.filter(l => l.date < latestWeight.date).sort((a,b) => b.date.localeCompare(a.date))[0];
+    if (prev) {
+      const diff = (latestWeight.weight - prev.weight).toFixed(1);
+      const el = document.getElementById('kpi-weight-delta');
+      el.textContent = (diff > 0 ? '▲ +' : '▼ ') + diff + 'kg';
+      el.className = 'kpi-delta ' + (diff <= 0 ? 'up' : 'down');
+    }
+  } else {
+    document.getElementById('kpi-weight').textContent = '—';
+  }
+
+  // Budget
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthEntries = db.budgetEntries.filter(e => e.date.startsWith(monthKey));
+  const income = monthEntries.filter(e => e.type === 'income').reduce((s,e) => s+e.amount, 0);
+  const expense = monthEntries.filter(e => e.type === 'expense').reduce((s,e) => s+e.amount, 0);
+  const balance = income - expense;
+  document.getElementById('kpi-budget').textContent = fmtMoney(balance);
+  document.getElementById('kpi-budget-sub').textContent = `収入 ${fmtMoney(income)} / 支出 ${fmtMoney(expense)}`;
+  document.getElementById('kpi-budget-sub').className = 'kpi-delta ' + (balance >= 0 ? 'up' : 'down');
+
+  // Week bar
+  renderWeekBar();
+
+  // Habits today
+  renderHabitToday();
+
+  // Today's tasks
+  const todayTasks = db.tasks.filter(t => !t.done && (!t.date || t.date <= today())).slice(0, 5);
+  const el = document.getElementById('dashboard-tasks');
+  if (todayTasks.length === 0) {
+    el.innerHTML = '<div class="empty">今日のタスクはありません 🎉</div>';
+  } else {
+    el.innerHTML = todayTasks.map(t => taskHTML(t)).join('');
+  }
+
+  // CEO message
+  renderCEOMessage();
+}
+
+function renderWeekBar() {
+  const bar = document.getElementById('week-bar');
+  const scores = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const dStr = d.toISOString().slice(0,10);
+    scores.push({ day: ['日','月','火','水','木','金','土'][d.getDay()], score: calcDayScore(dStr), date: dStr });
+  }
+  const avg = scores.reduce((s,x) => s+x.score, 0) / 7;
+  bar.innerHTML = scores.map(s => `
+    <div class="week-score-col">
+      <div class="week-score-fill" style="height:${s.score}%;background:${s.date===today()?'var(--gold)':'var(--muted)'}"></div>
+      <div class="week-score-day">${s.day}</div>
+    </div>`).join('');
+  document.getElementById('week-avg').textContent = `週平均 ${Math.round(avg)}%`;
+}
+
+function calcDayScore(dateStr) {
+  let score = 0; let max = 0;
+  // Guitar
+  max += 33;
+  if (db.guitarLogs.find(l => l.date === dateStr)) score += 33;
+  // Diet logged
+  max += 33;
+  if (db.dietLogs.find(l => l.date === dateStr)) score += 33;
+  // Habits
+  const hLog = db.habitLogs[dateStr] || {};
+  db.habits.forEach(h => { max += 34/db.habits.length; if (hLog[h.id]) score += 34/db.habits.length; });
+  return max > 0 ? Math.round((score/max)*100) : 0;
+}
+
+function renderHabitToday() {
+  const t = today();
+  const hLog = db.habitLogs[t] || {};
+  const done = db.habits.filter(h => hLog[h.id]).length;
+  document.getElementById('habit-today-badge').textContent = `${done} / ${db.habits.length}`;
+  const el = document.getElementById('habit-today-list');
+  if (db.habits.length === 0) { el.innerHTML = '<div class="empty">習慣がまだ設定されていません</div>'; return; }
+  el.innerHTML = db.habits.map(h => `
+    <div class="habit-row">
+      <div class="habit-name">${h.name}</div>
+      <div class="habit-dot ${hLog[h.id]?'done':''}" onclick="toggleHabit('${h.id}')">
+        ${hLog[h.id]?'✓':''}
+      </div>
+    </div>`).join('');
+}
+
+function toggleHabit(hid) {
+  const t = today();
+  if (!db.habitLogs[t]) db.habitLogs[t] = {};
+  db.habitLogs[t][hid] = !db.habitLogs[t][hid];
+  saveDB(db);
+  renderHabitToday();
+  renderWeekBar();
+}
+
+function renderCEOMessage() {
+  const streak = calcGuitarStreak();
+  const latestWeight = db.dietLogs.slice().sort((a,b) => b.date.localeCompare(a.date))[0];
+  const todayGuitar = db.guitarLogs.find(l => l.date === today());
+  const name = db.config.name || 'オーナー';
+
+  let msgs = [];
+  if (!todayGuitar) msgs.push(`📌 ${name}さん、今日のギター練習がまだ記録されていません。${db.config.guitar.dailyMin}分の練習でストリークを続けましょう。`);
+  else msgs.push(`✅ 今日も${todayGuitar.minutes}分のギター練習を完了しました。${streak}日連続です。この調子で続けましょう。`);
+
+  if (latestWeight && db.config.diet.goalWeight) {
+    const diff = (latestWeight.weight - db.config.diet.goalWeight).toFixed(1);
+    if (diff > 0) msgs.push(`💪 目標体重まであと${diff}kg。継続が結果を作ります。`);
+    else msgs.push(`🎉 目標体重を達成しています！ 体を維持することも重要なミッションです。`);
+  }
+
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthEntries = db.budgetEntries.filter(e => e.date.startsWith(monthKey));
+  const income = monthEntries.filter(e => e.type==='income').reduce((s,e)=>s+e.amount,0);
+  const expense = monthEntries.filter(e => e.type==='expense').reduce((s,e)=>s+e.amount,0);
+  if (income - expense < 0) msgs.push(`⚠️ 今月は収支がマイナスです。支出の見直しを検討してください。`);
+
+  document.getElementById('ceo-message').innerHTML = msgs.map(m => `<p style="margin-bottom:8px;">${m}</p>`).join('');
+}
+
+/* ═══════════════════════════════════════════
+   TASKS
+═══════════════════════════════════════════ */
+let taskFilter = 'all';
+
+function renderTasks() {
+  let items = db.tasks.filter(t => !t.done);
+  let done  = db.tasks.filter(t => t.done);
+  if (taskFilter !== 'all') {
+    items = items.filter(t => t.cat === taskFilter);
+    done  = done.filter(t => t.cat === taskFilter);
+  }
+  document.getElementById('task-count-open').textContent = `${items.length} 未完了`;
+  document.getElementById('task-count-done').textContent = `${done.length} 完了`;
+  const el = document.getElementById('task-list');
+  el.innerHTML = items.length ? items.map(t => taskHTML(t)).join('') : '<div class="empty">タスクがありません</div>';
+  const dl = document.getElementById('task-done-list');
+  dl.innerHTML = done.length ? done.map(t => taskHTML(t)).join('') : '<div class="empty">なし</div>';
+}
+
+function taskHTML(t) {
+  return `<div class="task-item ${t.cat} ${t.done?'done':''}">
+    <input type="checkbox" class="task-cb" ${t.done?'checked':''} onchange="toggleTask('${t.id}')">
+    <div class="task-text ${t.done?'done':''}">${t.name}${t.note?`<span style="display:block;font-size:0.72rem;color:var(--muted);margin-top:2px;">${t.note}</span>`:''}
+    </div>
+    ${t.date?`<span style="font-size:0.7rem;color:var(--muted);">${fmt(t.date)}</span>`:''}
+    <span class="task-tag ${t.cat}">${{guitar:'🎸',diet:'💪',budget:'💰',general:'📌'}[t.cat]||''}</span>
+    <button class="btn btn-danger" style="padding:3px 8px;font-size:0.72rem;" onclick="deleteTask('${t.id}')">✕</button>
+  </div>`;
+}
+
+function toggleTask(id) {
+  const t = db.tasks.find(t => t.id === id);
+  if (t) { t.done = !t.done; saveDB(db); renderTasks(); renderDashboard(); }
+}
+function deleteTask(id) {
+  db.tasks = db.tasks.filter(t => t.id !== id); saveDB(db); renderTasks(); renderDashboard();
+}
+function toggleDone() {
+  const el = document.getElementById('task-done-list');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+document.querySelectorAll('.task-filter').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.task-filter').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    taskFilter = b.dataset.filter;
+    renderTasks();
+  });
+});
+
+function openTaskModal() {
+  document.getElementById('task-modal').style.display = 'flex';
+  document.getElementById('task-input-date').value = today();
+  document.getElementById('task-input-name').focus();
+}
+function closeTaskModal() { document.getElementById('task-modal').style.display = 'none'; }
+function saveTask() {
+  const name = document.getElementById('task-input-name').value.trim();
+  if (!name) { toast('タスク名を入力してください'); return; }
+  db.tasks.unshift({
+    id: uid(), name,
+    cat: document.getElementById('task-input-cat').value,
+    date: document.getElementById('task-input-date').value,
+    note: document.getElementById('task-input-note').value.trim(),
+    done: false, createdAt: new Date().toISOString()
+  });
+  saveDB(db); closeTaskModal();
+  document.getElementById('task-input-name').value = '';
+  document.getElementById('task-input-note').value = '';
+  renderTasks(); toast('タスクを追加しました');
+  if (db.config.notion.token && db.config.notion.tasksDb) syncTaskToNotion(db.tasks[0]);
+}
+
+/* ═══════════════════════════════════════════
+   GUITAR
+═══════════════════════════════════════════ */
+function calcGuitarStreak() {
+  const dates = new Set(db.guitarLogs.map(l => l.date));
+  let streak = 0; const d = new Date();
+  while (true) {
+    const s = d.toISOString().slice(0,10);
+    if (!dates.has(s)) { if (streak === 0 && s === today()) { d.setDate(d.getDate()-1); continue; } break; }
+    streak++; d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+
+function renderGuitar() {
+  const streak = calcGuitarStreak();
+  document.getElementById('guitar-streak').textContent = streak;
+  document.getElementById('guitar-date').value = today();
+
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthMin = db.guitarLogs.filter(l => l.date.startsWith(monthKey)).reduce((s,l) => s+l.minutes, 0);
+  const totalMin = db.guitarLogs.reduce((s,l) => s+l.minutes, 0);
+  document.getElementById('guitar-month-hours').textContent = (monthMin/60).toFixed(1);
+  document.getElementById('guitar-total-hours').textContent = (totalMin/60).toFixed(1);
+
+  // Goals progress
+  const annualGoalH = db.config.guitar.annualGoal || 300;
+  const yearKey = String(now.getFullYear());
+  const yearMin = db.guitarLogs.filter(l => l.date.startsWith(yearKey)).reduce((s,l) => s+l.minutes, 0);
+  const yearH = yearMin/60;
+  const pct = Math.min(100, Math.round((yearH/annualGoalH)*100));
+  document.getElementById('guitar-goals-progress').innerHTML = `
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.83rem;">
+        <span>年間練習時間目標</span>
+        <span>${yearH.toFixed(1)}h / ${annualGoalH}h (${pct}%)</span>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%;background:var(--guitar);"></div></div>
+    </div>`;
+
+  // Log list
+  const logs = db.guitarLogs.slice().sort((a,b) => b.date.localeCompare(a.date)).slice(0, 30);
+  const typeLabel = { scale:'スケール',chord:'コード',song:'曲',theory:'音楽理論',improv:'アドリブ',tech:'テクニック',live:'ライブ',other:'その他' };
+  document.getElementById('guitar-log-list').innerHTML = logs.length
+    ? logs.map(l => `<div class="log-row" style="grid-template-columns:80px 60px 80px 1fr">
+        <span class="log-date">${l.date}</span>
+        <span style="color:var(--guitar);font-weight:700;">${l.minutes}分</span>
+        <span style="font-size:0.75rem;color:var(--muted);">${typeLabel[l.type]||l.type}</span>
+        <span style="color:var(--muted);font-size:0.78rem;">${l.note||''}</span>
+      </div>`).join('')
+    : '<div class="empty">まだ記録がありません</div>';
+}
+
+function saveGuitarLog() {
+  const date = document.getElementById('guitar-date').value;
+  const minutes = parseInt(document.getElementById('guitar-min').value);
+  if (!date || !minutes || minutes < 1) { toast('日付と練習時間を入力してください'); return; }
+  db.guitarLogs.push({ date, minutes, type: document.getElementById('guitar-type').value, note: document.getElementById('guitar-note').value.trim() });
+  saveDB(db);
+  document.getElementById('guitar-min').value = '';
+  document.getElementById('guitar-note').value = '';
+  renderGuitar(); renderDashboard();
+  toast(`${minutes}分の練習を記録しました 🎸`);
+}
+
+/* ═══════════════════════════════════════════
+   DIET
+═══════════════════════════════════════════ */
+function renderDiet() {
+  document.getElementById('diet-date').value = today();
+  const sorted = db.dietLogs.slice().sort((a,b) => b.date.localeCompare(a.date));
+  const latest = sorted[0];
+
+  if (latest) {
+    document.getElementById('diet-current-weight').textContent = latest.weight;
+    if (db.config.diet.goalWeight) {
+      const diff = (latest.weight - db.config.diet.goalWeight).toFixed(1);
+      const el = document.getElementById('diet-to-go');
+      el.textContent = diff > 0 ? diff : '達成';
+    }
+    // 1ヶ月変化
+    const oneMonthAgo = new Date(); oneMonthAgo.setMonth(oneMonthAgo.getMonth()-1);
+    const omaStr = oneMonthAgo.toISOString().slice(0,10);
+    const monthAgoLog = sorted.find(l => l.date <= omaStr);
+    if (monthAgoLog) {
+      const diff = (latest.weight - monthAgoLog.weight).toFixed(1);
+      const el = document.getElementById('diet-month-change');
+      el.textContent = (diff > 0 ? '+' : '') + diff;
+      el.className = 'kpi-value';
+      el.style.color = diff <= 0 ? 'var(--diet)' : 'var(--danger)';
+    }
+  }
+
+  // Load goal inputs
+  if (db.config.diet.goalWeight) document.getElementById('diet-goal-weight').value = db.config.diet.goalWeight;
+  if (db.config.diet.goalDate)   document.getElementById('diet-goal-date').value = db.config.diet.goalDate;
+
+  drawWeightChart();
+
+  // Log list
+  document.getElementById('diet-log-list').innerHTML = sorted.slice(0,30).length
+    ? sorted.slice(0,30).map(l => `<div class="log-row" style="grid-template-columns:90px 70px 1fr">
+        <span class="log-date">${l.date}</span>
+        <span style="color:var(--diet);font-weight:700;">${l.weight}kg</span>
+        <span style="color:var(--muted);font-size:0.78rem;">${l.note||''}</span>
+      </div>`).join('')
+    : '<div class="empty">まだ記録がありません</div>';
+}
+
+function saveDietLog() {
+  const date = document.getElementById('diet-date').value;
+  const weight = parseFloat(document.getElementById('diet-weight').value);
+  if (!date || !weight || weight < 20) { toast('日付と体重を入力してください'); return; }
+  db.dietLogs = db.dietLogs.filter(l => l.date !== date);
+  db.dietLogs.push({ date, weight, note: document.getElementById('diet-note').value.trim() });
+  saveDB(db);
+  document.getElementById('diet-weight').value = '';
+  document.getElementById('diet-note').value = '';
+  renderDiet(); renderDashboard();
+  toast(`体重 ${weight}kg を記録しました 💪`);
+}
+
+function saveDietGoal() {
+  db.config.diet.goalWeight = parseFloat(document.getElementById('diet-goal-weight').value) || null;
+  db.config.diet.goalDate   = document.getElementById('diet-goal-date').value || null;
+  saveDB(db); renderDiet(); toast('目標を更新しました');
+}
+
+function drawWeightChart() {
+  const canvas = document.getElementById('weight-chart');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth || 400;
+  canvas.height = 180;
+  const data = db.dietLogs.slice().sort((a,b) => a.date.localeCompare(b.date)).slice(-30);
+  if (data.length < 2) {
+    ctx.fillStyle = '#2a2a40'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#6b6b88'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('データが2件以上になるとグラフが表示されます', canvas.width/2, 90);
+    return;
+  }
+  const W = canvas.width, H = canvas.height, pad = 36;
+  ctx.clearRect(0,0,W,H);
+  const vals = data.map(d => d.weight);
+  const min = Math.min(...vals) - 1, max = Math.max(...vals) + 1;
+  const scaleX = (i) => pad + (i/(data.length-1))*(W-pad*2);
+  const scaleY = (v) => H - pad - ((v-min)/(max-min))*(H-pad*2);
+
+  // Grid
+  ctx.strokeStyle = '#2a2a40'; ctx.lineWidth = 1;
+  for (let g = 0; g <= 4; g++) {
+    const y = pad + g*(H-pad*2)/4;
+    ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(W-pad,y); ctx.stroke();
+    const v = max - g*(max-min)/4;
+    ctx.fillStyle = '#6b6b88'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(v.toFixed(1), pad-4, y+4);
+  }
+
+  // Goal line
+  if (db.config.diet.goalWeight) {
+    const gy = scaleY(db.config.diet.goalWeight);
+    ctx.strokeStyle = 'rgba(81,207,102,0.4)'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(pad,gy); ctx.lineTo(W-pad,gy); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Line
+  ctx.strokeStyle = '#51cf66'; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  data.forEach((d,i) => { i===0 ? ctx.moveTo(scaleX(i),scaleY(d.weight)) : ctx.lineTo(scaleX(i),scaleY(d.weight)); });
+  ctx.stroke();
+
+  // Fill
+  ctx.fillStyle = 'rgba(81,207,102,0.08)';
+  ctx.beginPath(); ctx.moveTo(scaleX(0), H-pad);
+  data.forEach((d,i) => ctx.lineTo(scaleX(i), scaleY(d.weight)));
+  ctx.lineTo(scaleX(data.length-1), H-pad); ctx.closePath(); ctx.fill();
+
+  // Dots
+  data.forEach((d,i) => {
+    ctx.fillStyle = '#51cf66'; ctx.beginPath();
+    ctx.arc(scaleX(i), scaleY(d.weight), 3, 0, Math.PI*2); ctx.fill();
+  });
+}
+
+/* ═══════════════════════════════════════════
+   BUDGET
+═══════════════════════════════════════════ */
+let budgetMonth = new Date();
+
+function changeMonth(delta) {
+  budgetMonth = new Date(budgetMonth.getFullYear(), budgetMonth.getMonth()+delta, 1);
+  renderBudget();
+}
+
+function renderBudget() {
+  document.getElementById('budget-date').value = today();
+  const y = budgetMonth.getFullYear(), m = budgetMonth.getMonth()+1;
+  document.getElementById('budget-month-label').textContent = `${y}年${m}月`;
+  const monthKey = `${y}-${String(m).padStart(2,'0')}`;
+  const entries = db.budgetEntries.filter(e => e.date.startsWith(monthKey)).sort((a,b) => b.date.localeCompare(a.date));
+  const income  = entries.filter(e => e.type==='income').reduce((s,e)=>s+e.amount,0);
+  const expense = entries.filter(e => e.type==='expense').reduce((s,e)=>s+e.amount,0);
+  document.getElementById('budget-income-total').textContent  = fmtMoney(income);
+  document.getElementById('budget-expense-total').textContent = fmtMoney(expense);
+  const bal = document.getElementById('budget-balance');
+  bal.textContent = fmtMoney(income-expense);
+  bal.style.color = income-expense >= 0 ? 'var(--diet)' : 'var(--danger)';
+
+  drawBudgetChart(entries);
+
+  // Log
+  document.getElementById('budget-log-list').innerHTML = entries.length
+    ? entries.map(e => `<div class="log-row" style="grid-template-columns:80px 1fr 90px 80px">
+        <span class="log-date">${fmt(e.date)}</span>
+        <span style="font-size:0.82rem;">${e.cat}${e.note?` — <span style="color:var(--muted)">${e.note}</span>`:''}</span>
+        <span style="font-weight:700;color:${e.type==='income'?'var(--diet)':'var(--danger)'};">${e.type==='income'?'+':'-'}${fmtMoney(e.amount)}</span>
+        <button class="btn btn-danger" style="padding:2px 8px;font-size:0.7rem;" onclick="deleteBudgetEntry('${e.id}')">削除</button>
+      </div>`).join('')
+    : '<div class="empty">まだ記録がありません</div>';
+}
+
+function drawBudgetChart(entries) {
+  const canvas = document.getElementById('budget-chart');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth || 400;
+  canvas.height = 160;
+  const expenses = entries.filter(e => e.type==='expense');
+  if (expenses.length === 0) {
+    ctx.fillStyle = '#1c1c2e'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#6b6b88'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('支出データがありません', canvas.width/2, 80); return;
+  }
+  // Aggregate by category
+  const cats = {};
+  expenses.forEach(e => cats[e.cat] = (cats[e.cat]||0) + e.amount);
+  const sorted = Object.entries(cats).sort((a,b) => b[1]-a[1]);
+  const total = sorted.reduce((s,[,v]) => s+v, 0);
+  const colors = ['#74c0fc','#f5c842','#ff6b6b','#51cf66','#b197fc','#ff9f43','#a29bfe','#fd79a8'];
+
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const barW = Math.min(40, (W - 60) / sorted.length - 8);
+  const maxVal = sorted[0][1];
+  sorted.forEach(([cat, val], i) => {
+    const x = 30 + i*(barW+8);
+    const bh = (val/maxVal)*(H-50);
+    const y = H-30-bh;
+    ctx.fillStyle = colors[i%colors.length];
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(x, y, barW, bh, [4,4,0,0]) : ctx.rect(x, y, barW, bh);
+    ctx.fill();
+    ctx.fillStyle = '#e8e8f0'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(cat.length > 4 ? cat.slice(0,4) : cat, x+barW/2, H-14);
+    ctx.fillStyle = colors[i%colors.length];
+    ctx.fillText(Math.round(val/1000)+'k', x+barW/2, y-4);
+  });
+}
+
+function saveBudgetEntry() {
+  const date = document.getElementById('budget-date').value;
+  const amount = parseInt(document.getElementById('budget-amount').value);
+  if (!date || !amount || amount < 1) { toast('日付と金額を入力してください'); return; }
+  db.budgetEntries.push({
+    id: uid(), date, amount,
+    type: document.getElementById('budget-type').value,
+    cat:  document.getElementById('budget-cat').value,
+    note: document.getElementById('budget-note').value.trim()
+  });
+  saveDB(db);
+  document.getElementById('budget-amount').value = '';
+  document.getElementById('budget-note').value = '';
+  renderBudget(); renderDashboard();
+  toast('取引を追加しました 💰');
+}
+
+function deleteBudgetEntry(id) {
+  db.budgetEntries = db.budgetEntries.filter(e => e.id !== id);
+  saveDB(db); renderBudget(); renderDashboard();
+}
+
+/* ═══════════════════════════════════════════
+   ROADMAP
+═══════════════════════════════════════════ */
+function renderRoadmap() {
+  document.getElementById('vision-text').textContent = db.config.vision || '';
+  const years = [...new Set(db.roadmap.map(r => r.year))].sort();
+  const now = new Date().getFullYear();
+  document.getElementById('roadmap-list').innerHTML = years.map(y => {
+    const goals = db.roadmap.filter(r => r.year === y);
+    const isPast = y < now, isCurrent = y === now;
+    return `<div class="roadmap-year">
+      <div class="roadmap-year-header" onclick="toggleRoadmapYear(this)">
+        <span class="roadmap-year-label">${y}年 ${isCurrent?'← 現在':''}</span>
+        <span class="roadmap-year-tag">${isPast?'✅ 完了':isCurrent?'🔥 進行中':'📅 予定'}</span>
+      </div>
+      <div class="roadmap-year-body ${isCurrent?'open':''}">
+        ${goals.map(g => `<div class="roadmap-goal">
+          <span class="roadmap-goal-cat ${g.cat}">${{guitar:'🎸',diet:'💪',budget:'💰'}[g.cat]||'📌'}</span>
+          <span>${g.goal}</span>
+          <button class="btn btn-danger" style="padding:2px 7px;font-size:0.68rem;margin-left:auto;" onclick="deleteRoadmapGoal(${g.year},'${g.cat}','${g.goal.replace(/'/g,"\\'")}')">✕</button>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleRoadmapYear(el) {
+  el.nextElementSibling.classList.toggle('open');
+}
+
+function saveRoadmapGoal() {
+  const year = parseInt(document.getElementById('rm-year').value);
+  const goal = document.getElementById('rm-goal').value.trim();
+  if (!year || !goal) { toast('年と目標を入力してください'); return; }
+  db.roadmap.push({ year, cat: document.getElementById('rm-cat').value, goal });
+  saveDB(db);
+  document.getElementById('rm-year').value = '';
+  document.getElementById('rm-goal').value = '';
+  renderRoadmap(); toast('マイルストーンを追加しました');
+}
+
+function deleteRoadmapGoal(year, cat, goal) {
+  db.roadmap = db.roadmap.filter(r => !(r.year===year && r.cat===cat && r.goal===goal));
+  saveDB(db); renderRoadmap();
+}
+
+/* ═══════════════════════════════════════════
+   SETTINGS
+═══════════════════════════════════════════ */
+function renderSettings() {
+  const c = db.config;
+  document.getElementById('cfg-name').value = c.name || '';
+  document.getElementById('cfg-vision').value = c.vision || '';
+  document.getElementById('cfg-guitar-annual-goal').value = c.guitar.annualGoal || 300;
+  document.getElementById('cfg-guitar-daily-min').value = c.guitar.dailyMin || 30;
+  if (c.diet.currentWeight) document.getElementById('cfg-weight-current').value = c.diet.currentWeight;
+  if (c.diet.goalWeight)    document.getElementById('cfg-weight-goal').value = c.diet.goalWeight;
+  if (c.budget.incomeTarget)  document.getElementById('cfg-income-target').value = c.budget.incomeTarget;
+  if (c.budget.savingTarget)  document.getElementById('cfg-saving-target').value = c.budget.savingTarget;
+  if (c.notion.token)    document.getElementById('cfg-notion-token').value = c.notion.token;
+  if (c.notion.tasksDb)  document.getElementById('cfg-notion-tasks-db').value = c.notion.tasksDb;
+  if (c.notion.diaryDb)  document.getElementById('cfg-notion-diary-db').value = c.notion.diaryDb;
+  renderHabitConfig();
+}
+
+function renderHabitConfig() {
+  const el = document.getElementById('habit-config-list');
+  el.innerHTML = db.habits.map(h => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:0.85rem;flex:1;">${h.name}</span>
+      <span class="task-tag ${h.cat}" style="font-size:0.7rem;">${h.cat}</span>
+      <button class="btn btn-danger" style="padding:2px 8px;font-size:0.72rem;" onclick="removeHabit('${h.id}')">✕</button>
+    </div>`).join('');
+}
+
+function addHabit() {
+  const name = prompt('習慣名を入力してください（例：🎸 ギター練習）');
+  if (!name) return;
+  const catArr = ['guitar','diet','budget','general'];
+  const catIn = prompt('カテゴリ (guitar / diet / budget / general)') || 'general';
+  const cat = catArr.includes(catIn) ? catIn : 'general';
+  db.habits.push({ id: uid(), name: name.trim(), cat });
+  saveDB(db); renderHabitConfig(); toast('習慣を追加しました');
+}
+
+function removeHabit(id) {
+  db.habits = db.habits.filter(h => h.id !== id); saveDB(db); renderHabitConfig();
+}
+
+function saveSettings() {
+  db.config.name   = document.getElementById('cfg-name').value.trim();
+  db.config.vision = document.getElementById('cfg-vision').value.trim();
+  db.config.guitar.annualGoal = parseInt(document.getElementById('cfg-guitar-annual-goal').value) || 300;
+  db.config.guitar.dailyMin   = parseInt(document.getElementById('cfg-guitar-daily-min').value) || 30;
+  db.config.diet.currentWeight = parseFloat(document.getElementById('cfg-weight-current').value) || null;
+  db.config.diet.goalWeight    = parseFloat(document.getElementById('cfg-weight-goal').value) || null;
+  db.config.budget.incomeTarget  = parseInt(document.getElementById('cfg-income-target').value) || 200000;
+  db.config.budget.savingTarget  = parseInt(document.getElementById('cfg-saving-target').value) || 30000;
+  db.config.notion.token   = document.getElementById('cfg-notion-token').value.trim();
+  db.config.notion.tasksDb = document.getElementById('cfg-notion-tasks-db').value.trim();
+  db.config.notion.diaryDb = document.getElementById('cfg-notion-diary-db').value.trim();
+  saveDB(db); toast('設定を保存しました ✅');
+}
+
+/* ═══════════════════════════════════════════
+   NOTION INTEGRATION
+═══════════════════════════════════════════ */
+async function testNotionConnection() {
+  const token = document.getElementById('cfg-notion-token').value.trim();
+  if (!token) { toast('Notion Tokenを入力してください'); return; }
+  const statusEl = document.getElementById('notion-status');
+  statusEl.textContent = '接続中...';
+  try {
+    const res = await fetch('https://api.notion.com/v1/users/me', {
+      headers: { 'Authorization': `Bearer ${token}`, 'Notion-Version': '2022-06-28' }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      statusEl.innerHTML = `<span style="color:var(--diet);">✅ 接続成功: ${data.name || data.type}</span>`;
+    } else {
+      statusEl.innerHTML = `<span style="color:var(--danger);">❌ 接続失敗 (${res.status})</span>`;
+    }
+  } catch(e) {
+    statusEl.innerHTML = `<span style="color:var(--danger);">❌ エラー: CORS制限のためブラウザから直接アクセスできません。Notion APIはサーバー経由での利用を推奨します。</span>`;
+  }
+}
+
+async function syncTaskToNotion(task) {
+  const { token, tasksDb } = db.config.notion;
+  if (!token || !tasksDb) return;
+  try {
+    await fetch('https://api.notion.com/v1/pages', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Notion-Version': '2022-06-28'
+      },
+      body: JSON.stringify({
+        parent: { database_id: tasksDb },
+        properties: {
+          'Name': { title: [{ text: { content: task.name } }] },
+          'Category': { select: { name: task.cat } },
+          'Due Date': task.date ? { date: { start: task.date } } : undefined,
+          'Status': { select: { name: task.done ? '完了' : '未完了' } }
+        }
+      })
+    });
+  } catch(e) { /* silent fail */ }
+}
+
+function exportNotionTasks() {
+  const tasks = db.tasks;
+  const csv = ['タスク名,カテゴリ,期日,状態,メモ']
+    .concat(tasks.map(t => `"${t.name}","${t.cat}","${t.date||''}","${t.done?'完了':'未完了'}","${t.note||''}"`))
+    .join('\n');
+  const blob = new Blob(['﻿'+csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `life_os_tasks_${today()}.csv`;
+  a.click();
+  toast('CSVでエクスポートしました（Notionにインポート可能）');
+}
+
+/* ═══════════════════════════════════════════
+   DATA EXPORT / IMPORT
+═══════════════════════════════════════════ */
+function exportData() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `life_os_backup_${today()}.json`;
+  a.click();
+  toast('エクスポートしました');
+}
+
+function importData() { document.getElementById('import-file').click(); }
+
+function handleImport(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      db = JSON.parse(ev.target.result);
+      saveDB(db); renderDashboard(); toast('データをインポートしました ✅');
+    } catch { toast('❌ JSONの読み込みに失敗しました'); }
+  };
+  reader.readAsText(file);
+}
+
+function confirmReset() {
+  if (confirm('すべてのデータをリセットしますか？この操作は取り消せません。')) {
+    db = defaultDB(); saveDB(db); renderDashboard();
+    nav('dashboard'); toast('データをリセットしました');
+  }
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+window.addEventListener('resize', () => {
+  if (document.getElementById('page-diet').classList.contains('active')) drawWeightChart();
+  if (document.getElementById('page-budget').classList.contains('active')) {
+    const now = budgetMonth; const y = now.getFullYear(), m = now.getMonth()+1;
+    const monthKey = `${y}-${String(m).padStart(2,'0')}`;
+    drawBudgetChart(db.budgetEntries.filter(e => e.date.startsWith(monthKey)));
+  }
+});
+
+renderDashboard();
+</script>
+</body>
+</html>
