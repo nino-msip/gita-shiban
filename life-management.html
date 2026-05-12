@@ -693,59 +693,37 @@
       <button class="btn btn-ghost" style="margin-top:10px;" onclick="addHabit()">＋ 習慣を追加</button>
     </div>
 
-    <!-- Notion連携 (Webhook) -->
+    <!-- Notion連携（APIトークン直接） -->
     <div class="card">
-      <div class="card-title">📲 Notion 連携（スマホ対応）</div>
-
-      <!-- ステップガイド -->
-      <details style="margin-bottom:14px;">
-        <summary style="cursor:pointer;font-size:0.85rem;font-weight:700;color:var(--gold);padding:6px 0;">
-          📖 セットアップ手順（タップして開く）
-        </summary>
-        <div style="font-size:0.8rem;line-height:1.9;color:var(--muted);margin-top:10px;padding:12px;background:var(--surface2);border-radius:8px;">
-          <strong style="color:var(--text);">① Make.com（無料）でアカウント作成</strong><br>
-          <a href="https://www.make.com" target="_blank" rel="noopener" style="color:var(--gold);">make.com</a> にアクセスしてサインアップ（無料プランで十分）<br><br>
-
-          <strong style="color:var(--text);">② Notionのデータベースを準備</strong><br>
-          Notionでデータベースを作成。プロパティ例：<br>
-          ・タスク用：Name（タイトル）/ Category（セレクト）/ Due（日付）/ Status（セレクト）<br>
-          ・ログ用：Name（タイトル）/ Date（日付）/ Value（数値）/ Notes（テキスト）<br><br>
-
-          <strong style="color:var(--text);">③ Make.comでシナリオを作成</strong><br>
-          1. 「Create a new scenario」<br>
-          2. 最初のモジュール: <strong style="color:var(--text);">Webhooks → Custom webhook</strong><br>
-          3. 「Add」→ 生成されたWebhook URLをコピー<br>
-          4. 次のモジュール: <strong style="color:var(--text);">Notion → Create a Database Item</strong><br>
-          5. Notionに接続し、対象のデータベースと各フィールドをマッピング<br>
-          6. シナリオを保存・有効化<br><br>
-
-          <strong style="color:var(--text);">④ Webhook URLを下のフォームに貼り付けて保存</strong><br>
-          タスク追加・ログ記録のたびに自動でNotionへ送信されます。<br>
-          スマホのNotionアプリでもリアルタイム反映 ✅
-        </div>
-      </details>
-
+      <div class="card-title">📲 Notion 連携（APIトークン直接）</div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:14px;line-height:1.7;">
+        Notion Integration Token とデータベースIDを設定してください。<br>
+        「同期キューを出力」でデータをJSON出力 → <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">node notion-sync.js</code> で同期します。
+      </div>
       <div class="stack">
         <div class="field">
-          <label>Make.com Webhook URL（タスク用）</label>
-          <input type="text" id="cfg-webhook-tasks" placeholder="https://hook.eu1.make.com/xxxx...">
+          <label>Notion Integration Token</label>
+          <input type="text" id="cfg-notion-token" placeholder="secret_xxxxxxxxxxxxxxxxxxxx">
         </div>
         <div class="field">
-          <label>Make.com Webhook URL（ギター練習ログ用）</label>
-          <input type="text" id="cfg-webhook-guitar" placeholder="https://hook.eu1.make.com/xxxx...">
+          <label>タスク DB ID</label>
+          <input type="text" id="cfg-notion-tasks-db" placeholder="32桁のID（NotionページURLから取得）">
         </div>
         <div class="field">
-          <label>Make.com Webhook URL（体重ログ用）</label>
-          <input type="text" id="cfg-webhook-diet" placeholder="https://hook.eu1.make.com/xxxx...">
+          <label>ギター練習ログ DB ID</label>
+          <input type="text" id="cfg-notion-guitar-db" placeholder="32桁のID">
         </div>
         <div class="field">
-          <label>Make.com Webhook URL（家計ログ用）</label>
-          <input type="text" id="cfg-webhook-budget" placeholder="https://hook.eu1.make.com/xxxx...">
+          <label>体重ログ DB ID</label>
+          <input type="text" id="cfg-notion-diet-db" placeholder="32桁のID">
         </div>
-
+        <div class="field">
+          <label>家計 DB ID</label>
+          <input type="text" id="cfg-notion-budget-db" placeholder="32桁のID">
+        </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
           <button class="btn btn-primary" onclick="saveSettings()">設定を保存</button>
-          <button class="btn btn-ghost" onclick="testWebhook()">🔗 接続テスト</button>
+          <button class="btn btn-ghost" onclick="exportSyncQueue()">📤 同期キューを出力</button>
           <button class="btn btn-ghost" onclick="exportNotionTasks()">📥 CSV出力</button>
         </div>
       </div>
@@ -805,8 +783,7 @@ function defaultDB() {
       guitar: { annualGoal: 300, dailyMin: 30 },
       diet: { currentWeight: null, goalWeight: null, goalDate: null },
       budget: { incomeTarget: 200000, savingTarget: 30000 },
-      notion: { token: '', tasksDb: '', diaryDb: '' },
-      webhooks: { tasks: '', guitar: '', diet: '', budget: '' }
+      notion: { token: '', tasksDb: '', guitarDb: '', dietDb: '', budgetDb: '' }
     },
     habits: [
       { id: 'h1', name: '🎸 ギター練習', cat: 'guitar' },
@@ -1439,11 +1416,12 @@ function renderSettings() {
   if (c.diet.goalWeight)    document.getElementById('cfg-weight-goal').value = c.diet.goalWeight;
   if (c.budget.incomeTarget)  document.getElementById('cfg-income-target').value = c.budget.incomeTarget;
   if (c.budget.savingTarget)  document.getElementById('cfg-saving-target').value = c.budget.savingTarget;
-  const wh = c.webhooks || {};
-  if (wh.tasks)  document.getElementById('cfg-webhook-tasks').value  = wh.tasks;
-  if (wh.guitar) document.getElementById('cfg-webhook-guitar').value = wh.guitar;
-  if (wh.diet)   document.getElementById('cfg-webhook-diet').value   = wh.diet;
-  if (wh.budget) document.getElementById('cfg-webhook-budget').value = wh.budget;
+  const n = c.notion || {};
+  if (n.token)    document.getElementById('cfg-notion-token').value     = n.token;
+  if (n.tasksDb)  document.getElementById('cfg-notion-tasks-db').value  = n.tasksDb;
+  if (n.guitarDb) document.getElementById('cfg-notion-guitar-db').value = n.guitarDb;
+  if (n.dietDb)   document.getElementById('cfg-notion-diet-db').value   = n.dietDb;
+  if (n.budgetDb) document.getElementById('cfg-notion-budget-db').value = n.budgetDb;
   renderHabitConfig();
 }
 
@@ -1480,48 +1458,40 @@ function saveSettings() {
   db.config.diet.goalWeight    = parseFloat(document.getElementById('cfg-weight-goal').value) || null;
   db.config.budget.incomeTarget  = parseInt(document.getElementById('cfg-income-target').value) || 200000;
   db.config.budget.savingTarget  = parseInt(document.getElementById('cfg-saving-target').value) || 30000;
-  if (!db.config.webhooks) db.config.webhooks = {};
-  db.config.webhooks.tasks  = document.getElementById('cfg-webhook-tasks').value.trim();
-  db.config.webhooks.guitar = document.getElementById('cfg-webhook-guitar').value.trim();
-  db.config.webhooks.diet   = document.getElementById('cfg-webhook-diet').value.trim();
-  db.config.webhooks.budget = document.getElementById('cfg-webhook-budget').value.trim();
+  if (!db.config.notion) db.config.notion = {};
+  db.config.notion.token    = document.getElementById('cfg-notion-token').value.trim();
+  db.config.notion.tasksDb  = document.getElementById('cfg-notion-tasks-db').value.trim();
+  db.config.notion.guitarDb = document.getElementById('cfg-notion-guitar-db').value.trim();
+  db.config.notion.dietDb   = document.getElementById('cfg-notion-diet-db').value.trim();
+  db.config.notion.budgetDb = document.getElementById('cfg-notion-budget-db').value.trim();
   saveDB(db); toast('設定を保存しました ✅');
 }
 
 /* ═══════════════════════════════════════════
-   WEBHOOK / NOTION INTEGRATION
+   NOTION SYNC (queue → notion-sync.js)
 ═══════════════════════════════════════════ */
-async function sendWebhook(type, payload) {
-  const url = (db.config.webhooks || {})[type];
-  if (!url) return;
-  try {
-    await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, timestamp: new Date().toISOString(), ...payload })
-    });
-  } catch(e) { /* silent — offline or CORS */ }
-}
+function sendWebhook() {} // no-op（webhook廃止）
 
-async function testWebhook() {
-  const url = document.getElementById('cfg-webhook-tasks').value.trim();
-  const statusEl = document.getElementById('notion-status');
-  if (!url) { statusEl.innerHTML = '<span style="color:var(--danger);">タスク用のWebhook URLを入力してください</span>'; return; }
-  statusEl.textContent = '送信中...';
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'test', timestamp: new Date().toISOString(), name: 'Life OS 接続テスト', cat: 'general' })
-    });
-    if (res.ok) {
-      statusEl.innerHTML = '<span style="color:var(--diet);">✅ Webhook送信成功！Make.comのシナリオ実行履歴を確認してください。</span>';
-    } else {
-      statusEl.innerHTML = `<span style="color:var(--danger);">❌ エラー (${res.status}) — Webhook URLを確認してください</span>`;
-    }
-  } catch(e) {
-    statusEl.innerHTML = '<span style="color:var(--diet);">✅ リクエスト送信完了（CORSにより応答確認不可ですが送信されています）</span>';
-  }
+function exportSyncQueue() {
+  const n = db.config.notion || {};
+  const queue = {
+    token:    n.token    || '',
+    tasksDb:  n.tasksDb  || '',
+    guitarDb: n.guitarDb || '',
+    dietDb:   n.dietDb   || '',
+    budgetDb: n.budgetDb || '',
+    tasks:       db.tasks.filter(t => !t.done),
+    guitarLogs:  db.guitarLogs.slice(-50),
+    dietLogs:    db.dietLogs.slice(-50),
+    budgetEntries: db.budgetEntries.slice(-100),
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(queue, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'notion-queue.json';
+  a.click();
+  toast('notion-queue.json を出力しました。node notion-sync.js で同期してください。');
 }
 
 function exportNotionTasks() {

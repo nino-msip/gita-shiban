@@ -1,0 +1,9 @@
+{
+  "name": "life-os-notion-sync",
+  "version": "1.0.0",
+  "description": "Life OS → Notion 同期スクリプト",
+  "scripts": {
+    "sync": "node notion-sync.js"
+  },
+  "engines": { "node": ">=16" }
+}
