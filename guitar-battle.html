@@ -381,6 +381,35 @@ body {
 .overlay-text { font-size:3rem; font-weight:900; animation:ov-pop 2s ease-out forwards; text-shadow:0 0 60px currentColor; }
 @keyframes ov-pop { 0%{transform:scale(0.2) rotate(-8deg)} 24%{transform:scale(1.22) rotate(3deg)} 40%{transform:scale(0.96) rotate(0deg)} 100%{transform:scale(1) rotate(0deg)} }
 
+/* ══ Timer Bar ════════════════════════════════════════════════ */
+.timer-bar-wrap {
+    width: 100%; max-width: 520px;
+    display: flex; align-items: center; gap: 8px; height: 18px;
+}
+.timer-bar-fill {
+    flex: 1; height: 5px; border-radius: 3px;
+    background: var(--ok); transition: none;
+}
+.timer-label {
+    font-size: 0.6rem; color: #2a2a50; font-weight: 700;
+    min-width: 36px; text-align: right; font-family: monospace;
+}
+
+/* ══ Weakness Stats ═══════════════════════════════════════════ */
+.stats-content { display: flex; flex-direction: column; gap: 7px; }
+.stats-empty { font-size: 0.64rem; color: #2a2a48; text-align: center; padding: 6px 0; }
+.stats-row {
+    display: grid;
+    grid-template-columns: 58px 26px 1fr 38px 44px;
+    align-items: center; gap: 6px;
+}
+.stats-pos  { font-size: 0.7rem; color: #7a7ab8; font-weight: 700; }
+.stats-note { font-size: 0.72rem; color: var(--gold); font-weight: 900; text-align: center; }
+.stats-bar-bg { background: #08081e; border-radius: 3px; overflow: hidden; height: 6px; }
+.stats-bar-fill { height: 100%; border-radius: 3px; }
+.stats-acc  { font-size: 0.65rem; font-weight: 700; text-align: right; }
+.stats-time { font-size: 0.58rem; color: #33335a; font-family: monospace; }
+
 /* ══ String Level Dots ═══════════════════════════════════════ */
 .ss-str-sub { font-size: 0.6rem; color: #33335a; margin: -4px 0 8px; text-align: center; }
 .ss-lv-dots { display: flex; gap: 5px; margin: 4px 0 2px; }
@@ -479,7 +508,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.23</span>
+        <span class="version-tag">v1.24</span>
         <span class="app-title">⚔️ 指板バトル</span>
     </div>
     <div class="header-btns">
@@ -512,6 +541,14 @@ body {
     <div class="ss-section">
         <div class="ss-section-title">✨ 特別ステージ</div>
         <div class="ss-grid ss-grid-3" id="ss-special-grid"></div>
+    </div>
+
+    <!-- 苦手分析 -->
+    <div class="ss-section">
+        <div class="ss-section-title">📊 苦手ゾーン分析</div>
+        <div id="stats-content" class="stats-content">
+            <div class="stats-empty">まだデータがありません</div>
+        </div>
     </div>
 </div>
 
@@ -561,6 +598,12 @@ body {
     <div class="battle-msg">
         <div id="combo-display" class="combo-display"></div>
         <div id="result-line" class="result-line"></div>
+    </div>
+
+    <!-- タイマーバー -->
+    <div class="timer-bar-wrap">
+        <div class="timer-bar-fill" id="timer-bar-fill"></div>
+        <span class="timer-label" id="timer-label">10.0s</span>
     </div>
 
     <div class="fretboard-container">
@@ -703,6 +746,7 @@ function showStageSelect() {
     document.getElementById('ss-fret-grid').innerHTML = '';
     document.getElementById('ss-special-grid').innerHTML = '';
     buildStageSelect();
+    renderWeaknessStats();
     document.getElementById('game-area').style.display = 'none';
     document.getElementById('stage-select').style.display = 'flex';
 }
@@ -869,6 +913,9 @@ let gLives=3, gCombo=0, gWave=0;
 let gEnemyHP=0, gEnemyMaxHP=0, gEnemy=null;
 let gBusy=false, gAnswered=false, gQ=null;
 let gConsecutive=0;
+let gQuestionTime=0;
+let gTimerAF=null;
+const TIME_LIMIT=10000;
 
 function getStageHi() { return +localStorage.getItem(HI_KEY(gStage.id)) || 0; }
 function setStageHi(v){ localStorage.setItem(HI_KEY(gStage.id), v); }
@@ -972,13 +1019,79 @@ function startGame() {
     gConsecutive=0;
     document.getElementById('explanation-panel').classList.remove('visible');
     const sb = document.getElementById('streak-bar');
-    if (gStage.isStrStage) {
-        sb.classList.add('visible');
-        updateStreakBar();
-    } else {
-        sb.classList.remove('visible');
-    }
+    if (gStage.isStrStage) { sb.classList.add('visible'); updateStreakBar(); }
+    else sb.classList.remove('visible');
     buildFretboard(); updateHUD(); spawnEnemy();
+}
+
+// ── タイマーバー ───────────────────────────────────────────────
+function startTimerBar() {
+    if (gTimerAF) cancelAnimationFrame(gTimerAF);
+    gQuestionTime = Date.now();
+    const fill  = document.getElementById('timer-bar-fill');
+    const label = document.getElementById('timer-label');
+    fill.style.transition = 'none';
+    fill.style.width = '100%';
+    fill.style.background = 'var(--ok)';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        fill.style.transition = `width ${TIME_LIMIT/1000}s linear, background ${TIME_LIMIT/1000}s ease-in`;
+        fill.style.width = '0%';
+        fill.style.background = '#f87171';
+    }));
+    const tick = () => {
+        const rem = Math.max(0, (TIME_LIMIT - (Date.now()-gQuestionTime)) / 1000);
+        label.textContent = rem.toFixed(1) + 's';
+        if (rem > 0) gTimerAF = requestAnimationFrame(tick);
+    };
+    gTimerAF = requestAnimationFrame(tick);
+}
+
+function stopTimerBar() {
+    if (gTimerAF) { cancelAnimationFrame(gTimerAF); gTimerAF=null; }
+    const fill = document.getElementById('timer-bar-fill');
+    fill.style.transition = 'none';
+}
+
+// ── 苦手統計 ──────────────────────────────────────────────────
+const STATS_KEY = 'fbattle_stats';
+function getStats() { try { return JSON.parse(localStorage.getItem(STATS_KEY))||{}; } catch{ return {}; } }
+
+function updateStats(s, f, isOk, ms) {
+    const st = getStats();
+    const k = `${s}_${f}`;
+    if (!st[k]) st[k] = {ok:0,ng:0,totalMs:0};
+    st[k].ok += isOk?1:0;
+    st[k].ng += isOk?0:1;
+    st[k].totalMs += ms;
+    localStorage.setItem(STATS_KEY, JSON.stringify(st));
+}
+
+function renderWeaknessStats() {
+    const el = document.getElementById('stats-content');
+    if (!el) return;
+    const st = getStats();
+    const entries = Object.entries(st)
+        .map(([k,v])=>{ const [s,f]=k.split('_').map(Number); const tot=v.ok+v.ng; return {s,f,tot,acc:v.ok/tot,avgMs:v.totalMs/tot}; })
+        .filter(e=>e.tot>=3)
+        .sort((a,b)=>a.acc-b.acc||b.avgMs-a.avgMs)
+        .slice(0,5);
+    if (!entries.length) {
+        el.innerHTML='<div class="stats-empty">まだデータが不足しています（各ポジション3回以上で分析開始）</div>';
+        return;
+    }
+    el.innerHTML = entries.map(e=>{
+        const lbl = e.f===0?`${STR_JP[e.s]} 開放`:`${STR_JP[e.s]} ${e.f}F`;
+        const pct = Math.round(e.acc*100);
+        const col = pct<40?'#f87171':pct<65?'#facc15':'#4ade80';
+        const avg = (e.avgMs/1000).toFixed(1);
+        return `<div class="stats-row">
+            <span class="stats-pos">${lbl}</span>
+            <span class="stats-note">${getNote(e.s,e.f)}</span>
+            <div class="stats-bar-bg"><div class="stats-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+            <span class="stats-acc" style="color:${col}">${pct}%</span>
+            <span class="stats-time">⏱${avg}s</span>
+        </div>`;
+    }).join('');
 }
 
 function spawnEnemy() {
@@ -1032,6 +1145,7 @@ function askQuestion() {
     setInd(s,f,'target pop');
     renderChoices(makeChoices(gQ.note));
     setTimeout(()=>playNote(s,f), 120);
+    startTimerBar();
 }
 
 function makeChoices(correct) {
@@ -1050,7 +1164,11 @@ function renderChoices(choices) {
 function onAnswer(selected,btn) {
     if (gAnswered||gBusy) return;
     gAnswered=true;
+    stopTimerBar();
+    const elapsed = Date.now() - gQuestionTime;
+    const timePts = Math.max(0, Math.floor((TIME_LIMIT - Math.min(elapsed,TIME_LIMIT)) / 100));
     const isOk=selected===gQ.note;
+    updateStats(gQ.s, gQ.f, isOk, elapsed);
 
     document.querySelectorAll('.choice-btn').forEach(b=>{
         b.disabled=true;
@@ -1066,7 +1184,8 @@ function onAnswer(selected,btn) {
         gCombo++;
         const mult=Math.min(1+(gCombo-1)*0.3,3.5);
         const crit=Math.random()<0.15;
-        const pts=Math.floor(gEnemy.base/gEnemy.hp*mult)*(crit?2:1);
+        const basePts=Math.floor(gEnemy.base/gEnemy.hp*mult)*(crit?2:1);
+        const pts=basePts+timePts;
         const hi=getStageHi();
         gScore+=pts;
         if (gScore>hi) { setStageHi(gScore); if (gScore>hi) setTimeout(sfxLevelUp,250); }
@@ -1078,6 +1197,9 @@ function onAnswer(selected,btn) {
         const cx=sr.left+sr.width/2;
         floatText(`+${pts.toLocaleString()}`,cx,sr.top-8,crit?'#f87171':'var(--gold)',crit?'2rem':'1.8rem');
         if (crit) floatText('CRITICAL!!',cx,sr.top-46,'#fb923c','1.2rem');
+        const elSec=(elapsed/1000).toFixed(1);
+        if (timePts>0) floatText(`⚡+${timePts}`,cx,sr.top-62,'#60a5fa','0.9rem');
+        document.getElementById('timer-label').textContent=elSec+'s';
 
         enemyHit(); updateCombo(); updateHUD();
         gEnemyHP--; updateEnemyHP();
@@ -1121,7 +1243,7 @@ function onAnswer(selected,btn) {
             setTimeout(()=>defeatEnemy(),480);
         } else {
             setSpeechBubble('ぐっ…！');
-            setResult('正解！','ok');
+            setResult(`正解！ ${(elapsed/1000).toFixed(1)}秒`,'ok');
             setTimeout(()=>askQuestion(),1200);
         }
     } else {
@@ -1317,6 +1439,7 @@ function shuffle(a){
 
 // ── Init ──────────────────────────────────────────────────────
 buildStageSelect();
+renderWeaknessStats();
 </script>
 </body>
 </html>
