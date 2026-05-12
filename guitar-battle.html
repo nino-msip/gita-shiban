@@ -508,7 +508,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.24</span>
+        <span class="version-tag">v1.25</span>
         <span class="app-title">⚔️ 指板バトル</span>
     </div>
     <div class="header-btns">
@@ -649,26 +649,29 @@ const STAGE_DEFS = [
 ];
 
 // ── 弦ステージ（レベル制） ──────────────────────────────────
-const STR_LV_RANGES = [[0,3],[5,7],[9,12]];
-const STR_LV_LABELS = ['開放〜3F','5〜7F','9〜12F'];
-const STR_CLEAR_TARGET = 5;
+const STR_LV_RANGES  = [[0,3],[5,7],[9,12],[0,12]]; // Lv1〜4
+const STR_LV_LABELS  = ['開放〜3F','5〜7F','9〜12F','全F 仕上げ'];
+const STR_CLEAR_TARGET = 5;   // Lv1-3: 連続正解数
+const STR_FINAL_LV   = 3;     // Lv4（仕上げ）のインデックス
+const STR_FINAL_CNT  = 10;    // 仕上げ問題数
 
 const STR_LV_KEY = i => `fbattle_strlv_${i}`;
-function getStrLv(i) { return Math.min(+localStorage.getItem(STR_LV_KEY(i))||0, 3); }
+function getStrLv(i) { return Math.min(+localStorage.getItem(STR_LV_KEY(i))||0, 4); }
 function setStrLv(i,v){ localStorage.setItem(STR_LV_KEY(i), v); }
 
 function makeStrStage(strIdx) {
     const lv = getStrLv(strIdx);
-    const effectiveLv = Math.min(lv, 2);
+    const effectiveLv = Math.min(lv, STR_FINAL_LV); // 0〜3
     const [min,max] = STR_LV_RANGES[effectiveLv];
+    const isFinal  = effectiveLv === STR_FINAL_LV;
+    const isMaster = lv > STR_FINAL_LV;
     return {
         id: `str${6-strIdx}`,
-        strIdx,
-        isStrStage: true,
+        strIdx, isStrStage: true, isFinalStage: isFinal,
         label: STR_JP[strIdx],
-        sub: lv>=3 ? '全レベルクリア！' : `Lv${effectiveLv+1} ${STR_LV_LABELS[effectiveLv]}`,
+        sub: isMaster ? '★ 完全マスター' : `Lv${effectiveLv+1} ${STR_LV_LABELS[effectiveLv]}`,
         color: STR_COLORS[strIdx],
-        filter: lv>=3 ? (s,f)=>s===strIdx : (s,f)=>s===strIdx&&f>=min&&f<=max,
+        filter: (s,f) => s===strIdx && f>=min && f<=max,
         lv, effectiveLv,
     };
 }
@@ -684,12 +687,15 @@ function buildStageSelect() {
         const st = makeStrStage(i);
         const lv = getStrLv(i);
         const hi = +localStorage.getItem(HI_KEY(st.id)) || 0;
-        const allClear = lv >= 3;
 
+
+        const isMaster = lv > STR_FINAL_LV;
+        const eLv = Math.min(lv, STR_FINAL_LV);
         let dotsHtml = '';
-        for (let d=0; d<3; d++) {
-            const cls = d < lv ? 'done' : (d === Math.min(lv,2) ? 'current' : 'locked');
-            dotsHtml += `<span class="ss-lv-dot ${cls}">${d+1}</span>`;
+        for (let d=0; d<4; d++) {
+            const cls = d < lv ? 'done' : (d === eLv ? 'current' : 'locked');
+            const sym = d === STR_FINAL_LV ? '★' : d+1;
+            dotsHtml += `<span class="ss-lv-dot ${cls}">${sym}</span>`;
         }
 
         const btn = document.createElement('button');
@@ -699,9 +705,9 @@ function buildStageSelect() {
             <span class="ss-label">${st.label}</span>
             <span class="ss-sub">${STR_OPEN[i]}</span>
             <div class="ss-lv-dots">${dotsHtml}</div>
-            ${allClear
-                ? `<span class="ss-lv-all-clear">★ 全クリア</span>`
-                : `<span class="ss-lv-current">Lv${Math.min(lv,2)+1}: ${STR_LV_LABELS[Math.min(lv,2)]}</span>`
+            ${isMaster
+                ? `<span class="ss-lv-all-clear">★ 完全マスター</span>`
+                : `<span class="ss-lv-current">Lv${eLv+1}: ${STR_LV_LABELS[eLv]}</span>`
             }
             <span class="ss-best ${hi>0?'has-score':''}">${hi>0?'BEST '+hi.toLocaleString():'—'}</span>`;
         btn.onclick = () => selectStrStage(i);
@@ -899,12 +905,17 @@ function buildQuestionText(s, f) {
     return f === 0 ? `${STR_JP[s]} 開放弦は？` : `${STR_JP[s]} ${f}フレットは？`;
 }
 
+let gSFQueue = [];
 function randomSF() {
-    const valid = [];
-    for (let s=0; s<6; s++)
-        for (let f=0; f<=NUM_FRETS; f++)
-            if (gStage.filter(s, f)) valid.push([s, f]);
-    return valid[Math.floor(Math.random() * valid.length)] || [0, 0];
+    if (gSFQueue.length === 0) {
+        const valid = [];
+        for (let s=0; s<6; s++)
+            for (let f=0; f<=NUM_FRETS; f++)
+                if (gStage.filter(s, f)) valid.push([s, f]);
+        gSFQueue = valid;
+        shuffle(gSFQueue);
+    }
+    return gSFQueue.pop();
 }
 
 // ── ゲーム状態 ────────────────────────────────────────────────
@@ -912,7 +923,7 @@ let gScore=0, gLevel=1, gXP=0, gXPNext=200;
 let gLives=3, gCombo=0, gWave=0;
 let gEnemyHP=0, gEnemyMaxHP=0, gEnemy=null;
 let gBusy=false, gAnswered=false, gQ=null;
-let gConsecutive=0;
+let gConsecutive=0, gQuizCount=0, gQuizCorrect=0;
 let gQuestionTime=0;
 let gTimerAF=null;
 const TIME_LIMIT=10000;
@@ -1016,7 +1027,8 @@ function setSpeechBubble(text) {
 function startGame() {
     gScore=0; gLevel=1; gXP=0; gXPNext=200;
     gLives=3; gCombo=0; gWave=0; gBusy=false;
-    gConsecutive=0;
+    gConsecutive=0; gQuizCount=0; gQuizCorrect=0;
+    gSFQueue=[];
     document.getElementById('explanation-panel').classList.remove('visible');
     const sb = document.getElementById('streak-bar');
     if (gStage.isStrStage) { sb.classList.add('visible'); updateStreakBar(); }
@@ -1204,35 +1216,45 @@ function onAnswer(selected,btn) {
         enemyHit(); updateCombo(); updateHUD();
         gEnemyHP--; updateEnemyHP();
 
-        // 弦ステージ：連続正解カウント
+        // 弦ステージ：連続正解 / 仕上げカウント
         if (gStage.isStrStage) {
-            gConsecutive++;
-            updateStreakBar();
-            if (gConsecutive >= STR_CLEAR_TARGET) {
-                gBusy=true;
-                const nextLv = gStage.effectiveLv + 1;
-                const strIdx = gStage.strIdx;
-                setStrLv(strIdx, nextLv);
-                const isAllClear = nextLv >= 3;
-                setTimeout(()=>{
-                    sfxStageClear();
-                    if (isAllClear) {
-                        showOverlay(`${gStage.label} 全クリア！★`,'#f5d070','rgba(245,208,112,0.12)',()=>{});
-                        burstFireworks();
-                    } else {
-                        showOverlay(`Lv${nextLv} へ進む！`,'#4ade80','rgba(74,222,128,0.10)',()=>{});
-                    }
+            if (gStage.isFinalStage) {
+                gQuizCount++; gQuizCorrect++;
+                updateStreakBar();
+                if (gQuizCount >= STR_FINAL_CNT) {
+                    gBusy=true;
+                    const strIdx = gStage.strIdx;
+                    setStrLv(strIdx, STR_FINAL_LV + 1); // master
                     setTimeout(()=>{
-                        gStage = makeStrStage(strIdx);
-                        document.getElementById('stage-bar-name').textContent = `${gStage.label}（${gStage.sub}）`;
-                        gConsecutive=0;
-                        updateStreakBar();
-                        document.getElementById('explanation-panel').classList.remove('visible');
-                        gBusy=false;
-                        askQuestion();
-                    }, 2200);
-                }, 480);
-                return;
+                        sfxStageClear(); burstFireworks();
+                        showOverlay(`★ 完全マスター！ ${gQuizCorrect}/${STR_FINAL_CNT}正解`,'#f5d070','rgba(245,208,112,0.12)',()=>{});
+                        setTimeout(()=>showStageSelect(), 2600);
+                    }, 480);
+                    return;
+                }
+            } else {
+                gConsecutive++;
+                updateStreakBar();
+                if (gConsecutive >= STR_CLEAR_TARGET) {
+                    gBusy=true;
+                    const nextLv = gStage.effectiveLv + 1;
+                    const strIdx = gStage.strIdx;
+                    setStrLv(strIdx, nextLv);
+                    setTimeout(()=>{
+                        sfxStageClear();
+                        showOverlay(`Lv${nextLv+1} へ進む！`,'#4ade80','rgba(74,222,128,0.10)',()=>{});
+                        setTimeout(()=>{
+                            gStage = makeStrStage(strIdx);
+                            document.getElementById('stage-bar-name').textContent = `${gStage.label}（${gStage.sub}）`;
+                            gConsecutive=0; gSFQueue=[];
+                            updateStreakBar();
+                            document.getElementById('explanation-panel').classList.remove('visible');
+                            gBusy=false;
+                            askQuestion();
+                        }, 2200);
+                    }, 480);
+                    return;
+                }
             }
         }
 
@@ -1247,10 +1269,25 @@ function onAnswer(selected,btn) {
             setTimeout(()=>askQuestion(),1200);
         }
     } else {
-        // 弦ステージ：不正解でリセット
+        // 弦ステージ：不正解
         if (gStage.isStrStage) {
-            gConsecutive=0;
-            updateStreakBar();
+            if (gStage.isFinalStage) {
+                gQuizCount++;
+                updateStreakBar();
+                if (gQuizCount >= STR_FINAL_CNT) {
+                    gBusy=true;
+                    const strIdx = gStage.strIdx;
+                    setTimeout(()=>{
+                        sfxStageClear();
+                        showOverlay(`仕上げ終了 ${gQuizCorrect}/${STR_FINAL_CNT}正解`,'#60a5fa','rgba(96,165,250,0.10)',()=>{});
+                        setTimeout(()=>showStageSelect(), 2600);
+                    }, 1400);
+                    return;
+                }
+            } else {
+                gConsecutive=0;
+                updateStreakBar();
+            }
         }
         gCombo=0; gLives=Math.max(0,gLives-1);
         updateCombo(); updateHUD(); sfxMiss(); playerHit();
@@ -1337,12 +1374,25 @@ function updateStreakBar() {
     const dots = document.getElementById('streak-dots');
     const tgt  = document.getElementById('streak-target');
     dots.innerHTML = '';
-    for (let i=0; i<STR_CLEAR_TARGET; i++) {
-        const d = document.createElement('div');
-        d.className = 'streak-dot' + (i < gConsecutive ? ' filled' : '');
-        dots.appendChild(d);
+    if (gStage.isFinalStage) {
+        // 仕上げ：10問プログレス（正解=金、不正解=赤、未回答=暗）
+        for (let i=0; i<STR_FINAL_CNT; i++) {
+            const d = document.createElement('div');
+            // 回答済み判定は gQuizCount で、正解はgQuizCorrectで分からないので色分けは簡略化
+            d.className = 'streak-dot' + (i < gQuizCount ? ' filled' : '');
+            dots.appendChild(d);
+        }
+        tgt.textContent = `${gQuizCount}/${STR_FINAL_CNT}問`;
+        document.getElementById('streak-label').textContent = '仕上げ';
+    } else {
+        for (let i=0; i<STR_CLEAR_TARGET; i++) {
+            const d = document.createElement('div');
+            d.className = 'streak-dot' + (i < gConsecutive ? ' filled' : '');
+            dots.appendChild(d);
+        }
+        tgt.textContent = `${gConsecutive}/${STR_CLEAR_TARGET}`;
+        document.getElementById('streak-label').textContent = '連続正解';
     }
-    tgt.textContent = `${gConsecutive}/${STR_CLEAR_TARGET}`;
 }
 
 // ── 音の導き方解説 ────────────────────────────────────────────
