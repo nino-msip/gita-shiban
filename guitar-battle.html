@@ -472,18 +472,7 @@ body {
 }
 .streak-target { font-size: 0.58rem; color: #33335a; font-weight: 400; white-space: nowrap; }
 
-/* ══ Explanation Panel ════════════════════════════════════════ */
-.explanation-panel {
-    display: none;
-    width: 100%; max-width: 520px;
-    background: #04041a;
-    border: 3px solid var(--dq-frame);
-    border-radius: 3px;
-    padding: 12px 15px 13px;
-    box-shadow: inset 0 0 0 1px var(--dq-frame2), 0 4px 18px rgba(0,0,0,0.7);
-}
-.explanation-panel.visible { display: block; }
-.exp-title { font-size: 0.58rem; color: #33337a; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 7px; }
+/* ══ Explanation Modal ════════════════════════════════════════ */
 .exp-chain { display: flex; flex-direction: column; gap: 3px; }
 .exp-row { display: flex; align-items: baseline; gap: 5px; font-size: 0.73rem; color: #5a5a8a; flex-wrap: wrap; }
 .exp-anchor  { color: var(--gold); font-weight: 800; }
@@ -493,6 +482,41 @@ body {
 .exp-steps   { font-size: 0.65rem; color: #33335a; margin-top: 6px; font-family: monospace; line-height: 1.6; }
 .exp-answer  { color: var(--ok); font-weight: 900; font-size: 0.85rem; }
 .exp-special { font-size: 0.6rem; color: #f87171; margin-top: 3px; }
+
+.explain-modal {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,10,0.80);
+    align-items: flex-end; justify-content: center;
+    padding: 0 12px 20px;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+}
+.explain-modal.open { display: flex; }
+.explain-modal-box {
+    background: #04041a; border: 3px solid var(--dq-frame); border-radius: 4px;
+    box-shadow: inset 0 0 0 1px var(--dq-frame2), 0 -4px 28px rgba(0,0,0,0.95);
+    padding: 16px 18px 14px; width: 100%; max-width: 480px;
+    display: flex; flex-direction: column; gap: 11px;
+    animation: modal-up 0.2s ease-out;
+}
+@keyframes modal-up {
+    from { transform: translateY(24px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+.explain-modal-result { font-size: 1.05rem; font-weight: 700; text-align: center; }
+.explain-modal-title {
+    font-size: 0.52rem; color: #33337a; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 5px;
+}
+.explain-next-btn {
+    font-family: 'DotGothic16', sans-serif;
+    background: #04041a; border: 2px solid var(--dq-frame);
+    color: var(--gold2); font-size: 0.92rem; padding: 11px 0;
+    border-radius: 2px; cursor: pointer; width: 100%; letter-spacing: 0.05em;
+    box-shadow: inset 0 0 0 1px var(--dq-frame2);
+    touch-action: manipulation; user-select: none; -webkit-user-select: none;
+}
+.explain-next-btn:hover  { background: #0a0a2e; }
+.explain-next-btn:active { background: #08082a; }
 
 /* ══ iPhone / 小画面対応（一画面収め） ════════════════════════ */
 @media (max-width: 430px) {
@@ -547,7 +571,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.26</span>
+        <span class="version-tag">v1.27</span>
         <span class="app-title">⚔️ 指板バトル</span>
     </div>
     <div class="header-btns">
@@ -658,10 +682,17 @@ body {
         <span class="streak-target" id="streak-target">0/5</span>
     </div>
 
-    <!-- 解説パネル -->
-    <div class="explanation-panel" id="explanation-panel">
-        <div class="exp-title">💡 音の導き方</div>
-        <div id="explanation-content" class="exp-chain"></div>
+    </div>
+
+<!-- 解説ポップアップ -->
+<div id="explain-modal" class="explain-modal">
+    <div class="explain-modal-box">
+        <div class="explain-modal-result" id="explain-modal-result"></div>
+        <div>
+            <div class="explain-modal-title">💡 音の導き方</div>
+            <div class="exp-chain" id="explain-modal-body"></div>
+        </div>
+        <button class="explain-next-btn" onclick="onExplainNext()">▶ 次へ</button>
     </div>
 </div>
 
@@ -980,7 +1011,6 @@ function startGame() {
     gLives=3; gCombo=0; gWave=0; gBusy=false;
     gConsecutive=0; gQuizCount=0; gQuizCorrect=0;
     gSFQueue=[];
-    document.getElementById('explanation-panel').classList.remove('visible');
     const sb = document.getElementById('streak-bar');
     if (gStage.isStrStage) { sb.classList.add('visible'); updateStreakBar(); }
     else sb.classList.remove('visible');
@@ -1101,7 +1131,6 @@ function spawnEnemy() {
 function askQuestion() {
     if (gBusy) return;
     gAnswered=false; clearInds();
-    document.getElementById('explanation-panel').classList.remove('visible');
     const [s,f] = randomSF();
     gQ={s, f, note:getNote(s,f)};
     setSpeechBubble(buildQuestionText(s,f));
@@ -1139,9 +1168,6 @@ function onAnswer(selected,btn) {
     });
     if (!isOk) btn.classList.add('ng');
     setInd(gQ.s,gQ.f,isOk?'correct pop':'wrong pop',gQ.note);
-
-    // 解説パネルを表示
-    showExplanation(gQ.s, gQ.f);
 
     if (isOk) {
         gCombo++;
@@ -1199,7 +1225,6 @@ function onAnswer(selected,btn) {
                             document.getElementById('stage-bar-name').textContent = `${gStage.label}（${gStage.sub}）`;
                             gConsecutive=0; gSFQueue=[];
                             updateStreakBar();
-                            document.getElementById('explanation-panel').classList.remove('visible');
                             gBusy=false;
                             askQuestion();
                         }, 2200);
@@ -1217,7 +1242,7 @@ function onAnswer(selected,btn) {
         } else {
             setSpeechBubble('ぐっ…！');
             setResult(`正解！ ${(elapsed/1000).toFixed(1)}秒`,'ok');
-            setTimeout(()=>askQuestion(),1200);
+            showExplainModal(true, ()=>askQuestion());
         }
     } else {
         // 弦ステージ：不正解
@@ -1245,11 +1270,10 @@ function onAnswer(selected,btn) {
         setSpeechBubble('フハハ！ 違うぞ！');
         if (gLives===0) {
             gLives=3; setResult('ピンチ！ 復活！','miss');
-            setTimeout(()=>askQuestion(),1600);
         } else {
             setResult(`不正解… 正解は ${gQ.note}`,'miss');
-            setTimeout(()=>askQuestion(),1400);
         }
+        showExplainModal(false, ()=>askQuestion());
     }
 }
 
@@ -1388,9 +1412,20 @@ function buildIntervalExplanation(s, f) {
     return rows.join('');
 }
 
-function showExplanation(s, f) {
-    document.getElementById('explanation-content').innerHTML = buildIntervalExplanation(s, f);
-    document.getElementById('explanation-panel').classList.add('visible');
+let gNextAction = null;
+
+function showExplainModal(isOk, nextFn) {
+    document.getElementById('explain-modal-result').innerHTML = isOk
+        ? `<span style="color:var(--ok)">✓ 正解！</span>`
+        : `<span style="color:var(--ng)">✗ 不正解… 正解は <span style="color:var(--gold);font-weight:900">${gQ.note}</span></span>`;
+    document.getElementById('explain-modal-body').innerHTML = buildIntervalExplanation(gQ.s, gQ.f);
+    gNextAction = nextFn;
+    document.getElementById('explain-modal').classList.add('open');
+}
+
+function onExplainNext() {
+    document.getElementById('explain-modal').classList.remove('open');
+    if (gNextAction) { const fn = gNextAction; gNextAction = null; fn(); }
 }
 
 // ── ビジュアルエフェクト ───────────────────────────────────────
