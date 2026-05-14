@@ -144,6 +144,8 @@ body {
 .ss-best.has-score { color: var(--gold); }
 
 /* ══ Stage Bar (in-game) ══════════════════════════════════════ */
+#game-area { gap: 8px; }
+
 .stage-bar {
     display: flex; align-items: center; justify-content: space-between;
     width: 100%; max-width: 520px;
@@ -520,49 +522,57 @@ body {
 
 /* ══ iPhone / 小画面対応（一画面収め） ════════════════════════ */
 @media (max-width: 430px) {
-    body { gap: 3px; padding: 4px 8px 12px; padding-top: max(4px, env(safe-area-inset-top)); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
-    .app-header { padding: 4px 8px; }
-    .app-title { font-size: 0.85rem; }
-    .hud { padding: 4px 9px; gap: 5px; }
-    .hud-lives { font-size: 0.82rem; min-width: 50px; }
-    .score-val { font-size: 0.88rem; }
-    .xp-wrap { width: 64px; }
-    .level-badge { font-size: 0.6rem; padding: 1px 7px; }
+    body { gap: 3px; padding: 3px 8px 8px; padding-top: max(3px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+    #game-area { gap: 4px; }
+    .app-header { padding: 3px 8px; }
+    .app-title { font-size: 0.82rem; }
+    .hud { padding: 3px 8px; gap: 4px; }
+    .hud-lives { font-size: 0.8rem; min-width: 46px; }
+    .score-val { font-size: 0.85rem; }
+    .xp-wrap { width: 60px; }
+    .xp-label { display: none; }
+    .level-badge { font-size: 0.58rem; padding: 1px 6px; }
+    .stage-bar { padding: 4px 9px; }
+    .stage-bar-label { font-size: 0.58rem; }
+    .stage-bar-name  { font-size: 0.68rem; }
     /* 敵エリアをコンパクトに */
-    .enemy-stage { min-height: 155px; padding: 5px 10px 48px; gap: 2px; }
-    .enemy-stage::before { top: 8px; width: 52px; height: 15px; }
-    .speech-bubble { font-size: 0.68rem; padding: 5px 9px; max-width: 250px; min-height: 28px; }
-    .enemy-name-text { font-size: 0.66rem; padding: 1px 10px; }
-    .hp-wrap { width: 155px; }
-    .hp-track { height: 8px; }
-    .battle-msg { min-height: 28px; gap: 0px; }
-    .combo-display { min-height: 1.3rem; font-size: 0.88rem; }
-    .result-line { font-size: 0.78rem; min-height: 1.1em; }
-    .timer-bar-wrap { height: 12px; }
+    .enemy-stage { min-height: 118px; padding: 4px 8px 40px; gap: 1px; }
+    .enemy-stage::before { display: none; }
+    .speech-bubble { font-size: 0.64rem; padding: 4px 8px; max-width: 230px; min-height: 24px; }
+    .enemy-name-text { font-size: 0.62rem; padding: 1px 8px; }
+    .hp-wrap { width: 140px; }
+    .hp-track { height: 7px; }
+    .hp-labels { font-size: 0.46rem; }
+    .enemy-sprite img, .enemy-sprite svg { max-height: 72px !important; width: auto !important; }
+    .battle-msg { min-height: 22px; gap: 0; }
+    .combo-display { min-height: 1.1rem; font-size: 0.82rem; }
+    .result-line { font-size: 0.74rem; min-height: 1em; }
+    .timer-bar-wrap { height: 10px; }
     /* フレットボードを縮小 */
-    .fretboard-container { padding-bottom: 3px; }
-    .fret-num-row { margin-bottom: 1px; }
-    .fret-num-cell { font-size: 0.42rem; }
-    .fretboard-grid { padding: 5px 0; }
-    .string-row { height: 24px; }
-    .fret-cell  { height: 24px; }
-    .note-ind   { width: 18px; height: 18px; font-size: 0.42rem; }
-    .dot-row { height: 7px; margin-top: 1px; }
+    .fretboard-container { padding-bottom: 2px; }
+    .fret-num-row { margin-bottom: 0; }
+    .fret-num-cell { font-size: 0.38rem; }
+    .fretboard-grid { padding: 3px 0; border-width: 2px; }
+    .string-row { height: 20px; }
+    .fret-cell  { height: 20px; border-right-width: 1px; }
+    .fret-cell.open-col { border-right-width: 3px; }
+    .note-ind   { width: 16px; height: 16px; font-size: 0.38rem; }
+    .dot-row { height: 6px; margin-top: 1px; }
     .fret-dot { width: 4px; height: 4px; }
     /* 選択ボタン */
     .choices-grid { gap: 4px; max-width: 100%; }
-    .choice-btn { padding: 8px 2px; font-size: 0.82rem; min-height: 40px; border-radius: 2px; border-width: 2px; }
-    .ss-label { font-size: 0.78rem; }
-    .ss-section { padding: 8px 8px; }
-    .ss-lv-dot { width: 17px; height: 17px; }
+    .choice-btn { padding: 7px 2px; font-size: 0.8rem; min-height: 38px; border-radius: 2px; border-width: 2px; }
+    .ss-label { font-size: 0.76rem; }
+    .ss-section { padding: 7px 7px; }
+    .ss-lv-dot { width: 16px; height: 16px; }
 }
 @media (max-width: 375px) {
-    .enemy-stage { min-height: 140px; padding: 4px 8px 44px; }
-    .speech-bubble { font-size: 0.64rem; padding: 4px 8px; }
-    .choice-btn { font-size: 0.76rem; min-height: 38px; }
-    .string-row { height: 22px; }
-    .fret-cell  { height: 22px; }
-    .note-ind   { width: 16px; height: 16px; font-size: 0.38rem; }
+    .enemy-stage { min-height: 105px; padding: 3px 7px 38px; }
+    .speech-bubble { font-size: 0.6rem; padding: 3px 7px; }
+    .choice-btn { font-size: 0.74rem; min-height: 36px; }
+    .string-row { height: 18px; }
+    .fret-cell  { height: 18px; }
+    .note-ind   { width: 14px; height: 14px; }
 }
 </style>
 </head>
@@ -571,7 +581,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.27</span>
+        <span class="version-tag">v1.28</span>
         <span class="app-title">⚔️ 指板バトル</span>
     </div>
     <div class="header-btns">
@@ -616,7 +626,7 @@ body {
 </div>
 
 <!-- ══ ゲーム画面（ステージ選択後に表示） ══ -->
-<div id="game-area" style="display:none; flex-direction:column; align-items:center; width:100%; max-width:520px; gap:8px;">
+<div id="game-area" style="display:none; flex-direction:column; align-items:center; width:100%; max-width:520px;">
 
     <div class="stage-bar">
         <div>
