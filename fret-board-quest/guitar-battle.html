@@ -1255,7 +1255,7 @@ function onAnswer(selected,btn) {
         } else {
             setSpeechBubble('ぐっ…！');
             setResult(`正解！ ${(elapsed/1000).toFixed(1)}秒`,'ok');
-            showExplainModal(true, ()=>askQuestion());
+            setTimeout(()=>askQuestion(), 900);
         }
     } else {
         // 弦ステージ：不正解
