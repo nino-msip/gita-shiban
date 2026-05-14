@@ -536,14 +536,15 @@ body {
     .stage-bar-label { font-size: 0.58rem; }
     .stage-bar-name  { font-size: 0.68rem; }
     /* 敵エリアをコンパクトに */
-    .enemy-stage { min-height: 118px; padding: 4px 8px 40px; gap: 1px; }
+    .enemy-stage { min-height: 190px; padding: 4px 8px 42px; gap: 1px; }
     .enemy-stage::before { display: none; }
     .speech-bubble { font-size: 0.64rem; padding: 4px 8px; max-width: 230px; min-height: 24px; }
     .enemy-name-text { font-size: 0.62rem; padding: 1px 8px; }
     .hp-wrap { width: 140px; }
     .hp-track { height: 7px; }
     .hp-labels { font-size: 0.46rem; }
-    .enemy-sprite img, .enemy-sprite svg { max-height: 72px !important; width: auto !important; }
+    .enemy-sprite img { max-height: 150px !important; width: auto !important; }
+    .enemy-sprite svg { max-height: 150px !important; width: auto !important; }
     .battle-msg { min-height: 22px; gap: 0; }
     .combo-display { min-height: 1.1rem; font-size: 0.82rem; }
     .result-line { font-size: 0.74rem; min-height: 1em; }
@@ -567,7 +568,9 @@ body {
     .ss-lv-dot { width: 16px; height: 16px; }
 }
 @media (max-width: 375px) {
-    .enemy-stage { min-height: 105px; padding: 3px 7px 38px; }
+    .enemy-stage { min-height: 170px; padding: 3px 7px 40px; }
+    .enemy-sprite img { max-height: 130px !important; }
+    .enemy-sprite svg { max-height: 130px !important; }
     .speech-bubble { font-size: 0.6rem; padding: 3px 7px; }
     .choice-btn { font-size: 0.74rem; min-height: 36px; }
     .string-row { height: 18px; }
@@ -581,7 +584,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.28</span>
+        <span class="version-tag">v1.29</span>
         <span class="app-title">⚔️ 指板バトル</span>
     </div>
     <div class="header-btns">
