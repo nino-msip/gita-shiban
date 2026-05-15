@@ -865,9 +865,9 @@ const STAGE_DEFS = [
 // ── 弦ステージ（レベル制） ──────────────────────────────────
 const STR_LV_RANGES  = [[0,3],[5,7],[9,12],[0,12]]; // Lv1〜4
 const STR_LV_LABELS  = ['開放〜3F','5〜7F','9〜12F','全F 仕上げ'];
-const STR_CLEAR_TARGET = 5;   // Lv1-3: 連続正解数
+const STR_CLEAR_TARGET = 3;   // Lv1-3: 連続正解数
 const STR_FINAL_LV   = 3;     // Lv4（仕上げ）のインデックス
-const STR_FINAL_CNT  = 10;    // 仕上げ問題数
+const STR_FINAL_CNT  = 5;     // 仕上げ問題数
 
 const STR_LV_KEY = i => `fbattle_strlv_${i}`;
 function getStrLv(i) { return Math.min(+localStorage.getItem(STR_LV_KEY(i))||0, 4); }
