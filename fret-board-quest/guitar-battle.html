@@ -869,8 +869,8 @@ const ENEMIES = [
 ];
 
 function pickEnemy(wave) {
-    if (wave%10===0 && wave>0) return ENEMIES[5];
-    if (wave%5===0  && wave>0) return ENEMIES[4];
+    if (wave%5===0 && wave>0) return ENEMIES[5];   // ドラゴン（5波ごと）
+    if (wave%3===0 && wave>0) return ENEMIES[4];   // ウィザード（3波ごと）
     return ENEMIES[Math.floor(Math.random()*4)];
 }
 
