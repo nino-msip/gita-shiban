@@ -699,7 +699,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.41</span>
+        <span class="version-tag">v1.42</span>
         <span class="app-title">⚔️ Fret Board Quest</span>
     </div>
     <div class="header-btns">
@@ -718,14 +718,14 @@ body {
     <!-- ポジションマーク（レベル制） -->
     <div class="ss-section">
         <div class="ss-section-title">🎵 ポジションマークステージ（レベル制）</div>
-        <div class="ss-str-sub">3連続正解で次のレベルへ自動進行</div>
+        <div class="ss-str-sub">3問正解で次のレベルへ自動進行</div>
         <div class="ss-grid ss-grid-3" id="ss-posmark-grid"></div>
     </div>
 
     <!-- 弦別（レベル制） -->
     <div class="ss-section">
         <div class="ss-section-title">🎸 弦別ステージ（レベル制）</div>
-        <div class="ss-str-sub">3連続正解で次のレベルへ自動進行</div>
+        <div class="ss-str-sub">3問正解で次のレベルへ自動進行</div>
         <div class="ss-grid ss-grid-3" id="ss-string-grid"></div>
     </div>
 
@@ -1575,11 +1575,6 @@ function onAnswer(selected,btn) {
             setTimeout(()=>askQuestion(), 900);
         }
     } else {
-        // 不正解：連続正解リセット（弦Lv1-3・ポジションLv1-3のみ）
-        if ((gStage.isStrStage || gStage.isPosMarkStage) && !gStage.isFinalStage && !gFinalDragonPhase) {
-            gConsecutive=0;
-            updateStreakBar();
-        }
         gCombo=0; gLives=Math.max(0,gLives-1);
         updateCombo(); updateHUD();
 
@@ -1743,7 +1738,7 @@ function updateStreakBar() {
             dots.appendChild(d);
         }
         tgt.textContent = `${gConsecutive}/${STR_CLEAR_TARGET}`;
-        document.getElementById('streak-label').textContent = '連続正解';
+        document.getElementById('streak-label').textContent = '正解数';
     }
 }
 
