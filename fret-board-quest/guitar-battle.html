@@ -699,7 +699,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.43</span>
+        <span class="version-tag">v1.44</span>
         <span class="app-title">⚔️ Fret Board Quest</span>
     </div>
     <div class="header-btns">
@@ -720,6 +720,12 @@ body {
         <div class="ss-section-title">🎵 ポジションマークステージ（レベル制）</div>
         <div class="ss-str-sub">3問正解で次のレベルへ自動進行</div>
         <div class="ss-grid ss-grid-3" id="ss-posmark-grid"></div>
+    </div>
+
+    <!-- ポジション魔王 -->
+    <div class="ss-section" id="ss-posmaou-section">
+        <div class="ss-section-title">🎵👑 ポジション魔王</div>
+        <div class="ss-grid ss-grid-1" id="ss-posmaou-grid"></div>
     </div>
 
     <!-- 弦別（レベル制） -->
@@ -1006,6 +1012,21 @@ function buildStageSelect() {
         grid.appendChild(btn);
     });
 
+    // ポジション魔王カード
+    const posmaouGrid = document.getElementById('ss-posmaou-grid');
+    const posCleared = allPosClear();
+    const posmaouHi = +localStorage.getItem(HI_KEY(POS_MAOU_STAGE.id)) || 0;
+    const posmaouBtn = document.createElement('button');
+    posmaouBtn.className = 'ss-btn ss-maou-card';
+    posmaouBtn.innerHTML = `
+        <span class="ss-maou-title">🎵👑 ポジション魔王</span>
+        <span class="ss-maou-sub">全弦ポジション制覇者への最終試練</span>
+        ${posCleared ? '' : '<span class="ss-maou-lock">🔒 全弦ポジションマスターで解放</span>'}
+        <span class="ss-maou-test">▶ テスト運用中（選択可）</span>
+        <span class="ss-best ${posmaouHi>0?'has-score':''}">${posmaouHi>0?'BEST '+posmaouHi.toLocaleString():'—'}</span>`;
+    posmaouBtn.onclick = () => selectPosMaouStage();
+    posmaouGrid.appendChild(posmaouBtn);
+
     // 魔王ステージカード
     const maouGrid = document.getElementById('ss-maou-grid');
     const cleared = allStringsCleared();
@@ -1020,6 +1041,14 @@ function buildStageSelect() {
         <span class="ss-best ${maouHi>0?'has-score':''}">${maouHi>0?'BEST '+maouHi.toLocaleString():'—'}</span>`;
     maouBtn.onclick = () => selectMaouStage();
     maouGrid.appendChild(maouBtn);
+}
+
+function selectPosMaouStage() {
+    gStage = POS_MAOU_STAGE;
+    document.getElementById('stage-bar-name').textContent = `${gStage.label}（${gStage.sub}）`;
+    document.getElementById('stage-select').style.display = 'none';
+    document.getElementById('game-area').style.display = 'flex';
+    startGame();
 }
 
 function selectPosStage(strIdx) {
@@ -1057,6 +1086,7 @@ function selectMaouStage() {
 function showStageSelect() {
     document.getElementById('ss-string-grid').innerHTML = '';
     document.getElementById('ss-posmark-grid').innerHTML = '';
+    document.getElementById('ss-posmaou-grid').innerHTML = '';
     document.getElementById('ss-fret-grid').innerHTML = '';
     document.getElementById('ss-special-grid').innerHTML = '';
     document.getElementById('ss-maou-grid').innerHTML = '';
@@ -1148,9 +1178,22 @@ const MAOU_STAGE = {
     filter: () => true,
 };
 
+const POS_MAOU_STAGE = {
+    id: 'pos_maou', label: 'ポジション魔王', sub: '全弦・ポジションマーク',
+    color: '#9333ea', isMaouStage: true,
+    filter: (s,f) => DOT_FRETS.has(f),
+};
+
 function allStringsCleared() {
     for (let i = 0; i < 6; i++) {
         if (getStrLv(i) <= STR_FINAL_LV) return false;
+    }
+    return true;
+}
+
+function allPosClear() {
+    for (let i = 0; i < 6; i++) {
+        if (getPosLv(i) <= POS_FINAL_LV) return false;
     }
     return true;
 }
