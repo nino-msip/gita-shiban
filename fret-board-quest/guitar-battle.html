@@ -683,7 +683,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.36</span>
+        <span class="version-tag">v1.37</span>
         <span class="app-title">⚔️ Fret Board Quest</span>
     </div>
     <div class="header-btns">
@@ -1480,19 +1480,7 @@ function onAnswer(selected,btn) {
             document.body.appendChild(atk); setTimeout(()=>atk.remove(), 900);
             const sr2=document.getElementById('enemy-sprite').getBoundingClientRect();
             if (sr2.width>0) setTimeout(()=>floatText('呪文！',sr2.left+sr2.width/2,sr2.bottom+10,'#c084fc','1.1rem'),280);
-
-            // HP全回復＋回復エフェクト
-            gEnemyHP = gEnemyMaxHP;
-            setTimeout(()=>{
-                updateEnemyHP();
-                sfxMaouRecover();
-                const rec=document.createElement('div'); rec.className='maou-recover-flash';
-                document.body.appendChild(rec); setTimeout(()=>rec.remove(),1100);
-                const sr3=document.getElementById('enemy-sprite').getBoundingClientRect();
-                if (sr3.width>0) floatText('HP全回復！',sr3.left+sr3.width/2,sr3.top-20,'#c084fc','1.2rem');
-            }, 620);
-
-            setSpeechBubble(enemyLine('recover'));
+            setSpeechBubble(enemyLine('wrong'));
         } else {
             sfxMiss(); playerHit();
             setSpeechBubble(enemyLine('wrong'));
@@ -1505,7 +1493,9 @@ function onAnswer(selected,btn) {
         } else {
             setResult(`不正解… 正解は ${gQ.note}`,'miss');
         }
-        showExplainModal(false, ()=>askQuestion());
+        // 魔王戦は「次へ」を押した後に全回復演出
+        const nextFn = gStage.isMaouStage ? maouRecoverThenAsk : ()=>askQuestion();
+        showExplainModal(false, nextFn);
     }
 }
 
@@ -1685,6 +1675,18 @@ function buildIntervalExplanation(s, f) {
 }
 
 let gNextAction = null;
+
+function maouRecoverThenAsk() {
+    gEnemyHP = gEnemyMaxHP;
+    updateEnemyHP();
+    sfxMaouRecover();
+    const rec=document.createElement('div'); rec.className='maou-recover-flash';
+    document.body.appendChild(rec); setTimeout(()=>rec.remove(), 1200);
+    const sr=document.getElementById('enemy-sprite').getBoundingClientRect();
+    if (sr.width>0) floatText('HP全回復！', sr.left+sr.width/2, sr.top-20, '#c084fc', '1.3rem');
+    setSpeechBubble(enemyLine('recover'));
+    setTimeout(()=>askQuestion(), 1400);
+}
 
 function showContinueModal() {
     const sub = gFinalDragonPhase ? 'ドラゴンに敗れた…' : `WAVE ${gWave} で力尽きた…`;
