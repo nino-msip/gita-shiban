@@ -534,6 +534,40 @@ body {
 .explain-next-btn:hover  { background: #0a0a2e; }
 .explain-next-btn:active { background: #08082a; }
 
+/* ── コンティニューモーダル ── */
+.continue-modal {
+    display: none; position: fixed; inset: 0; z-index: 300;
+    background: rgba(0,0,10,0.88);
+    align-items: center; justify-content: center;
+    padding: 0 16px;
+}
+.continue-modal.open { display: flex; }
+.continue-modal-box {
+    background: #04041a; border: 3px solid var(--dq-frame); border-radius: 4px;
+    box-shadow: inset 0 0 0 1px var(--dq-frame2), 0 8px 48px rgba(0,0,0,0.98);
+    padding: 24px 20px 20px; width: 100%; max-width: 360px;
+    display: flex; flex-direction: column; gap: 14px; text-align: center;
+    animation: modal-up 0.25s ease-out;
+}
+.continue-title {
+    font-size: 1.6rem; font-weight: 700; color: #f87171;
+    text-shadow: 0 0 20px #f87171aa; letter-spacing: 0.12em;
+}
+.continue-sub {
+    font-size: 0.72rem; color: #6666aa; letter-spacing: 0.1em;
+}
+.continue-btn {
+    font-family: 'DotGothic16', sans-serif;
+    background: #04041a; border: 2px solid var(--dq-frame);
+    color: var(--gold2); font-size: 0.92rem; padding: 13px 0;
+    border-radius: 2px; cursor: pointer; width: 100%; letter-spacing: 0.05em;
+    box-shadow: inset 0 0 0 1px var(--dq-frame2);
+    touch-action: manipulation; user-select: none; -webkit-user-select: none;
+}
+.continue-btn:hover  { background: #0a0a2e; }
+.continue-btn:active { background: #08082a; }
+.continue-btn.restart { color: #f87171; border-color: #f8717166; }
+
 /* ══ iPhone / 小画面対応（一画面収め） ════════════════════════ */
 @media (max-width: 430px) {
     body { gap: 3px; padding: 3px 8px 8px; padding-top: max(3px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); }
@@ -598,7 +632,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.30</span>
+        <span class="version-tag">v1.31</span>
         <span class="app-title">⚔️ Fret Board Quest</span>
     </div>
     <div class="header-btns">
@@ -712,6 +746,15 @@ body {
     </div>
 
 <!-- 解説ポップアップ -->
+<div id="continue-modal" class="continue-modal">
+    <div class="continue-modal-box">
+        <div class="continue-title">GAME OVER</div>
+        <div class="continue-sub" id="continue-sub">ライフが尽きた…</div>
+        <button class="continue-btn" onclick="onContinue()">▶ 続きから（ライフ回復）</button>
+        <button class="continue-btn restart" onclick="onRestart()">↩ 最初から</button>
+    </div>
+</div>
+
 <div id="explain-modal" class="explain-modal">
     <div class="explain-modal-box">
         <div class="explain-modal-result" id="explain-modal-result"></div>
@@ -909,7 +952,7 @@ function randomSF() {
 
 // ── ゲーム状態 ────────────────────────────────────────────────
 let gScore=0, gLevel=1, gXP=0, gXPNext=200;
-let gLives=3, gCombo=0, gWave=0;
+let gLives=5, gCombo=0, gWave=0;
 let gEnemyHP=0, gEnemyMaxHP=0, gEnemy=null;
 let gBusy=false, gAnswered=false, gQ=null;
 let gConsecutive=0, gQuizCount=0, gQuizCorrect=0;
@@ -1016,7 +1059,7 @@ function setSpeechBubble(text) {
 // ── ゲームフロー ──────────────────────────────────────────────
 function startGame() {
     gScore=0; gLevel=1; gXP=0; gXPNext=200;
-    gLives=3; gCombo=0; gWave=0; gBusy=false;
+    gLives=5; gCombo=0; gWave=0; gBusy=false;
     gConsecutive=0; gQuizCount=0; gQuizCorrect=0;
     gFinalDragonPhase=false;
     gSFQueue=[];
@@ -1207,7 +1250,7 @@ function onAnswer(selected,btn) {
         gEnemyHP--; updateEnemyHP();
 
         // 弦ステージ：連続正解 / 仕上げカウント
-        if (gStage.isStrStage) {
+        if (gStage.isStrStage && !gFinalDragonPhase) {
             if (gStage.isFinalStage) {
                 gQuizCount++; gQuizCorrect++;
                 updateStreakBar();
@@ -1254,7 +1297,7 @@ function onAnswer(selected,btn) {
         }
     } else {
         // 弦ステージ：不正解
-        if (gStage.isStrStage) {
+        if (gStage.isStrStage && !gFinalDragonPhase) {
             if (gStage.isFinalStage) {
                 gQuizCount++;
                 updateStreakBar();
@@ -1273,7 +1316,9 @@ function onAnswer(selected,btn) {
         updateCombo(); updateHUD(); sfxMiss(); playerHit();
         setSpeechBubble('フハハ！ 違うぞ！');
         if (gLives===0) {
-            gLives=3; setResult('ピンチ！ 復活！','miss');
+            gBusy=true;
+            setTimeout(()=>showContinueModal(), 900);
+            return;
         } else {
             setResult(`不正解… 正解は ${gQ.note}`,'miss');
         }
@@ -1366,7 +1411,7 @@ function updateHUD() {
     document.getElementById('hud-score').textContent=gScore.toLocaleString();
     document.getElementById('hud-best').textContent='BEST '+getStageHi().toLocaleString();
     document.getElementById('hud-level').textContent='LV.'+gLevel;
-    let h=''; for (let i=0;i<3;i++) h+=i<gLives?'❤️':'🖤';
+    let h=''; for (let i=0;i<5;i++) h+=i<gLives?'❤️':'🖤';
     document.getElementById('hud-lives').textContent=h;
     const pct=Math.min(gXP/gXPNext*100,100);
     document.getElementById('xp-fill').style.width=pct+'%';
@@ -1446,6 +1491,23 @@ function buildIntervalExplanation(s, f) {
 }
 
 let gNextAction = null;
+
+function showContinueModal() {
+    const sub = gFinalDragonPhase ? 'ドラゴンに敗れた…' : `WAVE ${gWave} で力尽きた…`;
+    document.getElementById('continue-sub').textContent = sub;
+    document.getElementById('continue-modal').classList.add('open');
+}
+function onContinue() {
+    document.getElementById('continue-modal').classList.remove('open');
+    gLives=5; gBusy=false;
+    updateHUD();
+    askQuestion();
+}
+function onRestart() {
+    document.getElementById('continue-modal').classList.remove('open');
+    gFinalDragonPhase=false;
+    showStageSelect();
+}
 
 function showExplainModal(isOk, nextFn) {
     document.getElementById('explain-modal-result').innerHTML = isOk
