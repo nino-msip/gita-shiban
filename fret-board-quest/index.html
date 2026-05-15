@@ -1,1211 +1,1008 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ギター指板マスター</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>指板理論道場 — フレクエ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-            background: #0f0f1a;
-            color: #e8e8e8;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 24px 16px;
-            gap: 18px;
-        }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-        h1 { font-size: 1.5rem; font-weight: 700; color: #f5c842; }
+:root {
+  --bg:      #020210;
+  --panel:   #04041a;
+  --panel2:  #06061e;
+  --border:  #c8a84b;
+  --border2: #7a5c1a;
+  --gold:    #f5d070;
+  --gold2:   #ffd700;
+  --ok:      #4ade80;
+  --ng:      #f87171;
+  --xp:      #818cf8;
+  --dim:     #3a3a60;
+  --muted:   #44446a;
+}
 
-        .mode-tabs {
-            display: flex;
-            gap: 6px;
-            background: #1e1e30;
-            padding: 5px;
-            border-radius: 12px;
-        }
+body {
+  font-family: 'DotGothic16', -apple-system, sans-serif;
+  background: var(--bg);
+  background-image: repeating-linear-gradient(
+    0deg, rgba(0,0,20,.08) 0px, rgba(0,0,20,.08) 1px,
+    transparent 1px, transparent 4px);
+  color: #eeeeff;
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 10px 14px 40px;
+  padding-top: max(10px, env(safe-area-inset-top));
+  padding-bottom: max(40px, env(safe-area-inset-bottom));
+  padding-left: max(14px, env(safe-area-inset-left));
+  padding-right: max(14px, env(safe-area-inset-right));
+  gap: 9px; overflow-x: hidden;
+}
 
-        .mode-tab {
-            padding: 8px 16px;
-            border-radius: 8px;
-            border: none;
-            background: transparent;
-            color: #888;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 500;
-        }
+/* ── DQ-Box mixin ── */
+.dq-box {
+  background: var(--panel);
+  border: 3px solid var(--border);
+  box-shadow: inset 0 0 0 1px var(--border2), 0 4px 18px rgba(0,0,0,.75);
+  border-radius: 4px;
+}
 
-        .mode-tab.active {
-            background: #f5c842;
-            color: #0f0f1a;
-            font-weight: 700;
-        }
+/* ══ Header ════════════════════════════════════════════════════ */
+.app-header {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; max-width: 760px;
+  padding: 6px 10px; flex-shrink: 0;
+}
+.title-wrap { display: flex; align-items: center; gap: 7px; }
+.app-title {
+  font-size: 1.05rem; color: var(--gold2);
+  text-shadow: 2px 2px 0 #5a3c00, 0 0 14px rgba(255,215,0,.5);
+  letter-spacing: .06em;
+}
+.app-sub { font-size: .55rem; color: var(--muted); letter-spacing: .04em; margin-top: 2px; }
+.header-btns { display: flex; gap: 6px; align-items: center; }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 3px;
+  border: 2px solid var(--border); background: var(--panel);
+  font-size: .88rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gold); transition: all .18s; text-decoration: none;
+  box-shadow: inset 0 0 0 1px var(--border2), 0 2px 8px rgba(0,0,0,.6);
+  touch-action: manipulation;
+}
+.icon-btn:hover { background: #0a0a30; }
+.battle-link {
+  padding: 6px 12px; border-radius: 3px;
+  border: 2px solid var(--border); background: var(--panel);
+  color: var(--gold); font-size: .72rem;
+  text-decoration: none; transition: all .18s; letter-spacing: .03em;
+  box-shadow: inset 0 0 0 1px var(--border2), 0 2px 8px rgba(0,0,0,.6);
+  touch-action: manipulation;
+}
+.battle-link:hover { background: #0a0a30; }
 
-        .stats {
-            display: flex;
-            gap: 20px;
-            font-size: 0.85rem;
-        }
+/* ══ Mode Tabs ══════════════════════════════════════════════════ */
+.mode-tabs {
+  display: flex; gap: 6px; width: 100%; max-width: 760px;
+  flex-wrap: wrap;
+}
+.mode-tab {
+  flex: 1; min-width: 80px;
+  padding: 8px 6px; border-radius: 3px;
+  border: 2px solid var(--border2);
+  background: var(--panel2); color: var(--muted);
+  font-family: 'DotGothic16', sans-serif;
+  font-size: .72rem; cursor: pointer;
+  transition: all .15s; letter-spacing: .03em;
+  box-shadow: inset 0 0 0 1px #1a1a2a;
+  touch-action: manipulation;
+}
+.mode-tab:hover { border-color: var(--border); color: var(--gold); }
+.mode-tab.active {
+  border: 2px solid var(--border);
+  background: #08082a; color: var(--gold2);
+  box-shadow: inset 0 0 0 1px var(--border2), 0 0 10px rgba(200,168,75,.25);
+  text-shadow: 1px 1px 0 #5a3c00;
+}
 
-        .stat { color: #666; }
-        .stat strong { color: #e8e8e8; font-size: 1rem; }
-        .stat.accuracy strong { color: #f5c842; }
+/* ══ Stats Bar ══════════════════════════════════════════════════ */
+.stats-bar {
+  display: flex; align-items: center; justify-content: center; gap: 20px;
+  width: 100%; max-width: 760px;
+  padding: 6px 14px;
+}
+.stat { text-align: center; }
+.stat-val { font-size: 1.2rem; color: var(--gold2); line-height: 1; text-shadow: 1px 1px 0 #5a3c00; }
+.stat-val.ok-col  { color: var(--ok); }
+.stat-val.ng-col  { color: var(--ng); }
+.stat-lbl { font-size: .52rem; color: var(--muted); margin-top: 2px; letter-spacing: .06em; }
+.stat-sep { width: 1px; height: 28px; background: var(--border2); }
 
-        .quiz-area {
-            text-align: center;
-            min-height: 90px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
+/* ══ Controls Row ═══════════════════════════════════════════════ */
+.controls-row {
+  display: flex; align-items: center; gap: 8px; justify-content: center;
+  width: 100%; max-width: 760px; flex-wrap: wrap;
+}
+.ctrl-btn {
+  padding: 6px 14px; border-radius: 3px;
+  border: 2px solid var(--border2); background: var(--panel2);
+  color: var(--muted); font-family: 'DotGothic16', sans-serif;
+  font-size: .72rem; cursor: pointer; transition: all .15s;
+  touch-action: manipulation;
+}
+.ctrl-btn:hover  { border-color: var(--border); color: var(--gold); }
+.ctrl-btn.active { border-color: var(--border); color: var(--gold2); background: #08082a;
+                   box-shadow: inset 0 0 0 1px var(--border2); }
 
-        .quiz-prompt { font-size: 0.95rem; color: #aaa; }
-        .quiz-note { font-size: 3rem; font-weight: 800; color: #f5c842; line-height: 1; }
+/* ══ Quiz Area ══════════════════════════════════════════════════ */
+.quiz-panel {
+  width: 100%; max-width: 760px;
+  padding: 14px 18px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  text-align: center;
+}
+.quiz-prompt { font-size: .82rem; color: #8888cc; line-height: 1.6; }
+.quiz-big    { font-size: 2.4rem; color: var(--gold2); line-height: 1;
+               text-shadow: 2px 2px 0 #5a3c00, 0 0 20px rgba(255,215,0,.4); }
+.result-line {
+  font-size: .95rem; min-height: 1.4em; letter-spacing: .05em;
+}
+.result-line.ok   { color: var(--ok); text-shadow: 0 0 14px rgba(74,222,128,.5); }
+.result-line.miss { color: var(--ng); text-shadow: 0 0 10px rgba(248,113,113,.4); }
+.streak-line { font-size: .72rem; color: var(--gold); min-height: 1.3em; letter-spacing: .06em; }
 
-        .result-text { font-size: 1.05rem; font-weight: 600; min-height: 1.4em; }
-        .result-text.correct { color: #4ade80; }
-        .result-text.wrong   { color: #f87171; }
+/* ══ Fretboard ══════════════════════════════════════════════════ */
+.fretboard-container {
+  width: 100%; max-width: 920px;
+  overflow-x: auto; padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.fretboard-inner { min-width: 680px; }
+.fret-num-row { display: flex; margin-bottom: 4px; }
+.fret-num-cell { text-align: center; font-size: .58rem; color: var(--muted); flex: 1; }
+.fret-num-cell.open-col { flex: .6; }
+.fret-num-cell.dot-num  { color: #c8963a; font-weight: 700; }
 
-        .streak { font-size: 0.85rem; color: #f5c842; font-weight: 600; min-height: 1.2em; }
+.fretboard-grid {
+  display: flex; flex-direction: column;
+  background: #3a2006; border-radius: 2px; padding: 8px 0;
+  border: 3px solid var(--border);
+  box-shadow: inset 0 0 0 1px var(--border2), 0 4px 20px rgba(0,0,0,.8);
+}
+.string-row { display: flex; align-items: center; height: 44px; }
+.fret-cells { display: flex; flex: 1; position: relative; }
+.fret-cells::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%;
+  transform: translateY(-50%); pointer-events: none; z-index: 0;
+}
+.string-row:nth-child(1) .fret-cells::before { height: 1px;   background: #e74c3c; }
+.string-row:nth-child(2) .fret-cells::before { height: 1.5px; background: #e8853d; }
+.string-row:nth-child(3) .fret-cells::before { height: 2px;   background: #f1c40f; }
+.string-row:nth-child(4) .fret-cells::before { height: 2.5px; background: #2ecc71; }
+.string-row:nth-child(5) .fret-cells::before { height: 3px;   background: #3498db; }
+.string-row:nth-child(6) .fret-cells::before { height: 4px;   background: #9b59b6; }
 
-        /* ── Fretboard ── */
-        .fretboard-container {
-            width: 100%;
-            max-width: 920px;
-            overflow-x: auto;
-            padding-bottom: 8px;
-        }
+.fret-cell {
+  flex: 1; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; border-right: 2px solid #b08040; z-index: 1;
+}
+.fret-cell.open-col { flex: .6; border-right: 5px solid #888; }
+.fret-cell.clickable { cursor: pointer; }
+.fret-cell.clickable:hover { background: rgba(255,255,255,.04); }
 
-        .fretboard-inner { min-width: 680px; }
+.dot-row { display: flex; margin-top: 2px; height: 18px; }
+.dot-cell { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.dot-cell.open-col { flex: .6; }
+.fret-dot { width: 10px; height: 10px; border-radius: 50%; background: #d4a84b; box-shadow: 0 0 4px #b08040aa; }
 
-        /* fret number row */
-        .fret-num-row {
-            display: flex;
-            margin-bottom: 4px;
-        }
+/* ── Note Indicator ── */
+.note-ind {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .6rem; font-weight: 400;
+  position: relative; z-index: 2;
+  opacity: 0; pointer-events: none; transition: opacity .15s;
+  border: none;
+}
+.note-ind.show    { opacity: 1; }
+.note-ind.visible { opacity: 1; background: #2a2a4a; color: #8888cc; border: 1px solid #3a3a5a; }
+.note-ind.target  { opacity: 1; background: var(--gold2); color: #0a0a00;
+                    box-shadow: 0 0 14px rgba(255,215,0,.7); }
+.note-ind.correct { opacity: 1; background: var(--ok); color: #000;
+                    box-shadow: 0 0 12px rgba(74,222,128,.6); }
+.note-ind.wrong   { opacity: 1; background: var(--ng); color: #000; }
+.note-ind.hint    { opacity: 1; background: rgba(74,222,128,.18); color: var(--ok);
+                    border: 1px solid var(--ok); }
+@keyframes pop {
+  0%{transform:scale(.5)} 60%{transform:scale(1.2)} 100%{transform:scale(1)}
+}
+.note-ind.pop { animation: pop .22s ease-out; }
 
-        .fret-num-cell {
-            text-align: center;
-            font-size: 0.62rem;
-            color: #555;
-            flex: 1;
-        }
+/* ══ Choices ════════════════════════════════════════════════════ */
+.choices-wrap { width: 100%; max-width: 520px; }
+.choices-grid {
+  display: grid; grid-template-columns: repeat(2,1fr);
+  gap: 8px; width: 100%;
+}
+.choices-grid.four { grid-template-columns: repeat(4,1fr); }
+.choice-btn {
+  padding: 12px 6px; border-radius: 3px;
+  border: 2px solid var(--border2); background: var(--panel2);
+  color: #9999cc; font-family: 'DotGothic16', sans-serif;
+  font-size: .8rem; cursor: pointer; transition: all .12s;
+  line-height: 1.3; touch-action: manipulation;
+  box-shadow: inset 0 0 0 1px #1a1a2a;
+}
+.choice-btn:hover:not(:disabled) { border-color: var(--border); color: var(--gold); }
+.choice-btn.correct { background: #0a2a12; border-color: var(--ok); color: var(--ok); }
+.choice-btn.wrong   { background: #2a0a0a; border-color: var(--ng); color: var(--ng); }
+.choice-btn:disabled { cursor: default; }
 
-        .fret-num-cell.open-col { flex: 0.6; }
+.next-btn {
+  padding: 11px 36px; border-radius: 3px;
+  border: 2px solid var(--border); background: var(--panel);
+  color: var(--gold2); font-family: 'DotGothic16', sans-serif;
+  font-size: .82rem; cursor: pointer; display: none; transition: all .15s;
+  box-shadow: inset 0 0 0 1px var(--border2), 0 4px 14px rgba(0,0,0,.5);
+  letter-spacing: .05em; touch-action: manipulation;
+}
+.next-btn.show { display: block; }
+.next-btn:hover { background: #08082a; box-shadow: inset 0 0 0 1px var(--border2), 0 0 12px rgba(200,168,75,.3); }
 
-        /* main grid */
-        .fretboard-grid {
-            display: flex;
-            flex-direction: column;
-            background: #5c3a12;
-            border-radius: 6px;
-            padding: 8px 0;
-            border: 2px solid #3d2509;
-        }
+/* ══ Interval Explanation ═══════════════════════════════════════ */
+.iv-expl {
+  display: none; width: 100%; max-width: 680px;
+  padding: 14px 18px; line-height: 1.8;
+}
+.iv-expl.show { display: block; }
+.iv-ex-title { font-size: .95rem; color: var(--gold2); margin-bottom: 5px;
+               text-shadow: 1px 1px 0 #5a3c00; }
+.iv-ex-pos   { font-size: .76rem; color: #9999cc; margin-bottom: 5px; }
+.iv-ex-tip   { font-size: .76rem; color: #74c0fc; padding-top: 6px;
+               border-top: 1px solid var(--border2); }
+.iv-ex-strings { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border2); }
+.iv-ex-str-lbl { font-size: .62rem; color: var(--muted); margin-bottom: 6px; }
+.iv-ex-str-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 4px; }
+.iv-ex-str-cell {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 5px 2px; border-radius: 3px;
+  background: #0a0a1e; border: 1px solid #1e1e3a;
+}
+.iv-ex-str-cell.is-root { border-color: var(--border); background: rgba(200,168,75,.07); }
+.iv-ex-str-name { font-size: .58rem; color: var(--muted); }
+.iv-ex-str-note { font-size: .8rem; color: #eeeeff; }
+.iv-ex-str-iv   { font-size: .66rem; font-weight: 400; }
 
-        .string-row {
-            display: flex;
-            align-items: center;
-            height: 44px;
-        }
+/* ══ Map / Scale Controls ═══════════════════════════════════════ */
+.root-picker {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  justify-content: center; max-width: 520px;
+}
+.root-btn {
+  padding: 6px 10px; border-radius: 3px;
+  border: 2px solid var(--border2); background: var(--panel2);
+  color: var(--muted); font-family: 'DotGothic16', sans-serif;
+  font-size: .78rem; cursor: pointer; transition: all .12s;
+  min-width: 40px; text-align: center; touch-action: manipulation;
+}
+.root-btn:hover { border-color: var(--border); color: var(--gold); }
+.root-btn.active { background: #08082a; border-color: var(--border); color: var(--gold2);
+                   box-shadow: inset 0 0 0 1px var(--border2); text-shadow: 1px 1px 0 #5a3c00; }
 
-        .fret-cells {
-            display: flex;
-            flex: 1;
-            position: relative;
-        }
+.scale-picker {
+  display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 680px;
+}
+.scale-btn {
+  padding: 6px 12px; border-radius: 3px;
+  border: 2px solid var(--border2); background: var(--panel2);
+  color: var(--muted); font-family: 'DotGothic16', sans-serif;
+  font-size: .7rem; cursor: pointer; transition: all .12s;
+  touch-action: manipulation;
+}
+.scale-btn:hover  { border-color: var(--border); color: var(--gold); }
+.scale-btn.active { background: #08082a; border-color: var(--border); color: var(--gold2);
+                    box-shadow: inset 0 0 0 1px var(--border2); }
 
-        /* string line */
-        .fret-cells::before {
-            content: '';
-            position: absolute;
-            left: 0; right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-            z-index: 0;
-        }
+/* ══ Interval Legend ════════════════════════════════════════════ */
+.iv-legend {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  max-width: 680px;
+}
+.iv-legend-item { display: flex; align-items: center; gap: 5px;
+                  font-size: .65rem; color: #7777aa; }
+.iv-legend-dot  { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
 
-        .string-row:nth-child(1) .fret-cells::before { height: 1px;   background: #e74c3c; }
-        .string-row:nth-child(2) .fret-cells::before { height: 1.5px; background: #e8853d; }
-        .string-row:nth-child(3) .fret-cells::before { height: 2px;   background: #f1c40f; }
-        .string-row:nth-child(4) .fret-cells::before { height: 2.5px; background: #2ecc71; }
-        .string-row:nth-child(5) .fret-cells::before { height: 3px;   background: #3498db; }
-        .string-row:nth-child(6) .fret-cells::before { height: 4px;   background: #9b59b6; }
+/* ══ Scale Info Panel ═══════════════════════════════════════════ */
+.scale-info {
+  display: none; width: 100%; max-width: 680px; padding: 14px 18px;
+}
+.scale-info.show { display: block; }
+.scale-info-title { font-size: .88rem; color: var(--gold2); margin-bottom: 8px;
+                    text-shadow: 1px 1px 0 #5a3c00; }
+.scale-info-degrees { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.degree-chip {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 5px 8px; border-radius: 3px;
+  background: #0a0a1e; border: 1px solid #1e1e3a;
+  min-width: 36px;
+}
+.degree-chip.is-root { border-color: var(--border); }
+.degree-num  { font-size: .65rem; }
+.degree-note { font-size: .78rem; color: #eeeeff; }
 
-        .fret-cell {
-            flex: 1;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            border-right: 2px solid #c8a45e;
-            z-index: 1;
-        }
+.scale-info-tip { font-size: .74rem; color: #74c0fc; padding-top: 8px;
+                  border-top: 1px solid var(--border2); line-height: 1.7; }
 
-        .fret-cell.open-col {
-            flex: 0.6;
-            border-right: 5px solid #999;
-        }
+/* ══ Find counter ═══════════════════════════════════════════════ */
+.find-counter { font-size: .78rem; color: var(--muted); letter-spacing: .05em; }
 
-        .fret-cell.clickable { cursor: pointer; }
-        .fret-cell.clickable:hover { background: rgba(255,255,255,0.05); }
+/* ══ Section label ══════════════════════════════════════════════ */
+.section-lbl {
+  font-size: .58rem; color: var(--muted); letter-spacing: .1em;
+  text-transform: uppercase; margin-bottom: 8px;
+}
 
-        /* dot row */
-        .dot-row {
-            display: flex;
-            margin-top: 3px;
-            height: 14px;
-        }
-
-        .dot-cell {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-        }
-
-        .dot-cell.open-col { flex: 0.6; }
-
-        .fret-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: #7a5c1a;
-        }
-
-        /* ── Note indicator ── */
-        .note-ind {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.62rem;
-            font-weight: 700;
-            position: relative;
-            z-index: 2;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.15s;
-        }
-
-        .note-ind.show    { opacity: 1; }
-        .note-ind.visible { opacity: 1; background: #e0e0e0; color: #222; }
-        .note-ind.target  { opacity: 1; background: #f5c842; color: #0f0f1a; box-shadow: 0 0 12px rgba(245,200,66,.7); }
-        .note-ind.correct { opacity: 1; background: #4ade80; color: #0f0f1a; box-shadow: 0 0 10px rgba(74,222,128,.5); }
-        .note-ind.wrong   { opacity: 1; background: #f87171; color: #0f0f1a; }
-        .note-ind.hint    { opacity: 1; background: rgba(74,222,128,.25); color: #4ade80; border: 1px solid #4ade80; }
-
-        @keyframes pop {
-            0%   { transform: scale(0.5); }
-            60%  { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-
-        .note-ind.pop { animation: pop 0.22s ease-out; }
-
-        /* ── Choices ── */
-        .choices-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            width: 100%;
-            max-width: 480px;
-        }
-
-        .choice-btn {
-            padding: 14px 8px;
-            border-radius: 10px;
-            border: 2px solid #2a2a40;
-            background: #1e1e30;
-            color: #e8e8e8;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-
-        .choice-btn:hover:not(:disabled) { border-color: #f5c842; color: #f5c842; transform: translateY(-2px); }
-        .choice-btn.correct { background: #14532d; border-color: #4ade80; color: #4ade80; }
-        .choice-btn.wrong   { background: #7f1d1d; border-color: #f87171; color: #f87171; }
-        .choice-btn:disabled { cursor: default; transform: none; }
-
-        .next-btn {
-            padding: 12px 36px;
-            border-radius: 10px;
-            border: none;
-            background: #f5c842;
-            color: #0f0f1a;
-            font-size: 0.95rem;
-            font-weight: 700;
-            cursor: pointer;
-            display: none;
-            transition: all 0.15s;
-        }
-
-        .next-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(245,200,66,.35); }
-        .next-btn.show { display: block; }
-
-        .open-toggle {
-            padding: 6px 14px;
-            border-radius: 20px;
-            border: 1.5px solid #444;
-            background: transparent;
-            color: #888;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .open-toggle.on {
-            border-color: #f5c842;
-            color: #f5c842;
-            background: rgba(245,200,66,.1);
-        }
-
-        .mute-btn {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            border: 1.5px solid #444;
-            background: transparent;
-            font-size: 1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-
-        .mute-btn:hover { border-color: #888; }
-
-        .top-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* ── Interval sub-tabs ── */
-        .interval-tabs {
-            display: none;
-            gap: 6px;
-            background: #1a1a2e;
-            padding: 4px;
-            border-radius: 10px;
-        }
-
-        .interval-tab {
-            padding: 6px 14px;
-            border-radius: 6px;
-            border: none;
-            background: transparent;
-            color: #666;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 500;
-        }
-
-        .interval-tab.active {
-            background: #e8e8e8;
-            color: #0f0f1a;
-            font-weight: 700;
-        }
-
-        /* ── Map controls ── */
-        .root-picker {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            justify-content: center;
-            max-width: 500px;
-        }
-
-        .root-btn {
-            padding: 7px 10px;
-            border-radius: 8px;
-            border: 1.5px solid #333;
-            background: #1e1e30;
-            color: #888;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.15s;
-            min-width: 42px;
-            text-align: center;
-        }
-
-        .root-btn:hover { border-color: #f5c842; color: #f5c842; }
-        .root-btn.active { background: #f5c842; color: #0f0f1a; border-color: #f5c842; }
-
-        /* ── Interval explanation ── */
-        .iv-explanation {
-            display: none;
-            max-width: 520px;
-            width: 100%;
-            background: #1a1a2e;
-            border: 1px solid #2a2a45;
-            border-radius: 12px;
-            padding: 14px 18px;
-            line-height: 1.7;
-        }
-
-        .iv-explanation.show { display: block; }
-
-        .iv-ex-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: #f5c842;
-            margin-bottom: 6px;
-        }
-
-        .iv-ex-pos {
-            font-size: 0.82rem;
-            color: #ccc;
-            margin-bottom: 6px;
-        }
-
-        .iv-ex-tip {
-            font-size: 0.82rem;
-            color: #74c0fc;
-            padding-top: 6px;
-            border-top: 1px solid #2a2a45;
-        }
-
-        .iv-ex-strings {
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 1px solid #2a2a45;
-        }
-
-        .iv-ex-strings-label {
-            font-size: 0.72rem;
-            color: #555;
-            margin-bottom: 6px;
-        }
-
-        .iv-ex-str-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 4px;
-        }
-
-        .iv-ex-str-cell {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            padding: 5px 2px;
-            border-radius: 6px;
-            background: #13131f;
-            border: 1px solid #222;
-        }
-
-        .iv-ex-str-cell.is-root { border-color: #f5c842; background: rgba(245,200,66,0.07); }
-
-        .iv-ex-str-name { font-size: 0.6rem; color: #555; }
-        .iv-ex-str-note { font-size: 0.82rem; font-weight: 700; color: #e8e8e8; }
-        .iv-ex-str-iv   { font-size: 0.68rem; font-weight: 700; }
-
-        /* ── Interval legend ── */
-        .iv-legend {
-            display: none;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-            max-width: 620px;
-        }
-
-        .iv-legend-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.7rem;
-            color: #aaa;
-        }
-
-        .iv-legend-dot {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-    </style>
+</style>
 </head>
 <body>
 
-<span style="position:fixed;top:10px;left:14px;font-size:0.7rem;color:#444;font-weight:600;letter-spacing:0.05em;">v1.0</span>
-<a href="guitar-battle.html" style="position:fixed;top:8px;right:14px;padding:6px 14px;background:#1e1e30;border:1.5px solid #2a2a40;border-radius:20px;color:#f5c842;font-size:0.78rem;font-weight:700;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.borderColor='#f5c842'" onmouseout="this.style.borderColor='#2a2a40'">⚔️ バトル</a>
-<h1>🎸 指板マスター</h1>
+<!-- ══ Header ══════════════════════════════════════════════════ -->
+<header class="app-header dq-box">
+  <div class="title-wrap">
+    <span>🎸</span>
+    <div>
+      <div class="app-title">指板理論道場</div>
+      <div class="app-sub">FRET BOARD QUEST — THEORY</div>
+    </div>
+  </div>
+  <div class="header-btns">
+    <button class="icon-btn" onclick="toggleMute()" id="mute-btn" title="ミュート">🔊</button>
+    <a class="battle-link" href="guitar-battle.html">⚔️ バトルへ</a>
+  </div>
+</header>
 
-<div class="mode-tabs">
-    <button class="mode-tab active" onclick="switchMode('quiz1')">フレット → 音名</button>
-    <button class="mode-tab"        onclick="switchMode('quiz2')">音名 → フレット</button>
-    <button class="mode-tab"        onclick="switchMode('study')">確認モード</button>
-    <button class="mode-tab"        onclick="switchMode('interval')">度数</button>
+<!-- ══ Mode Tabs ════════════════════════════════════════════════ -->
+<nav class="mode-tabs">
+  <button class="mode-tab active" data-mode="iv-quiz"   onclick="switchMode('iv-quiz')">度数クイズ</button>
+  <button class="mode-tab"        data-mode="iv-find"   onclick="switchMode('iv-find')">度数探し</button>
+  <button class="mode-tab"        data-mode="iv-map"    onclick="switchMode('iv-map')">度数マップ</button>
+  <button class="mode-tab"        data-mode="scale"     onclick="switchMode('scale')">スケール</button>
+  <button class="mode-tab"        data-mode="reference" onclick="switchMode('reference')">音名参照</button>
+</nav>
+
+<!-- ══ Stats Bar ════════════════════════════════════════════════ -->
+<div class="stats-bar dq-box" id="stats-bar">
+  <div class="stat"><div class="stat-val ok-col" id="s-ok">0</div><div class="stat-lbl">正解</div></div>
+  <div class="stat-sep"></div>
+  <div class="stat"><div class="stat-val ng-col" id="s-ng">0</div><div class="stat-lbl">不正解</div></div>
+  <div class="stat-sep"></div>
+  <div class="stat"><div class="stat-val" id="s-acc">—</div><div class="stat-lbl">正解率</div></div>
 </div>
 
-<div class="interval-tabs" id="interval-tabs">
-    <button class="interval-tab active" onclick="setIntervalSubMode('quiz')">度数当て</button>
-    <button class="interval-tab"        onclick="setIntervalSubMode('find')">度数探し</button>
-    <button class="interval-tab"        onclick="setIntervalSubMode('map')">度数マップ</button>
+<!-- ══ Quiz Panel ═══════════════════════════════════════════════ -->
+<div class="quiz-panel dq-box" id="quiz-panel">
+  <div class="quiz-prompt" id="quiz-prompt"></div>
+  <div class="quiz-big"    id="quiz-big"></div>
+  <div class="result-line" id="result-line"></div>
+  <div class="streak-line" id="streak-line"></div>
 </div>
 
-<div class="stats">
-    <div class="stat">正解 <strong id="s-ok">0</strong></div>
-    <div class="stat">不正解 <strong id="s-ng">0</strong></div>
-    <div class="stat accuracy">正解率 <strong id="s-acc">—</strong></div>
+<!-- ══ Map / Scale Controls ═════════════════════════════════════ -->
+<div id="map-controls" style="display:none; flex-direction:column; align-items:center; gap:10px; width:100%; max-width:760px;">
+  <div class="section-lbl">ルート音</div>
+  <div class="root-picker" id="root-picker"></div>
 </div>
 
-<div class="top-controls">
-    <button id="open-toggle-btn" class="open-toggle" onclick="toggleOpenStrings()">開放弦の音名を表示</button>
-    <button id="mute-btn" class="mute-btn" onclick="toggleMute()" title="ミュート切替">🔊</button>
+<div id="scale-controls" style="display:none; flex-direction:column; align-items:center; gap:10px; width:100%; max-width:760px;">
+  <div class="section-lbl">ルート音</div>
+  <div class="root-picker" id="scale-root-picker"></div>
+  <div class="section-lbl" style="margin-top:4px;">スケール</div>
+  <div class="scale-picker" id="scale-picker"></div>
 </div>
 
-<div class="quiz-area" id="quiz-area">
-    <div class="quiz-prompt" id="quiz-prompt">指板上の光っているフレットの音名は？</div>
-    <div class="quiz-note"   id="quiz-note"></div>
-    <div class="result-text" id="result-text"></div>
-    <div class="streak"      id="streak"></div>
-</div>
-
-<div id="map-controls" style="display:none; flex-direction:column; align-items:center; gap:10px;">
-    <div style="font-size:0.8rem; color:#666;">ルート音を選択</div>
-    <div class="root-picker" id="root-picker"></div>
-</div>
-
+<!-- ══ Fretboard ════════════════════════════════════════════════ -->
 <div class="fretboard-container">
-    <div class="fretboard-inner" id="fretboard-inner"></div>
+  <div class="fretboard-inner" id="fretboard-inner"></div>
 </div>
 
-<div class="iv-legend" id="iv-legend"></div>
-<div class="iv-explanation" id="iv-explanation"></div>
-<div class="choices-grid" id="choices-grid"></div>
-<button class="next-btn" id="next-btn" onclick="onNextBtn()">次の問題 →</button>
+<!-- ══ Legend ══════════════════════════════════════════════════ -->
+<div class="iv-legend" id="iv-legend" style="display:none"></div>
+
+<!-- ══ Scale Info ═══════════════════════════════════════════════ -->
+<div class="scale-info dq-box" id="scale-info"></div>
+
+<!-- ══ Choices ══════════════════════════════════════════════════ -->
+<div class="choices-wrap" id="choices-wrap" style="display:none">
+  <div class="choices-grid" id="choices-grid"></div>
+</div>
+<button class="next-btn" id="next-btn" onclick="onNext()">次へ →</button>
+
+<!-- ══ Interval Explanation ════════════════════════════════════ -->
+<div class="iv-expl dq-box" id="iv-expl"></div>
 
 <script>
-const NOTES       = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-const STR_LABELS  = ['E','B','G','D','A','E'];   // high → low
-const OPEN_NOTES  = [4, 11, 7, 2, 9, 4];         // E B G D A E
-const DOT_FRETS   = new Set([3,5,7,9,12]);
-const NUM_FRETS   = 12;
+/* ───────────────────────────── Constants ─────────────────────── */
+const NOTES      = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const OPEN_NOTES = [4, 11, 7, 2, 9, 4];   // E4 B3 G3 D3 A2 E2  (high→low)
+const NUM_FRETS  = 12;
+const DOT_FRETS  = new Set([3,5,7,9,12]);
+const BASE_FREQS = [329.63, 246.94, 196.00, 146.83, 110.00, 82.41];
 
 const INTERVALS = [
-    { name: 'ルート',   semitones: 0,  short: 'R',  color: '#f5c842' },
-    { name: '短2度',    semitones: 1,  short: 'b2', color: '#ff6b6b' },
-    { name: '長2度',    semitones: 2,  short: '2',  color: '#ffa94d' },
-    { name: '短3度',    semitones: 3,  short: 'b3', color: '#74c0fc' },
-    { name: '長3度',    semitones: 4,  short: '3',  color: '#69db7c' },
-    { name: '完全4度',  semitones: 5,  short: '4',  color: '#da77f2' },
-    { name: '減5/増4',  semitones: 6,  short: 'b5', color: '#f783ac' },
-    { name: '完全5度',  semitones: 7,  short: '5',  color: '#ff8787' },
-    { name: '短6度',    semitones: 8,  short: 'b6', color: '#63e6be' },
-    { name: '長6度',    semitones: 9,  short: '6',  color: '#4dabf7' },
-    { name: '短7度',    semitones: 10, short: 'b7', color: '#cc5de8' },
-    { name: '長7度',    semitones: 11, short: '7',  color: '#ff922b' },
+  { name:'ルート',   semitones:0,  short:'R',  color:'#f5c842' },
+  { name:'短2度',    semitones:1,  short:'b2', color:'#ff6b6b' },
+  { name:'長2度',    semitones:2,  short:'2',  color:'#ffa94d' },
+  { name:'短3度',    semitones:3,  short:'b3', color:'#74c0fc' },
+  { name:'長3度',    semitones:4,  short:'3',  color:'#69db7c' },
+  { name:'完全4度',  semitones:5,  short:'4',  color:'#da77f2' },
+  { name:'減5/増4',  semitones:6,  short:'b5', color:'#f783ac' },
+  { name:'完全5度',  semitones:7,  short:'5',  color:'#ff8787' },
+  { name:'短6度',    semitones:8,  short:'b6', color:'#63e6be' },
+  { name:'長6度',    semitones:9,  short:'6',  color:'#4dabf7' },
+  { name:'短7度',    semitones:10, short:'b7', color:'#cc5de8' },
+  { name:'長7度',    semitones:11, short:'7',  color:'#ff922b' },
 ];
 
-let mode    = 'quiz1';
-let ok = 0, ng = 0, streak = 0;
-let showOpenStrings = false;
-let q       = null;
-let done    = false;
+const INTERVAL_TIPS = {
+  1: '半音 = 常に1フレット隣り',
+  2: '全音 = 常に2フレット隣り',
+  3: '短3度 → 同弦+3、または1本低い弦−2フレット',
+  4: '長3度 → 同弦+4、または1本低い弦−1フレット（G-B弦間は同フレット）',
+  5: '完全4度 → 同弦+5 ＝ 隣の弦の同フレット（標準チューニングの基本）',
+  6: 'トライトーン（減5/増4）→ 同弦+6、最も不安定な響き',
+  7: '完全5度 → 同弦+7、または1本低い弦+2フレット（G-B間は+3）',
+  8: '短6度 → 同弦+8',
+  9: '長6度 → 同弦+9、または2本低い弦+2フレット',
+  10:'短7度 → 同弦+10、または1本低い弦+5フレット',
+  11:'長7度 → 同弦+11（オクターブの半音下）',
+};
 
-let intervalSubMode = 'quiz';
-let ivQ     = null;
+const SCALES = [
+  { id:'major',    name:'メジャー',          intervals:[0,2,4,5,7,9,11],
+    tip:'明るい基本スケール。 R-2-3-4-5-6-7。コード: M, M7, dom7' },
+  { id:'minor',    name:'ナチュラルマイナー', intervals:[0,2,3,5,7,8,10],
+    tip:'暗い基本スケール。 R-2-b3-4-5-b6-b7。コード: m, m7' },
+  { id:'major-p',  name:'メジャーペンタ',    intervals:[0,2,4,7,9],
+    tip:'5音。R-2-3-5-6。カントリー・ポップで多用。マイナーペンタの相対スケール' },
+  { id:'minor-p',  name:'マイナーペンタ',    intervals:[0,3,5,7,10],
+    tip:'5音。R-b3-4-5-b7。ロック・ブルースの基本。まず覚えるべきスケール' },
+  { id:'blues',    name:'ブルース',          intervals:[0,3,5,6,7,10],
+    tip:'マイナーペンタ + b5（ブルーノート）。ベンドで独特の哀愁を出す' },
+  { id:'dorian',   name:'ドリアン',          intervals:[0,2,3,5,7,9,10],
+    tip:'マイナー+長6度。暗すぎず明るすぎない。ジャズ・フュージョンで多用' },
+  { id:'mixo',     name:'ミクソリディアン', intervals:[0,2,4,5,7,9,10],
+    tip:'メジャー+短7度。ブルージーなメジャー感。ロック・ファンクの定番' },
+  { id:'phrygian', name:'フリジアン',        intervals:[0,1,3,5,7,8,10],
+    tip:'マイナー+短2度。スペイン・フラメンコ的な緊張感。メタルにも多用' },
+];
+
+/* ───────────────────────────── State ────────────────────────── */
+let mode = 'iv-quiz';
+let ok = 0, ng = 0, streak = 0;
+let done = false;
+let muted = false;
+let audioCtx = null;
+
+// iv-quiz / iv-find state
+let ivQ = null;
 let ivFound = null;
+
+// map state
 let mapRoot = 0;
 
-// ── Audio ──
-const BASE_FREQS = [329.63, 246.94, 196.00, 146.83, 110.00, 82.41]; // E4 B3 G3 D3 A2 E2
-let audioCtx = null;
-let muted = false;
+// scale state
+let scaleRoot  = 0;
+let scaleId    = 'minor-p';
 
-function getAudioCtx() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    return audioCtx;
+const getNote  = (s, f) => NOTES[(OPEN_NOTES[s] + f) % 12];
+const shuffle  = a => { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+/* ───────────────────────────── Audio ────────────────────────── */
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
 }
-
 function playNote(s, f) {
-    if (muted) return;
-    const ctx = getAudioCtx();
-    const freq = BASE_FREQS[s] * Math.pow(2, f / 12);
-    const t = ctx.currentTime;
-
-    const osc1 = ctx.createOscillator();
-    const osc2 = ctx.createOscillator();
-    const filter = ctx.createBiquadFilter();
-    const gain = ctx.createGain();
-    const gain2 = ctx.createGain();
-
-    osc1.type = 'triangle';
-    osc1.frequency.value = freq;
-    osc2.type = 'sawtooth';
-    osc2.frequency.value = freq;
-    gain2.gain.value = 0.12;
-
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(freq * 12, t);
-    filter.frequency.exponentialRampToValueAtTime(freq * 1.5, t + 0.5);
-
-    gain.gain.setValueAtTime(0.001, t);
-    gain.gain.linearRampToValueAtTime(0.55, t + 0.003);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
-
-    osc1.connect(filter);
-    osc2.connect(gain2);
-    gain2.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc1.start(t); osc2.start(t);
-    osc1.stop(t + 2); osc2.stop(t + 2);
+  if (muted) return;
+  const ctx  = getCtx();
+  const freq = BASE_FREQS[s] * Math.pow(2, f / 12);
+  const t    = ctx.currentTime;
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const filt = ctx.createBiquadFilter();
+  const gain = ctx.createGain();
+  const g2   = ctx.createGain();
+  osc1.type = 'triangle'; osc1.frequency.value = freq;
+  osc2.type = 'sawtooth'; osc2.frequency.value = freq; g2.gain.value = 0.12;
+  filt.type = 'lowpass';
+  filt.frequency.setValueAtTime(freq*12, t);
+  filt.frequency.exponentialRampToValueAtTime(freq*1.5, t+0.5);
+  gain.gain.setValueAtTime(0.001, t);
+  gain.gain.linearRampToValueAtTime(0.5, t+0.003);
+  gain.gain.exponentialRampToValueAtTime(0.001, t+1.8);
+  osc1.connect(filt); osc2.connect(g2); g2.connect(filt);
+  filt.connect(gain); gain.connect(ctx.destination);
+  osc1.start(t); osc2.start(t); osc1.stop(t+2); osc2.stop(t+2);
 }
-
 function toggleMute() {
-    muted = !muted;
-    document.getElementById('mute-btn').textContent = muted ? '🔇' : '🔊';
+  muted = !muted;
+  document.getElementById('mute-btn').textContent = muted ? '🔇' : '🔊';
 }
 
-const getNote = (s, f) => NOTES[(OPEN_NOTES[s] + f) % 12];
-
-/* ── Build DOM ── */
+/* ───────────────────────────── Fretboard ────────────────────── */
 function buildFretboard() {
-    const root = document.getElementById('fretboard-inner');
-    root.innerHTML = '';
+  const root = document.getElementById('fretboard-inner');
+  root.innerHTML = '';
 
-    // fret number row
-    const numRow = document.createElement('div');
-    numRow.className = 'fret-num-row';
-    addFretCells(numRow, f => {
-        const d = document.createElement('div');
-        d.className = 'fret-num-cell' + (f === 0 ? ' open-col' : '');
-        d.textContent = f === 0 ? '開放' : f;
-        return d;
-    });
-    root.appendChild(numRow);
+  // fret num row
+  const numRow = document.createElement('div');
+  numRow.className = 'fret-num-row';
+  for (let f = 0; f <= NUM_FRETS; f++) {
+    const d = document.createElement('div');
+    d.className = 'fret-num-cell' + (f===0 ? ' open-col' : '') + (DOT_FRETS.has(f) ? ' dot-num' : '');
+    d.textContent = f === 0 ? '開放' : f;
+    numRow.appendChild(d);
+  }
+  root.appendChild(numRow);
 
-    // fretboard grid
-    const grid = document.createElement('div');
-    grid.className = 'fretboard-grid';
+  // grid
+  const grid = document.createElement('div');
+  grid.className = 'fretboard-grid';
+  for (let s = 0; s < 6; s++) {
+    const row   = document.createElement('div'); row.className = 'string-row';
+    const cells = document.createElement('div'); cells.className = 'fret-cells';
+    for (let f = 0; f <= NUM_FRETS; f++) {
+      const cell = document.createElement('div');
+      cell.className = 'fret-cell' + (f===0 ? ' open-col' : '') + ' clickable';
+      cell.addEventListener('click', () => onFretClick(s, f));
 
-    for (let s = 0; s < 6; s++) {
-        const row = document.createElement('div');
-        row.className = 'string-row';
-
-
-        const cells = document.createElement('div');
-        cells.className = 'fret-cells';
-
-        for (let f = 0; f <= NUM_FRETS; f++) {
-            const cell = document.createElement('div');
-            cell.className = 'fret-cell' + (f === 0 ? ' open-col' : '');
-
-            cell.classList.add('clickable');
-            cell.addEventListener('click', () => {
-                playNote(s, f);
-                if (mode === 'quiz2') onFretClick(s, f);
-                else if (mode === 'interval' && intervalSubMode === 'find') onIntervalFindClick(s, f);
-            });
-
-            const ind = document.createElement('div');
-            ind.className = 'note-ind';
-            ind.id = `ni-${s}-${f}`;
-            ind.textContent = mode === 'study' ? getNote(s, f) : '';
-
-            if (mode === 'study') ind.classList.add('show', 'visible');
-
-            cell.appendChild(ind);
-            cells.appendChild(cell);
-        }
-
-        row.appendChild(cells);
-        grid.appendChild(row);
+      const ind = document.createElement('div');
+      ind.className = 'note-ind';
+      ind.id = `ni-${s}-${f}`;
+      cell.appendChild(ind);
+      cells.appendChild(cell);
     }
+    row.appendChild(cells);
+    grid.appendChild(row);
+  }
+  root.appendChild(grid);
 
-    root.appendChild(grid);
-
-    // dot row
-    const dotRow = document.createElement('div');
-    dotRow.className = 'dot-row';
-    addFretCells(dotRow, f => {
-        const d = document.createElement('div');
-        d.className = 'dot-cell' + (f === 0 ? ' open-col' : '');
-        if (DOT_FRETS.has(f)) {
-            const n = f === 12 ? 2 : 1;
-            for (let i = 0; i < n; i++) {
-                const dot = document.createElement('div');
-                dot.className = 'fret-dot';
-                d.appendChild(dot);
-            }
-        }
-        return d;
-    });
-    root.appendChild(dotRow);
-    applyOpenStringsState();
-}
-
-function addFretCells(parent, make) {
-    for (let f = 0; f <= NUM_FRETS; f++) parent.appendChild(make(f));
-}
-
-/* ── Mode switch ── */
-function switchMode(m) {
-    mode = m;
-    document.querySelectorAll('.mode-tab').forEach((btn, i) => {
-        btn.classList.toggle('active', ['quiz1','quiz2','study','interval'][i] === m);
-    });
-
-    ok = ng = streak = 0;
-    updateStats();
-    buildFretboard();
-
-    setResult('', '');
-    document.getElementById('streak').textContent = '';
-    document.getElementById('next-btn').classList.remove('show');
-    document.getElementById('choices-grid').innerHTML = '';
-
-    document.getElementById('iv-explanation').classList.remove('show');
-
-    const intervalTabs = document.getElementById('interval-tabs');
-    const mapControls  = document.getElementById('map-controls');
-    const ivLegend     = document.getElementById('iv-legend');
-
-    intervalTabs.style.display = m === 'interval' ? 'flex' : 'none';
-
-    if (m === 'study') {
-        document.getElementById('quiz-area').style.display = 'none';
-        mapControls.style.display = 'none';
-        ivLegend.style.display    = 'none';
-    } else if (m === 'interval') {
-        mapControls.style.display = 'none';
-        ivLegend.style.display    = 'none';
-        setIntervalSubMode(intervalSubMode);
-    } else {
-        document.getElementById('quiz-area').style.display = 'flex';
-        mapControls.style.display = 'none';
-        ivLegend.style.display    = 'none';
-        nextQuestion();
+  // dot row
+  const dotRow = document.createElement('div'); dotRow.className = 'dot-row';
+  for (let f = 0; f <= NUM_FRETS; f++) {
+    const d = document.createElement('div');
+    d.className = 'dot-cell' + (f===0 ? ' open-col' : '');
+    if (DOT_FRETS.has(f)) {
+      const n = f===12 ? 2 : 1;
+      for (let i=0;i<n;i++) { const dot=document.createElement('div'); dot.className='fret-dot'; d.appendChild(dot); }
     }
+    dotRow.appendChild(d);
+  }
+  root.appendChild(dotRow);
 }
 
-/* ── Question ── */
-function nextQuestion() {
-    done = false;
-    setResult('', '');
-    document.getElementById('streak').textContent = '';
-    document.getElementById('next-btn').classList.remove('show');
-    clearIndicators();
-
-    const s = Math.floor(Math.random() * 6);
-    const f = Math.floor(Math.random() * (NUM_FRETS + 1));
-    q = { s, f, note: getNote(s, f), hadWrong: false };
-
-    if (mode === 'quiz1') {
-        setInd(s, f, 'target pop');
-        document.getElementById('quiz-prompt').textContent = 'この位置の音名は？';
-        document.getElementById('quiz-note').textContent = '';
-        renderChoices(makeChoices(q.note));
-    } else {
-        document.getElementById('quiz-prompt').textContent = 'この音をフレット上でクリック！';
-        document.getElementById('quiz-note').textContent = q.note;
-        document.getElementById('choices-grid').innerHTML = '';
-    }
-    setTimeout(() => playNote(q.s, q.f), 120);
+function clearInds() {
+  document.querySelectorAll('.note-ind').forEach(el => {
+    el.textContent = ''; el.className = 'note-ind';
+    el.style.background = ''; el.style.color = '';
+  });
 }
 
-/* ── Quiz 1: choice click ── */
-function renderChoices(choices) {
-    const grid = document.getElementById('choices-grid');
-    grid.innerHTML = '';
-    choices.forEach(note => {
-        const btn = document.createElement('button');
-        btn.className = 'choice-btn';
-        btn.textContent = note;
-        btn.onclick = () => onChoiceClick(note, btn);
-        grid.appendChild(btn);
-    });
-}
-
-function onChoiceClick(selected, btn) {
-    if (done) return;
-    done = true;
-
-    const isOk = selected === q.note;
-    document.querySelectorAll('.choice-btn').forEach(b => {
-        b.disabled = true;
-        if (b.textContent === q.note) b.classList.add('correct');
-    });
-    if (!isOk) btn.classList.add('wrong');
-
-    setInd(q.s, q.f, isOk ? 'correct pop' : 'wrong pop', q.note);
-    recordScore(isOk);
-    document.getElementById('next-btn').classList.add('show');
-}
-
-/* ── Quiz 2: fret click ── */
-function onFretClick(s, f) {
-    if (done) return;
-
-    const clicked = getNote(s, f);
-    if (clicked === q.note) {
-        done = true;
-        if (!q.hadWrong) { ok++; streak++; } else streak = 0;
-        updateStats();
-
-        // show correct position + all other positions as hint
-        for (let si = 0; si < 6; si++)
-            for (let fi = 0; fi <= NUM_FRETS; fi++)
-                if (getNote(si, fi) === q.note)
-                    setInd(si, fi, si === s && fi === f ? 'correct pop' : 'hint', getNote(si, fi));
-
-        setResult(true);
-        document.getElementById('next-btn').classList.add('show');
-    } else {
-        if (!q.hadWrong) { ng++; streak = 0; q.hadWrong = true; updateStats(); }
-
-        const ind = document.getElementById(`ni-${s}-${f}`);
-        ind.className = 'note-ind wrong pop';
-        setTimeout(() => { if (!done) ind.className = 'note-ind'; }, 600);
-
-        setResult(false, `${clicked} は違います。もう一度！`);
-    }
-}
-
-/* ── Helpers ── */
-function clearIndicators() {
-    document.querySelectorAll('.note-ind').forEach(el => {
-        el.textContent = '';
-        el.className = mode === 'study' ? 'note-ind show visible' : 'note-ind';
-        el.style.background = '';
-        el.style.color = '';
-    });
-    if (mode === 'study') {
-        for (let s = 0; s < 6; s++)
-            for (let f = 1; f <= NUM_FRETS; f++) {
-                const ind = document.getElementById(`ni-${s}-${f}`);
-                if (ind) ind.textContent = getNote(s, f);
-            }
-    }
-    if (mode !== 'interval') applyOpenStringsState();
-}
-
-function applyOpenStringsState() {
-    for (let s = 0; s < 6; s++) {
-        const ind = document.getElementById(`ni-${s}-0`);
-        if (!ind) continue;
-        if (showOpenStrings) {
-            ind.textContent = getNote(s, 0);
-            ind.className = 'note-ind show visible';
-        } else {
-            ind.textContent = '';
-            ind.className = 'note-ind';
-        }
-    }
-}
-
-function toggleOpenStrings() {
-    showOpenStrings = !showOpenStrings;
-    const btn = document.getElementById('open-toggle-btn');
-    btn.textContent = showOpenStrings ? '開放弦の音名を非表示' : '開放弦の音名を表示';
-    btn.classList.toggle('on', showOpenStrings);
-    applyOpenStringsState();
-}
-
-function setInd(s, f, cls, text) {
-    const el = document.getElementById(`ni-${s}-${f}`);
-    if (el) {
-        if (text !== undefined) el.textContent = text;
-        el.className = `note-ind ${cls}`;
-        void el.offsetWidth; // restart animation
-    }
-}
-
-function setResult(isOk, msg) {
-    const el = document.getElementById('result-text');
-    if (typeof isOk === 'boolean') {
-        el.textContent = msg || (isOk ? '正解！' : '不正解...');
-        el.className = `result-text ${isOk ? 'correct' : 'wrong'}`;
-        const s = document.getElementById('streak');
-        s.textContent = streak >= 3 ? `🔥 ${streak} 連続正解！` : '';
-    } else {
-        el.textContent = '';
-        el.className = 'result-text';
-    }
-}
-
-function recordScore(isOk) {
-    if (isOk) { ok++; streak++; } else { ng++; streak = 0; }
-    updateStats();
-    setResult(isOk);
-}
-
-function updateStats() {
-    document.getElementById('s-ok').textContent  = ok;
-    document.getElementById('s-ng').textContent  = ng;
-    const total = ok + ng;
-    document.getElementById('s-acc').textContent =
-        total > 0 ? Math.round(ok / total * 100) + '%' : '—';
-}
-
-function makeChoices(correct) {
-    const others = NOTES.filter(n => n !== correct);
-    shuffle(others);
-    const arr = [correct, ...others.slice(0, 3)];
-    shuffle(arr);
-    return arr;
-}
-
-function shuffle(a) {
-    for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-    }
-}
-
-function onNextBtn() {
-    if (mode === 'interval') nextIntervalQuestion();
-    else nextQuestion();
-}
-
-/* ── Interval mode ── */
-function setIntervalSubMode(sub) {
-    intervalSubMode = sub;
-    document.querySelectorAll('.interval-tab').forEach((btn, i) => {
-        btn.classList.toggle('active', ['quiz','find','map'][i] === sub);
-    });
-
-    const mapControls = document.getElementById('map-controls');
-    const ivLegend    = document.getElementById('iv-legend');
-    const quizArea    = document.getElementById('quiz-area');
-    const nextBtn     = document.getElementById('next-btn');
-
-    ok = ng = streak = 0;
-    updateStats();
-
-    if (sub === 'map') {
-        quizArea.style.display   = 'none';
-        nextBtn.classList.remove('show');
-        document.getElementById('choices-grid').innerHTML = '';
-        mapControls.style.display = 'flex';
-        ivLegend.style.display    = 'flex';
-        buildMapControls();
-        buildIntervalMap();
-    } else {
-        quizArea.style.display    = 'flex';
-        mapControls.style.display = 'none';
-        ivLegend.style.display    = 'none';
-        nextIntervalQuestion();
-    }
-}
-
-function nextIntervalQuestion() {
-    done = false;
-    ivFound = new Set();
-    setResult('', '');
-    document.getElementById('streak').textContent = '';
-    document.getElementById('next-btn').classList.remove('show');
-    document.getElementById('choices-grid').innerHTML = '';
-    document.getElementById('iv-explanation').classList.remove('show');
-    clearIndicators();
-
-    if (intervalSubMode === 'quiz') startIvQuiz();
-    else if (intervalSubMode === 'find') startIvFind();
-}
-
-/* ① 度数当てクイズ */
-function startIvQuiz() {
-    const s1 = Math.floor(Math.random() * 6);
-    const f1 = Math.floor(Math.random() * 9);
-    const iv = INTERVALS[1 + Math.floor(Math.random() * 11)];
-
-    const rootNote   = (OPEN_NOTES[s1] + f1) % 12;
-    const targetNote = (rootNote + iv.semitones) % 12;
-
-    const candidates = [];
-    for (let ss = 0; ss < 6; ss++)
-        for (let ff = 0; ff <= 12; ff++)
-            if ((OPEN_NOTES[ss] + ff) % 12 === targetNote && !(ss === s1 && ff === f1))
-                candidates.push({ ss, ff, dist: Math.abs(ff - f1) + Math.abs(ss - s1) * 3 });
-    candidates.sort((a, b) => a.dist - b.dist);
-    const { ss: s2, ff: f2 } = candidates[Math.floor(Math.random() * Math.min(4, candidates.length))];
-
-    ivQ = { s1, f1, s2, f2, iv };
-
-    showIvInd(s1, f1, 'R', INTERVALS[0].color);
-
-    const tgt = document.getElementById(`ni-${s2}-${f2}`);
-    tgt.textContent = '?';
-    tgt.className   = 'note-ind target pop';
-    tgt.style.background = '';
-    tgt.style.color = '';
-
-    document.getElementById('quiz-prompt').textContent = 'R（ルート）から★まで何度？';
-    document.getElementById('quiz-note').textContent   = '';
-
-    renderIvChoices(makeIvChoices(iv.semitones));
-    playNote(s1, f1);
-    setTimeout(() => playNote(s2, f2), 450);
-}
-
-function makeIvChoices(correct) {
-    const wrong = INTERVALS.filter(iv => iv.semitones !== correct && iv.semitones > 0);
-    shuffle(wrong);
-    const arr = [INTERVALS.find(iv => iv.semitones === correct), ...wrong.slice(0, 3)];
-    shuffle(arr);
-    return arr;
-}
-
-function renderIvChoices(choices) {
-    const grid = document.getElementById('choices-grid');
-    grid.innerHTML = '';
-    grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
-    choices.forEach(iv => {
-        const btn = document.createElement('button');
-        btn.className   = 'choice-btn';
-        btn.textContent = iv.name;
-        btn.style.fontSize = '0.82rem';
-        btn.onclick = () => onIvChoice(iv.semitones, btn);
-        grid.appendChild(btn);
-    });
-}
-
-function onIvChoice(selected, btn) {
-    if (done) return;
-    done = true;
-    const correct = ivQ.iv.semitones;
-    const isOk    = selected === correct;
-
-    document.querySelectorAll('.choice-btn').forEach(b => {
-        b.disabled = true;
-        const iv = INTERVALS.find(iv => iv.name === b.textContent);
-        if (iv && iv.semitones === correct) b.classList.add('correct');
-    });
-    if (!isOk) btn.classList.add('wrong');
-
-    // Rの位置に音名を表示
-    showIvInd(ivQ.s1, ivQ.f1, getNote(ivQ.s1, ivQ.f1), INTERVALS[0].color);
-    showIvInd(ivQ.s2, ivQ.f2, ivQ.iv.short, ivQ.iv.color);
-
-    showIvExplanation(ivQ);
-    recordScore(isOk);
-    document.getElementById('next-btn').classList.add('show');
-}
-
-/* ② 度数探しクイズ */
-function startIvFind() {
-    const rootNoteIdx   = Math.floor(Math.random() * 12);
-    const useful        = [2, 3, 4, 5, 7, 10];
-    const semitones     = useful[Math.floor(Math.random() * useful.length)];
-    const iv            = INTERVALS[semitones];
-    const targetNoteIdx = (rootNoteIdx + semitones) % 12;
-
-    let total = 0;
-    for (let ss = 0; ss < 6; ss++)
-        for (let ff = 0; ff <= 12; ff++)
-            if ((OPEN_NOTES[ss] + ff) % 12 === targetNoteIdx) total++;
-
-    ivQ = { rootNoteIdx, targetNoteIdx, iv, total };
-    ivFound = new Set();
-
-    for (let ss = 0; ss < 6; ss++)
-        for (let ff = 0; ff <= 12; ff++)
-            if ((OPEN_NOTES[ss] + ff) % 12 === rootNoteIdx)
-                showIvInd(ss, ff, 'R', INTERVALS[0].color);
-
-    document.getElementById('quiz-prompt').textContent =
-        `${NOTES[rootNoteIdx]} からの ${iv.name} を全部探せ！`;
-    document.getElementById('quiz-note').textContent = NOTES[targetNoteIdx];
-
-    updateFindCounter();
-
-    // play first root note
-    for (let ss = 0; ss < 6; ss++) {
-        for (let ff = 0; ff <= 12; ff++) {
-            if ((OPEN_NOTES[ss] + ff) % 12 === rootNoteIdx) { playNote(ss, ff); break; }
-        }
-        break;
-    }
-}
-
-function onIntervalFindClick(s, f) {
-    if (done) return;
-    const note = (OPEN_NOTES[s] + f) % 12;
-    const key  = `${s}-${f}`;
-
-    if (note === ivQ.targetNoteIdx) {
-        if (!ivFound.has(key)) {
-            ivFound.add(key);
-            showIvInd(s, f, ivQ.iv.short, ivQ.iv.color);
-            updateFindCounter();
-
-            if (ivFound.size === ivQ.total) {
-                done = true;
-                ok++; streak++;
-                updateStats();
-                setResult(true, `全${ivQ.total}ポジション発見！`);
-                document.getElementById('next-btn').classList.add('show');
-            }
-        }
-    } else if (note !== ivQ.rootNoteIdx) {
-        ng++; streak = 0; updateStats();
-        const ind = document.getElementById(`ni-${s}-${f}`);
-        ind.textContent = NOTES[note];
-        ind.className   = 'note-ind wrong pop';
-        ind.style.background = ''; ind.style.color = '';
-        setTimeout(() => {
-            if (!done) { ind.textContent = ''; ind.className = 'note-ind'; }
-        }, 600);
-        setResult(false, `${NOTES[note]} は違います`);
-    }
-}
-
-function updateFindCounter() {
-    const el = document.getElementById('streak');
-    el.textContent  = `${ivFound.size} / ${ivQ.total} ポジション発見`;
-    el.style.color  = '#888';
-}
-
-/* ③ 度数マップ */
-function buildMapControls() {
-    const picker = document.getElementById('root-picker');
-    picker.innerHTML = '';
-    NOTES.forEach((note, i) => {
-        const btn = document.createElement('button');
-        btn.className = 'root-btn' + (i === mapRoot ? ' active' : '');
-        btn.textContent = note;
-        btn.onclick = () => {
-            mapRoot = i;
-            document.querySelectorAll('.root-btn').forEach((b, j) => b.classList.toggle('active', j === i));
-            buildIntervalMap();
-        };
-        picker.appendChild(btn);
-    });
-
-    const legend = document.getElementById('iv-legend');
-    legend.innerHTML = '';
-    INTERVALS.forEach(iv => {
-        const item  = document.createElement('div');
-        item.className = 'iv-legend-item';
-        const dot   = document.createElement('div');
-        dot.className = 'iv-legend-dot';
-        dot.style.background = iv.color;
-        const lbl   = document.createElement('span');
-        lbl.textContent = `${iv.short}=${iv.name}`;
-        item.appendChild(dot);
-        item.appendChild(lbl);
-        legend.appendChild(item);
-    });
-}
-
-function buildIntervalMap() {
-    clearIndicators();
-    for (let ss = 0; ss < 6; ss++)
-        for (let ff = 0; ff <= 12; ff++) {
-            const semitones = ((OPEN_NOTES[ss] + ff) - mapRoot + 144) % 12;
-            const iv = INTERVALS[semitones];
-            showIvInd(ss, ff, iv.short, iv.color);
-        }
-}
-
-function showIvExplanation({ s1, f1, s2, f2, iv }) {
-    const rootNote   = getNote(s1, f1);
-    const targetNote = getNote(s2, f2);
-    const strNames   = ['1弦(E)', '2弦(B)', '3弦(G)', '4弦(D)', '5弦(A)', '6弦(E)'];
-
-    // 位置関係の説明
-    let posDesc;
-    if (s1 === s2) {
-        const d = f2 - f1;
-        posDesc = `同じ弦（${strNames[s1]}）で ${d > 0 ? '+' : ''}${d} フレット`;
-    } else {
-        const sd = s2 - s1;
-        const fd = f2 - f1;
-        const dir = sd > 0 ? '低' : '高';
-        // B弦(index 1)とG弦(index 2)の間は4半音
-        const crossBG = (Math.min(s1,s2) === 1 && Math.max(s1,s2) === 2);
-        const tuningNote = crossBG ? '※G-B弦間は4半音（他の弦間は5半音）' : '';
-        posDesc = `${strNames[s1]} → ${strNames[s2]}（${Math.abs(sd)}本${dir}い弦）、フレット差 ${fd >= 0 ? '+' : ''}${fd}${tuningNote ? '\n' + tuningNote : ''}`;
-    }
-
-    // 度数ごとの汎用パターンTips
-    const TIPS = {
-        1:  '半音 = 常に1フレット隣り',
-        2:  '全音 = 常に2フレット隣り',
-        3:  '短3度 → 同弦+3、または1本低い弦−2フレット',
-        4:  '長3度 → 同弦+4、または1本低い弦−1フレット（G-B間は同フレット）',
-        5:  '完全4度 → 同弦+5 ＝ 隣の弦の同フレット（標準チューニングの基準）',
-        6:  'トライトーン（減5/増4） → 同弦+6、最も不安定な響き',
-        7:  '完全5度 → 同弦+7、または1本低い弦+2フレット（G-B間は+3）',
-        8:  '短6度 → 同弦+8',
-        9:  '長6度 → 同弦+9、または2本低い弦+2フレット',
-        10: '短7度 → 同弦+10、または1本低い弦+5フレット',
-        11: '長7度 → 同弦+11（オクターブの半音下）',
-    };
-
-    const tip = TIPS[iv.semitones] || `${iv.name} = ${iv.semitones}半音`;
-
-    // 同一フレット各弦の度数（ルート弦から順に並べる）
-    const rootNoteIdx = (OPEN_NOTES[s1] + f1) % 12;
-    const strLabels   = ['1弦','2弦','3弦','4弦','5弦','6弦'];
-    // ルート弦から1弦方向へ、折り返して6弦方向へ
-    const strOrder = [];
-    for (let i = s1; i >= 0; i--) strOrder.push(i);
-    for (let i = 5; i > s1; i--) strOrder.push(i);
-
-    let strCells = '';
-    for (let i = 0; i < 6; i++) {
-        const ss        = strOrder[i];
-        const noteIdx   = (OPEN_NOTES[ss] + f1) % 12;
-        const semitones = (noteIdx - rootNoteIdx + 12) % 12;
-        const ivs       = INTERVALS[semitones];
-        const isRoot    = i === 0;
-        strCells += `
-            <div class="iv-ex-str-cell ${isRoot ? 'is-root' : ''}">
-                <span class="iv-ex-str-name">${strLabels[ss]}</span>
-                <span class="iv-ex-str-note">${NOTES[noteIdx]}</span>
-                <span class="iv-ex-str-iv" style="color:${ivs.color}">${isRoot ? 'R' : ivs.short}</span>
-            </div>`;
-    }
-
-    const el = document.getElementById('iv-explanation');
-    el.innerHTML = `
-        <div class="iv-ex-title">${rootNote} → ${targetNote}（${iv.name} / ${iv.semitones}半音）</div>
-        <div class="iv-ex-pos">${posDesc.replace(/\n/g, '<br>')}</div>
-        <div class="iv-ex-tip">💡 ${tip}</div>
-        <div class="iv-ex-strings">
-            <div class="iv-ex-strings-label">フレット ${f1} での各弦の度数（ルートから）</div>
-            <div class="iv-ex-str-grid">${strCells}</div>
-        </div>
-    `;
-    el.classList.add('show');
+function setInd(s, f, cls, text, bg, col) {
+  const el = document.getElementById(`ni-${s}-${f}`);
+  if (!el) return;
+  if (text !== undefined) el.textContent = text;
+  el.className = `note-ind ${cls}`;
+  if (bg)  el.style.background = bg;
+  if (col) el.style.color = col;
+  void el.offsetWidth;
 }
 
 function showIvInd(s, f, text, color) {
-    const ind = document.getElementById(`ni-${s}-${f}`);
-    if (!ind) return;
-    ind.textContent      = text;
-    ind.className        = 'note-ind show';
-    ind.style.background = color;
-    ind.style.color      = '#0f0f1a';
+  const el = document.getElementById(`ni-${s}-${f}`);
+  if (!el) return;
+  el.textContent = text; el.className = 'note-ind show';
+  el.style.background = color; el.style.color = '#0a0a00';
 }
 
-// init
+/* ───────────────────────────── UI helpers ───────────────────── */
+function updateStats() {
+  document.getElementById('s-ok').textContent  = ok;
+  document.getElementById('s-ng').textContent  = ng;
+  const total = ok + ng;
+  document.getElementById('s-acc').textContent = total > 0 ? Math.round(ok/total*100)+'%' : '—';
+}
+
+function setResult(isOk, msg) {
+  const el = document.getElementById('result-line');
+  if (typeof isOk === 'boolean') {
+    el.textContent = msg || (isOk ? '正解！' : '不正解…');
+    el.className = 'result-line ' + (isOk ? 'ok' : 'miss');
+    document.getElementById('streak-line').textContent =
+      streak >= 3 ? `🔥 ${streak} 連続正解！` : '';
+  } else {
+    el.textContent = ''; el.className = 'result-line';
+  }
+}
+
+function recordScore(isOk) {
+  if (isOk) { ok++; streak++; } else { ng++; streak = 0; }
+  updateStats(); setResult(isOk);
+}
+
+function showNext() { document.getElementById('next-btn').classList.add('show'); }
+function hideNext() { document.getElementById('next-btn').classList.remove('show'); }
+
+/* ───────────────────────────── Mode Switch ──────────────────── */
+function switchMode(m) {
+  mode = m;
+  ok = ng = streak = 0;
+  updateStats();
+  done = false;
+  clearInds();
+  setResult('');
+  document.getElementById('streak-line').textContent = '';
+  hideNext();
+  document.getElementById('iv-expl').classList.remove('show');
+  document.getElementById('iv-legend').style.display = 'none';
+  document.getElementById('scale-info').classList.remove('show');
+
+  document.querySelectorAll('.mode-tab').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === m));
+
+  const quizPanel   = document.getElementById('quiz-panel');
+  const mapCtrl     = document.getElementById('map-controls');
+  const scaleCtrl   = document.getElementById('scale-controls');
+  const choicesWrap = document.getElementById('choices-wrap');
+  const statsBar    = document.getElementById('stats-bar');
+
+  quizPanel.style.display   = 'none';
+  mapCtrl.style.display     = 'none';
+  scaleCtrl.style.display   = 'none';
+  choicesWrap.style.display = 'none';
+  statsBar.style.display    = 'flex';
+
+  document.getElementById('choices-grid').innerHTML = '';
+
+  if (m === 'iv-quiz') {
+    quizPanel.style.display   = 'flex';
+    choicesWrap.style.display = 'block';
+    startIvQuiz();
+  } else if (m === 'iv-find') {
+    quizPanel.style.display   = 'flex';
+    statsBar.style.display    = 'flex';
+    startIvFind();
+  } else if (m === 'iv-map') {
+    mapCtrl.style.display     = 'flex';
+    statsBar.style.display    = 'none';
+    document.getElementById('iv-legend').style.display = 'flex';
+    buildMapControls();
+    buildIntervalMap();
+  } else if (m === 'scale') {
+    scaleCtrl.style.display   = 'flex';
+    statsBar.style.display    = 'none';
+    document.getElementById('iv-legend').style.display = 'flex';
+    buildScaleControls();
+    buildScaleMap();
+  } else if (m === 'reference') {
+    statsBar.style.display = 'none';
+    buildReference();
+  }
+}
+
+function onFretClick(s, f) {
+  playNote(s, f);
+  if (mode === 'iv-find') onIvFindClick(s, f);
+}
+
+function onNext() {
+  if (mode === 'iv-quiz') startIvQuiz();
+  else if (mode === 'iv-find') startIvFind();
+}
+
+/* ───────────────────────────── Interval Quiz ─────────────────── */
+function startIvQuiz() {
+  done = false; ivFound = new Set();
+  clearInds(); setResult(''); document.getElementById('streak-line').textContent = '';
+  hideNext(); document.getElementById('choices-grid').innerHTML = '';
+  document.getElementById('iv-expl').classList.remove('show');
+
+  const s1 = Math.floor(Math.random() * 6);
+  const f1 = Math.floor(Math.random() * 9);
+  const iv = INTERVALS[1 + Math.floor(Math.random() * 11)];
+
+  const rootNote   = (OPEN_NOTES[s1] + f1) % 12;
+  const targetNote = (rootNote + iv.semitones) % 12;
+
+  const cands = [];
+  for (let ss=0; ss<6; ss++)
+    for (let ff=0; ff<=12; ff++)
+      if ((OPEN_NOTES[ss]+ff)%12 === targetNote && !(ss===s1&&ff===f1))
+        cands.push({ss, ff, dist: Math.abs(ff-f1)+Math.abs(ss-s1)*3});
+  cands.sort((a,b)=>a.dist-b.dist);
+  const {ss:s2, ff:f2} = cands[Math.floor(Math.random()*Math.min(4,cands.length))];
+
+  ivQ = {s1,f1,s2,f2,iv};
+
+  showIvInd(s1, f1, 'R', INTERVALS[0].color);
+  const tgt = document.getElementById(`ni-${s2}-${f2}`);
+  tgt.textContent = '?'; tgt.className = 'note-ind target pop';
+  tgt.style.background = ''; tgt.style.color = '';
+
+  document.getElementById('quiz-prompt').textContent = 'R（ルート）から ★ まで何度？';
+  document.getElementById('quiz-big').textContent = '';
+
+  // choices
+  const wrong = INTERVALS.filter(i=>i.semitones!==iv.semitones&&i.semitones>0);
+  shuffle(wrong);
+  const choices = shuffle([iv, ...wrong.slice(0,3)]);
+  const grid = document.getElementById('choices-grid');
+  grid.innerHTML = ''; grid.className = 'choices-grid';
+  document.getElementById('choices-wrap').style.display = 'block';
+  choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn'; btn.textContent = c.name;
+    btn.onclick = () => onIvChoice(c.semitones, btn);
+    grid.appendChild(btn);
+  });
+
+  playNote(s1,f1); setTimeout(()=>playNote(s2,f2), 450);
+}
+
+function onIvChoice(selected, btn) {
+  if (done) return;
+  done = true;
+  const correct = ivQ.iv.semitones;
+  const isOk    = selected === correct;
+
+  document.querySelectorAll('.choice-btn').forEach(b => {
+    b.disabled = true;
+    const iv = INTERVALS.find(i=>i.name===b.textContent);
+    if (iv && iv.semitones===correct) b.classList.add('correct');
+  });
+  if (!isOk) btn.classList.add('wrong');
+
+  showIvInd(ivQ.s1, ivQ.f1, getNote(ivQ.s1,ivQ.f1), INTERVALS[0].color);
+  showIvInd(ivQ.s2, ivQ.f2, ivQ.iv.short, ivQ.iv.color);
+  showIvExplanation(ivQ);
+  recordScore(isOk);
+  showNext();
+}
+
+/* ───────────────────────────── Interval Find ─────────────────── */
+function startIvFind() {
+  done = false; ivFound = new Set();
+  clearInds(); setResult(''); document.getElementById('streak-line').textContent = '';
+  hideNext(); document.getElementById('choices-grid').innerHTML = '';
+  document.getElementById('iv-expl').classList.remove('show');
+  document.getElementById('choices-wrap').style.display = 'none';
+
+  const rootIdx   = Math.floor(Math.random() * 12);
+  const useful    = [2,3,4,5,7,10];
+  const semitones = useful[Math.floor(Math.random()*useful.length)];
+  const iv        = INTERVALS[semitones];
+  const targetIdx = (rootIdx + semitones) % 12;
+
+  let total = 0;
+  for (let ss=0;ss<6;ss++) for(let ff=0;ff<=12;ff++)
+    if ((OPEN_NOTES[ss]+ff)%12===targetIdx) total++;
+
+  ivQ = {rootIdx, targetIdx, iv, total};
+
+  for (let ss=0;ss<6;ss++) for(let ff=0;ff<=12;ff++)
+    if ((OPEN_NOTES[ss]+ff)%12===rootIdx)
+      showIvInd(ss,ff,'R',INTERVALS[0].color);
+
+  document.getElementById('quiz-prompt').textContent =
+    `${NOTES[rootIdx]} からの ${iv.name}（${iv.short}）を全部タップせよ！`;
+  document.getElementById('quiz-big').textContent = NOTES[targetIdx];
+  document.getElementById('streak-line').textContent = `0 / ${total} ポジション`;
+}
+
+function onIvFindClick(s, f) {
+  if (done || mode !== 'iv-find') return;
+  const note = (OPEN_NOTES[s]+f) % 12;
+  const key  = `${s}-${f}`;
+  if (note === ivQ.targetIdx) {
+    if (!ivFound.has(key)) {
+      ivFound.add(key);
+      showIvInd(s, f, ivQ.iv.short, ivQ.iv.color);
+      document.getElementById('streak-line').textContent = `${ivFound.size} / ${ivQ.total} ポジション`;
+      if (ivFound.size === ivQ.total) {
+        done = true; ok++; streak++;
+        updateStats();
+        setResult(true, `全${ivQ.total}ポジション発見！`);
+        showNext();
+      }
+    }
+  } else if (note !== ivQ.rootIdx) {
+    ng++; streak = 0; updateStats();
+    const ind = document.getElementById(`ni-${s}-${f}`);
+    ind.textContent = NOTES[note]; ind.className = 'note-ind wrong pop';
+    ind.style.background = ''; ind.style.color = '';
+    setTimeout(()=>{ if(!done){ind.textContent='';ind.className='note-ind';} }, 650);
+    setResult(false, `${NOTES[note]} は違います`);
+  }
+}
+
+/* ───────────────────────────── Interval Map ─────────────────── */
+function buildMapControls() {
+  const picker = document.getElementById('root-picker');
+  picker.innerHTML = '';
+  NOTES.forEach((n,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'root-btn' + (i===mapRoot?' active':'');
+    btn.textContent = n;
+    btn.onclick = () => { mapRoot=i; picker.querySelectorAll('.root-btn').forEach((b,j)=>b.classList.toggle('active',j===i)); buildIntervalMap(); };
+    picker.appendChild(btn);
+  });
+  buildLegend();
+}
+
+function buildIntervalMap() {
+  clearInds();
+  for (let ss=0;ss<6;ss++) for(let ff=0;ff<=NUM_FRETS;ff++) {
+    const sem = ((OPEN_NOTES[ss]+ff)-mapRoot+144)%12;
+    const iv  = INTERVALS[sem];
+    showIvInd(ss,ff,iv.short,iv.color);
+  }
+}
+
+/* ───────────────────────────── Scale Map ────────────────────── */
+function buildScaleControls() {
+  // root picker
+  const rootPicker = document.getElementById('scale-root-picker');
+  rootPicker.innerHTML = '';
+  NOTES.forEach((n,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'root-btn' + (i===scaleRoot?' active':'');
+    btn.textContent = n;
+    btn.onclick = () => {
+      scaleRoot=i;
+      rootPicker.querySelectorAll('.root-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+      buildScaleMap();
+    };
+    rootPicker.appendChild(btn);
+  });
+
+  // scale picker
+  const scalePicker = document.getElementById('scale-picker');
+  scalePicker.innerHTML = '';
+  SCALES.forEach(sc => {
+    const btn = document.createElement('button');
+    btn.className = 'scale-btn' + (sc.id===scaleId?' active':'');
+    btn.textContent = sc.name;
+    btn.onclick = () => {
+      scaleId=sc.id;
+      scalePicker.querySelectorAll('.scale-btn').forEach(b=>b.classList.toggle('active',b.textContent===sc.name));
+      buildScaleMap();
+    };
+    scalePicker.appendChild(btn);
+  });
+
+  buildLegend();
+}
+
+function buildScaleMap() {
+  clearInds();
+  const sc = SCALES.find(s=>s.id===scaleId);
+  if (!sc) return;
+  const ivSet = new Set(sc.intervals);
+
+  for (let ss=0;ss<6;ss++) for(let ff=0;ff<=NUM_FRETS;ff++) {
+    const sem = ((OPEN_NOTES[ss]+ff) - scaleRoot + 144) % 12;
+    if (ivSet.has(sem)) {
+      const iv = INTERVALS[sem];
+      showIvInd(ss, ff, iv.short, iv.color);
+    }
+  }
+
+  // Show scale info panel
+  const info = document.getElementById('scale-info');
+  const rootName = NOTES[scaleRoot];
+  let degreesHTML = sc.intervals.map(sem => {
+    const iv   = INTERVALS[sem];
+    const note = NOTES[(scaleRoot+sem)%12];
+    return `<div class="degree-chip${sem===0?' is-root':''}">
+      <div class="degree-num" style="color:${iv.color}">${iv.short}</div>
+      <div class="degree-note">${note}</div>
+    </div>`;
+  }).join('');
+
+  info.innerHTML = `
+    <div class="scale-info-title">${rootName} ${sc.name}</div>
+    <div class="scale-info-degrees">${degreesHTML}</div>
+    <div class="scale-info-tip">💡 ${sc.tip}</div>
+  `;
+  info.classList.add('show');
+}
+
+/* ───────────────────────────── Reference ────────────────────── */
+function buildReference() {
+  clearInds();
+  for (let ss=0;ss<6;ss++) for(let ff=0;ff<=NUM_FRETS;ff++) {
+    const n = getNote(ss,ff);
+    const el = document.getElementById(`ni-${ss}-${ff}`);
+    if (!el) continue;
+    el.textContent = n; el.className = 'note-ind show visible';
+    el.style.background=''; el.style.color='';
+  }
+}
+
+/* ───────────────────────────── Legend ───────────────────────── */
+function buildLegend() {
+  const legend = document.getElementById('iv-legend');
+  legend.innerHTML = '';
+  INTERVALS.forEach(iv => {
+    const item = document.createElement('div'); item.className='iv-legend-item';
+    const dot  = document.createElement('div'); dot.className='iv-legend-dot'; dot.style.background=iv.color;
+    const lbl  = document.createElement('span'); lbl.textContent=`${iv.short}=${iv.name}`;
+    item.appendChild(dot); item.appendChild(lbl); legend.appendChild(item);
+  });
+}
+
+/* ───────────────────────────── IV Explanation ───────────────── */
+function showIvExplanation({s1,f1,s2,f2,iv}) {
+  const rootNote   = getNote(s1,f1);
+  const targetNote = getNote(s2,f2);
+  const strNames   = ['1弦(E)','2弦(B)','3弦(G)','4弦(D)','5弦(A)','6弦(E)'];
+
+  let posDesc;
+  if (s1===s2) {
+    const d = f2-f1;
+    posDesc = `同じ弦（${strNames[s1]}）で ${d>0?'+':''}${d} フレット`;
+  } else {
+    const sd=s2-s1, fd=f2-f1;
+    const dir=sd>0?'低':'高';
+    const crossBG=(Math.min(s1,s2)===1&&Math.max(s1,s2)===2);
+    posDesc=`${strNames[s1]} → ${strNames[s2]}（${Math.abs(sd)}本${dir}い弦）、フレット差 ${fd>=0?'+':''}${fd}`
+      +(crossBG?'<br><span style="color:#f5c842;font-size:.7rem">※G-B弦間は4半音（他の弦間は5半音）</span>':'');
+  }
+
+  const tip = INTERVAL_TIPS[iv.semitones] || `${iv.name} = ${iv.semitones}半音`;
+
+  const rootNoteIdx = (OPEN_NOTES[s1]+f1)%12;
+  const strOrder = [];
+  for(let i=s1;i>=0;i--) strOrder.push(i);
+  for(let i=5;i>s1;i--)  strOrder.push(i);
+  const strLabels=['1弦','2弦','3弦','4弦','5弦','6弦'];
+  let strCells='';
+  for(let i=0;i<6;i++){
+    const ss=strOrder[i];
+    const nIdx=(OPEN_NOTES[ss]+f1)%12;
+    const sem=(nIdx-rootNoteIdx+12)%12;
+    const ivs=INTERVALS[sem];
+    strCells+=`<div class="iv-ex-str-cell${i===0?' is-root':''}">
+      <span class="iv-ex-str-name">${strLabels[ss]}</span>
+      <span class="iv-ex-str-note">${NOTES[nIdx]}</span>
+      <span class="iv-ex-str-iv" style="color:${ivs.color}">${i===0?'R':ivs.short}</span>
+    </div>`;
+  }
+
+  const el = document.getElementById('iv-expl');
+  el.innerHTML=`
+    <div class="iv-ex-title">${rootNote} → ${targetNote}（${iv.name} / ${iv.semitones}半音）</div>
+    <div class="iv-ex-pos">${posDesc}</div>
+    <div class="iv-ex-tip">💡 ${tip}</div>
+    <div class="iv-ex-strings">
+      <div class="iv-ex-str-lbl">フレット ${f1} での各弦の度数（ルートから）</div>
+      <div class="iv-ex-str-grid">${strCells}</div>
+    </div>
+  `;
+  el.classList.add('show');
+}
+
+/* ───────────────────────────── Init ─────────────────────────── */
 buildFretboard();
-nextQuestion();
+switchMode('iv-quiz');
 </script>
 </body>
 </html>
