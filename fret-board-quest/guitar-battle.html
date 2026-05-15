@@ -673,7 +673,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.34</span>
+        <span class="version-tag">v1.35</span>
         <span class="app-title">⚔️ Fret Board Quest</span>
     </div>
     <div class="header-btns">
@@ -1460,12 +1460,14 @@ function onAnswer(selected,btn) {
         gCombo=0; gLives=Math.max(0,gLives-1);
         updateCombo(); updateHUD(); sfxMiss(); playerHit();
 
-        // 魔王HP回復（不正解でゼロリセット）
-        if (gStage.isMaouStage && gEnemyHP < gEnemyMaxHP) {
+        // 魔王HP回復（不正解で常にゼロリセット）
+        if (gStage.isMaouStage) {
             gEnemyHP = gEnemyMaxHP;
             updateEnemyHP();
             const sr2=document.getElementById('enemy-sprite').getBoundingClientRect();
-            floatText('HP全回復！', sr2.left+sr2.width/2, sr2.top-20, '#c084fc', '1.1rem');
+            setTimeout(()=>{
+                floatText('HP全回復！', sr2.left+sr2.width/2, sr2.top-20, '#c084fc', '1.2rem');
+            }, 400);
             setSpeechBubble(enemyLine('recover'));
         } else {
             setSpeechBubble(enemyLine('wrong'));
@@ -1500,13 +1502,15 @@ function defeatEnemy() {
     if (leveled) setTimeout(()=>{sfxLevelUp();showOverlay('LEVEL UP!','#f5d070','rgba(245,208,112,0.12)',()=>{});},d);
 
     if (gStage.isMaouStage) {
-        document.getElementById('enemy-stage').classList.remove('maou-stage');
         const d2=d+(leveled?1250:600);
         setTimeout(()=>{
             sfxStageClear(); burstFireworks();
             showOverlay('★ 魔王討伐！ 真の覇者！','#c084fc','rgba(147,51,234,0.18)',()=>{});
             setTimeout(()=>{ burstFireworks(); }, 800);
-            setTimeout(()=>showStageSelect(), 3400);
+            setTimeout(()=>{
+                document.getElementById('enemy-stage').classList.remove('maou-stage');
+                showStageSelect();
+            }, 3400);
         }, d2);
     } else if (gFinalDragonPhase) {
         gFinalDragonPhase=false;
