@@ -390,6 +390,20 @@ body {
 @keyframes body-flash { 0%,100%{background-color:var(--bg)} 30%{background-color:#2c0808} 60%{background-color:#180505} }
 .shake-el { animation:shake 0.42s ease-out; }
 @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-10px)} 40%{transform:translateX(10px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+/* 敵攻撃エフェクト */
+.enemy-sprite.attack { animation:enemy-attack 0.52s ease-out forwards; }
+@keyframes enemy-attack {
+    0%   { transform:scale(1)    translateY(0)    translateX(0); }
+    28%  { transform:scale(1.22) translateY(36px) translateX(-20px); }
+    58%  { transform:scale(1.05) translateY(10px) translateX(-5px); }
+    100% { transform:scale(1)    translateY(0)    translateX(0); }
+}
+.player-damage-flash {
+    position:fixed; inset:0; z-index:150; pointer-events:none;
+    background:radial-gradient(ellipse at 50% 110%, rgba(220,30,30,0.6) 0%, transparent 65%);
+    animation:player-dmg-fade 0.7s ease-out forwards;
+}
+@keyframes player-dmg-fade { 0%{opacity:1} 100%{opacity:0} }
 .overlay-anim { position:fixed; inset:0; z-index:9998; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; animation:ov-fade 2s ease-out forwards; }
 @keyframes ov-fade { 0%{opacity:0} 18%{opacity:1} 65%{opacity:1} 100%{opacity:0} }
 .overlay-text {
@@ -869,6 +883,7 @@ const ENEMIES = [
 ];
 
 function pickEnemy(wave) {
+    if (gFinalDragonPhase) return ENEMIES[5];       // 仕上げ最終ボス
     if (wave%5===0 && wave>0) return ENEMIES[5];   // ドラゴン（5波ごと）
     if (wave%3===0 && wave>0) return ENEMIES[4];   // ウィザード（3波ごと）
     return ENEMIES[Math.floor(Math.random()*4)];
@@ -899,6 +914,7 @@ let gEnemyHP=0, gEnemyMaxHP=0, gEnemy=null;
 let gBusy=false, gAnswered=false, gQ=null;
 let gConsecutive=0, gQuizCount=0, gQuizCorrect=0;
 let gQuestionTime=0;
+let gFinalDragonPhase=false;
 let gTimerAF=null;
 const TIME_LIMIT=10000;
 
@@ -1002,6 +1018,7 @@ function startGame() {
     gScore=0; gLevel=1; gXP=0; gXPNext=200;
     gLives=3; gCombo=0; gWave=0; gBusy=false;
     gConsecutive=0; gQuizCount=0; gQuizCorrect=0;
+    gFinalDragonPhase=false;
     gSFQueue=[];
     const sb = document.getElementById('streak-bar');
     if (gStage.isStrStage) { sb.classList.add('visible'); updateStreakBar(); }
@@ -1091,8 +1108,8 @@ function spawnEnemy() {
     sprite.innerHTML=SVGS[gEnemy.svgKey];
 
     const isBoss=gEnemy.boss||gEnemy.mini;
-    const chipHtml=isBoss?`<span class="boss-chip">${gEnemy.boss?'BOSS':'MINI BOSS'}</span>`:'';
-    document.getElementById('wave-badge').innerHTML=`ENEMY #${gWave}${chipHtml}`;
+    const chipHtml=isBoss?`<span class="boss-chip">${gFinalDragonPhase?'FINAL BOSS':gEnemy.boss?'BOSS':'MINI BOSS'}</span>`:'';
+    document.getElementById('wave-badge').innerHTML=gFinalDragonPhase?`FINAL BOSS${chipHtml}`:`ENEMY #${gWave}${chipHtml}`;
     document.getElementById('enemy-name').textContent=gEnemy.name;
 
     const stage=document.getElementById('enemy-stage');
@@ -1111,7 +1128,11 @@ function spawnEnemy() {
     }, 60);
 
     updateEnemyHP(); setResult('');
-    if (isBoss) {
+    if (gFinalDragonPhase) {
+        sfxBossWarn();
+        showOverlay('⚠️ FINAL BOSS！',gEnemy.color,gEnemy.color+'18',()=>{});
+        setTimeout(()=>askQuestion(), 1600);
+    } else if (isBoss) {
         sfxBossWarn();
         showOverlay(gEnemy.boss?'⚠️ BOSS BATTLE!':'⚠️ MINI BOSS!',gEnemy.color,gEnemy.color+'18',()=>{});
         setTimeout(()=>askQuestion(), 1400);
@@ -1192,13 +1213,8 @@ function onAnswer(selected,btn) {
                 updateStreakBar();
                 if (gQuizCount >= STR_FINAL_CNT) {
                     gBusy=true;
-                    const strIdx = gStage.strIdx;
-                    setStrLv(strIdx, STR_FINAL_LV + 1); // master
-                    setTimeout(()=>{
-                        sfxStageClear(); burstFireworks();
-                        showOverlay(`★ 完全マスター！ ${gQuizCorrect}/${STR_FINAL_CNT}正解`,'#f5d070','rgba(245,208,112,0.12)',()=>{});
-                        setTimeout(()=>showStageSelect(), 2600);
-                    }, 480);
+                    gFinalDragonPhase=true;
+                    setTimeout(()=>{gBusy=false; spawnEnemy();}, 600);
                     return;
                 }
             } else {
@@ -1244,12 +1260,8 @@ function onAnswer(selected,btn) {
                 updateStreakBar();
                 if (gQuizCount >= STR_FINAL_CNT) {
                     gBusy=true;
-                    const strIdx = gStage.strIdx;
-                    setTimeout(()=>{
-                        sfxStageClear();
-                        showOverlay(`仕上げ終了 ${gQuizCorrect}/${STR_FINAL_CNT}正解`,'#60a5fa','rgba(96,165,250,0.10)',()=>{});
-                        setTimeout(()=>showStageSelect(), 2600);
-                    }, 1400);
+                    gFinalDragonPhase=true;
+                    setTimeout(()=>{gBusy=false; spawnEnemy();}, 1400);
                     return;
                 }
             } else {
@@ -1276,7 +1288,7 @@ function defeatEnemy() {
     const sr=sprite.getBoundingClientRect();
     const cx=sr.left+sr.width/2, cy=sr.top+sr.height/2;
     spawnParticles(cx,cy,gEnemy.color,22); spawnStars(cx,cy,8);
-    floatText('倒した！',cx,sr.top-5,gEnemy.color,'2.2rem');
+    floatText('Victory!!',cx,sr.top-5,'#ffd700','2.4rem');
     const xpGain=gEnemy.xp+gCombo*8;
     floatText(`+${xpGain} XP`,cx,sr.top+32,'#818cf8','1.1rem');
     gXP+=xpGain;
@@ -1285,7 +1297,18 @@ function defeatEnemy() {
     updateHUD();
     const d=leveled?650:0;
     if (leveled) setTimeout(()=>{sfxLevelUp();showOverlay('LEVEL UP!','#f5d070','rgba(245,208,112,0.12)',()=>{});},d);
-    if (gWave%10===0) {
+
+    if (gFinalDragonPhase) {
+        gFinalDragonPhase=false;
+        const strIdx=gStage.strIdx;
+        setStrLv(strIdx, STR_FINAL_LV+1);
+        const d2=d+(leveled?1250:450);
+        setTimeout(()=>{
+            sfxStageClear(); burstFireworks();
+            showOverlay('★ 完全マスター！','#f5d070','rgba(245,208,112,0.12)',()=>{});
+            setTimeout(()=>showStageSelect(), 2600);
+        }, d2);
+    } else if (gWave%10===0) {
         const d2=d+(leveled?1250:450);
         setTimeout(()=>{sfxStageClear();showOverlay(`STAGE ${gWave/10} CLEAR!`,'#4ade80','rgba(74,222,128,0.10)',()=>{});burstFireworks();},d2);
         setTimeout(()=>spawnEnemy(),d2+2000);
@@ -1299,9 +1322,27 @@ function enemyHit() {
     sp.className='enemy-sprite hit'; setTimeout(()=>sp.className='enemy-sprite idle',580);
 }
 function playerHit() {
+    const sp=document.getElementById('enemy-sprite');
+    const sr=sp.getBoundingClientRect();
+    // 敵が突進するアニメーション
+    sp.className='enemy-sprite attack';
+    setTimeout(()=>sp.className='enemy-sprite idle', 620);
+    // 画面フラッシュ＋HUDシェイク
     document.body.classList.add('body-flash');
     document.getElementById('hud').classList.add('shake-el');
     setTimeout(()=>{document.body.classList.remove('body-flash');document.getElementById('hud').classList.remove('shake-el');},540);
+    // 下からの赤いダメージフラッシュ
+    setTimeout(()=>{
+        const overlay=document.createElement('div');
+        overlay.className='player-damage-flash';
+        document.body.appendChild(overlay);
+        setTimeout(()=>overlay.remove(), 750);
+    }, 220);
+    // ATTACKテキスト
+    if (sr.width>0) {
+        const cx=sr.left+sr.width/2;
+        setTimeout(()=>floatText('ATTACK!', cx, sr.bottom+10, '#f87171', '1.1rem'), 280);
+    }
 }
 function updateEnemyHP() {
     const pct=Math.max(0,gEnemyHP/gEnemyMaxHP*100);
