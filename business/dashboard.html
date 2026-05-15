@@ -353,6 +353,52 @@
     .notion-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
     .notion-btn:hover   { opacity: .85; }
 
+    /* ── Docs & Products ── */
+    .grid-docs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    @media (max-width: 700px) { .grid-docs { grid-template-columns: 1fr; } }
+
+    .doc-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+    }
+    .doc-item:last-child { border-bottom: none; }
+    .doc-link {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      flex: 1;
+    }
+    .doc-link:hover { color: var(--accent); }
+    .doc-date { font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+    .product-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .product-card:last-child { border-bottom: none; }
+    .product-icon { font-size: 28px; flex-shrink: 0; }
+    .product-info { flex: 1; }
+    .product-name { font-weight: 700; font-size: 14px; }
+    .product-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+    .product-btn {
+      font-size: 11px;
+      color: var(--accent2);
+      border: 1px solid var(--accent2);
+      padding: 4px 10px;
+      border-radius: 5px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .product-btn:hover { background: var(--accent2); color: #000; }
+
     /* ── Util ── */
     .flex-between { display: flex; justify-content: space-between; align-items: center; }
     .reset-btn {
@@ -522,6 +568,52 @@
       <div class="legend-item"><div class="legend-dot event-post"></div>投稿</div>
       <div class="legend-item"><div class="legend-dot event-task"></div>タスク</div>
     </div>
+  </div>
+
+</div>
+
+<!-- Products & Documents -->
+<div class="grid-docs">
+
+  <!-- Products -->
+  <div class="card">
+    <div class="card-label">プロダクト</div>
+    <div class="product-card">
+      <div class="product-icon">🎸</div>
+      <div class="product-info">
+        <div class="product-name">フレットボードクエスト</div>
+        <div class="product-desc">ギター指板学習 × RPGバトルゲーム<br>
+          <span style="font-size:10px;color:var(--accent2)">nino-msip.github.io/gita-shiban/fret-board-quest/guitar-battle.html</span>
+        </div>
+      </div>
+      <a class="product-btn" href="https://nino-msip.github.io/gita-shiban/fret-board-quest/guitar-battle.html" target="_blank">開く →</a>
+    </div>
+    <div class="product-card">
+      <div class="product-icon">🎵</div>
+      <div class="product-info">
+        <div class="product-name">指板マスター（学習モード）</div>
+        <div class="product-desc">確認・クイズ・度数マップ<br>
+          <span style="font-size:10px;color:var(--accent2)">nino-msip.github.io/gita-shiban/fret-board-quest/</span>
+        </div>
+      </div>
+      <a class="product-btn" href="https://nino-msip.github.io/gita-shiban/fret-board-quest/" target="_blank">開く →</a>
+    </div>
+  </div>
+
+  <!-- Documents -->
+  <div class="card">
+    <div class="flex-between" style="margin-bottom:10px">
+      <div class="card-label" style="margin-bottom:0">ビジネスドキュメント</div>
+      <span style="font-size:10px;color:var(--muted)">自動更新</span>
+    </div>
+    <!-- DOCS-START -->
+<div class="doc-item"><a class="doc-link" href="BUSINESS_PLAN.md" target="_blank">事業計画書</a><span class="doc-date">2026/05/14 17:48</span></div>
+<div class="doc-item"><a class="doc-link" href="COLLAB_STRATEGY.md" target="_blank">コラボ戦略</a><span class="doc-date">2026/05/14 17:48</span></div>
+<div class="doc-item"><a class="doc-link" href="COMPANY.md" target="_blank">会社概要</a><span class="doc-date">2026/05/14 17:48</span></div>
+<div class="doc-item"><a class="doc-link" href="FRETBOARDQUEST_MARKET_ROADMAP.md" target="_blank">フレクエ 市場分析 & ロードマップ</a><span class="doc-date">2026/05/15 10:37</span></div>
+<div class="doc-item"><a class="doc-link" href="REVENUE_MODEL.md" target="_blank">収益モデル</a><span class="doc-date">2026/05/14 17:48</span></div>
+<div class="doc-item"><a class="doc-link" href="ROADMAP.md" target="_blank">ロードマップ</a><span class="doc-date">2026/05/14 17:48</span></div>
+<!-- DOCS-END -->
   </div>
 
 </div>

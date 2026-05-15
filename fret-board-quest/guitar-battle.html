@@ -1431,39 +1431,40 @@ function onAnswer(selected,btn) {
         enemyHit(); updateCombo(); updateHUD();
         gEnemyHP--; updateEnemyHP();
 
-        // 弦ステージ：連続正解 / 仕上げカウント
-        if (gStage.isStrStage && !gFinalDragonPhase) {
-            if (gStage.isFinalStage) {
-                gQuizCount++; gQuizCorrect++;
-                updateStreakBar();
-                if (gQuizCorrect >= STR_FINAL_CNT) {
-                    gBusy=true;
-                    gFinalDragonPhase=true;
-                    setTimeout(()=>{gBusy=false; spawnEnemy();}, 600);
-                    return;
-                }
-            } else {
-                gConsecutive++;
-                updateStreakBar();
-                if (gConsecutive >= STR_CLEAR_TARGET) {
-                    gBusy=true;
-                    const nextLv = gStage.effectiveLv + 1;
-                    const strIdx = gStage.strIdx;
-                    setStrLv(strIdx, nextLv);
+        // 正解カウント（仕上げ / フレット別 / 特別 → 5問正解でドラゴン戦）
+        if (!gFinalDragonPhase && (gStage.isFinalStage || !gStage.isStrStage)) {
+            gQuizCount++; gQuizCorrect++;
+            updateStreakBar();
+            if (gQuizCorrect >= STR_FINAL_CNT) {
+                gBusy=true;
+                gFinalDragonPhase=true;
+                setTimeout(()=>{gBusy=false; spawnEnemy();}, 600);
+                return;
+            }
+        }
+
+        // 弦ステージ Lv1〜3：連続正解カウント
+        if (gStage.isStrStage && !gStage.isFinalStage && !gFinalDragonPhase) {
+            gConsecutive++;
+            updateStreakBar();
+            if (gConsecutive >= STR_CLEAR_TARGET) {
+                gBusy=true;
+                const nextLv = gStage.effectiveLv + 1;
+                const strIdx = gStage.strIdx;
+                setStrLv(strIdx, nextLv);
+                setTimeout(()=>{
+                    sfxStageClear();
+                    showOverlay(`Lv${nextLv+1} へ進む！`,'#4ade80','rgba(74,222,128,0.10)',()=>{});
                     setTimeout(()=>{
-                        sfxStageClear();
-                        showOverlay(`Lv${nextLv+1} へ進む！`,'#4ade80','rgba(74,222,128,0.10)',()=>{});
-                        setTimeout(()=>{
-                            gStage = makeStrStage(strIdx);
-                            document.getElementById('stage-bar-name').textContent = `${gStage.label}（${gStage.sub}）`;
-                            gConsecutive=0; gSFQueue=[];
-                            updateStreakBar();
-                            gBusy=false;
-                            askQuestion();
-                        }, 2200);
-                    }, 480);
-                    return;
-                }
+                        gStage = makeStrStage(strIdx);
+                        document.getElementById('stage-bar-name').textContent = `${gStage.label}（${gStage.sub}）`;
+                        gConsecutive=0; gSFQueue=[];
+                        updateStreakBar();
+                        gBusy=false;
+                        askQuestion();
+                    }, 2200);
+                }, 480);
+                return;
             }
         }
 
@@ -1478,15 +1479,10 @@ function onAnswer(selected,btn) {
             setTimeout(()=>askQuestion(), 900);
         }
     } else {
-        // 弦ステージ：不正解
-        if (gStage.isStrStage && !gFinalDragonPhase) {
-            if (gStage.isFinalStage) {
-                gQuizCount++;
-                updateStreakBar();
-            } else {
-                gConsecutive=0;
-                updateStreakBar();
-            }
+        // 不正解：連続正解リセット（弦Lv1-3のみ）、カウントは増やさない
+        if (gStage.isStrStage && !gStage.isFinalStage && !gFinalDragonPhase) {
+            gConsecutive=0;
+            updateStreakBar();
         }
         gCombo=0; gLives=Math.max(0,gLives-1);
         updateCombo(); updateHUD();
@@ -1548,8 +1544,10 @@ function defeatEnemy() {
         }, d2);
     } else if (gFinalDragonPhase) {
         gFinalDragonPhase=false;
-        const strIdx=gStage.strIdx;
-        setStrLv(strIdx, STR_FINAL_LV+1);
+        if (gStage.isStrStage) {
+            const strIdx=gStage.strIdx;
+            setStrLv(strIdx, STR_FINAL_LV+1);
+        }
         const d2=d+(leveled?1250:450);
         setTimeout(()=>{
             sfxStageClear(); burstFireworks();
@@ -1630,16 +1628,16 @@ function updateStreakBar() {
     const dots = document.getElementById('streak-dots');
     const tgt  = document.getElementById('streak-target');
     dots.innerHTML = '';
-    if (gStage.isFinalStage) {
-        // 仕上げ：10問プログレス（正解=金、不正解=赤、未回答=暗）
+    if (gStage.isFinalStage || !gStage.isStrStage) {
+        // 仕上げ・フレット別・特別：5問正解プログレス
         for (let i=0; i<STR_FINAL_CNT; i++) {
             const d = document.createElement('div');
-            // 回答済み判定は gQuizCount で、正解はgQuizCorrectで分からないので色分けは簡略化
             d.className = 'streak-dot' + (i < gQuizCorrect ? ' filled' : '');
             dots.appendChild(d);
         }
         tgt.textContent = `${gQuizCorrect}/${STR_FINAL_CNT}問正解`;
-        document.getElementById('streak-label').textContent = '仕上げ';
+        document.getElementById('streak-label').textContent =
+            gStage.isFinalStage ? '仕上げ' : 'ステージ';
     } else {
         for (let i=0; i<STR_CLEAR_TARGET; i++) {
             const d = document.createElement('div');
