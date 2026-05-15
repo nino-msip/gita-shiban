@@ -683,7 +683,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.37</span>
+        <span class="version-tag">v1.38</span>
         <span class="app-title">⚔️ Fret Board Quest</span>
     </div>
     <div class="header-btns">
@@ -1677,15 +1677,21 @@ function buildIntervalExplanation(s, f) {
 let gNextAction = null;
 
 function maouRecoverThenAsk() {
+    sfxMaouRecover();
+    // HPゲージを1.8秒かけてアニメーション回復
+    const fill = document.getElementById('hp-fill');
+    fill.style.transition = 'width 1.8s ease-out';
     gEnemyHP = gEnemyMaxHP;
     updateEnemyHP();
-    sfxMaouRecover();
+    setTimeout(()=>{ fill.style.transition = ''; }, 2000);
+
     const rec=document.createElement('div'); rec.className='maou-recover-flash';
-    document.body.appendChild(rec); setTimeout(()=>rec.remove(), 1200);
+    document.body.appendChild(rec); setTimeout(()=>rec.remove(), 2500);
+
     const sr=document.getElementById('enemy-sprite').getBoundingClientRect();
     if (sr.width>0) floatText('HP全回復！', sr.left+sr.width/2, sr.top-20, '#c084fc', '1.3rem');
     setSpeechBubble(enemyLine('recover'));
-    setTimeout(()=>askQuestion(), 1400);
+    setTimeout(()=>askQuestion(), 3000);
 }
 
 function showContinueModal() {
