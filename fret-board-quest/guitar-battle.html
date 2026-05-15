@@ -699,7 +699,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.39</span>
+        <span class="version-tag">v1.40</span>
         <span class="app-title">⚔️ Fret Board Quest</span>
     </div>
     <div class="header-btns">
@@ -718,8 +718,15 @@ body {
     <!-- 弦別（レベル制） -->
     <div class="ss-section">
         <div class="ss-section-title">🎸 弦別ステージ（レベル制）</div>
-        <div class="ss-str-sub">5連続正解で次のレベルへ自動進行</div>
+        <div class="ss-str-sub">3連続正解で次のレベルへ自動進行</div>
         <div class="ss-grid ss-grid-3" id="ss-string-grid"></div>
+    </div>
+
+    <!-- ポジションマーク -->
+    <div class="ss-section">
+        <div class="ss-section-title">🎵 ポジションマークステージ</div>
+        <div class="ss-str-sub">3・5・7・9・12フレットの音を弦ごとに覚えよう</div>
+        <div class="ss-grid ss-grid-3" id="ss-posmark-grid"></div>
     </div>
 
     <!-- フレット別 -->
@@ -860,6 +867,13 @@ const STAGE_DEFS = [
     { id:'natural', grid:'special', label:'ナチュラル', sub:'C D E F G A B', color:'#f5d070', filter:(s,f)=>!getNote(s,f).includes('#') },
     { id:'sharp',   grid:'special', label:'シャープ',   sub:'C# D# F# G# A#', color:'#f87171', filter:(s,f)=>getNote(s,f).includes('#') },
     { id:'all',     grid:'special', label:'全域',       sub:'全弦・全フレット', color:'#e0a835', filter:()=>true },
+    // ── ポジションマーク弦別ステージ（3・5・7・9・12Fのみ） ──
+    { id:'pos_str0', grid:'posmark', label:'1弦', sub:'3・5・7・9・12F', color:'#e74c3c', isPosMarkStage:true, filter:(s,f)=>s===0&&DOT_FRETS.has(f) },
+    { id:'pos_str1', grid:'posmark', label:'2弦', sub:'3・5・7・9・12F', color:'#e8853d', isPosMarkStage:true, filter:(s,f)=>s===1&&DOT_FRETS.has(f) },
+    { id:'pos_str2', grid:'posmark', label:'3弦', sub:'3・5・7・9・12F', color:'#f1c40f', isPosMarkStage:true, filter:(s,f)=>s===2&&DOT_FRETS.has(f) },
+    { id:'pos_str3', grid:'posmark', label:'4弦', sub:'3・5・7・9・12F', color:'#2ecc71', isPosMarkStage:true, filter:(s,f)=>s===3&&DOT_FRETS.has(f) },
+    { id:'pos_str4', grid:'posmark', label:'5弦', sub:'3・5・7・9・12F', color:'#3498db', isPosMarkStage:true, filter:(s,f)=>s===4&&DOT_FRETS.has(f) },
+    { id:'pos_str5', grid:'posmark', label:'6弦', sub:'3・5・7・9・12F', color:'#9b59b6', isPosMarkStage:true, filter:(s,f)=>s===5&&DOT_FRETS.has(f) },
 ];
 
 // ── 弦ステージ（レベル制） ──────────────────────────────────
@@ -867,7 +881,7 @@ const STR_LV_RANGES  = [[0,3],[5,7],[9,12],[0,12]]; // Lv1〜4
 const STR_LV_LABELS  = ['開放〜3F','5〜7F','9〜12F','全F 仕上げ'];
 const STR_CLEAR_TARGET = 3;   // Lv1-3: 連続正解数
 const STR_FINAL_LV   = 3;     // Lv4（仕上げ）のインデックス
-const STR_FINAL_CNT  = 5;     // 仕上げ問題数
+const STR_FINAL_CNT  = 10;    // ドラゴン戦クリア問題数
 
 const STR_LV_KEY = i => `fbattle_strlv_${i}`;
 function getStrLv(i) { return Math.min(+localStorage.getItem(STR_LV_KEY(i))||0, 4); }
@@ -928,8 +942,8 @@ function buildStageSelect() {
         strGrid.appendChild(btn);
     }
 
-    // フレット別・特別ステージ
-    const gridMap = { fret:'ss-fret-grid', special:'ss-special-grid' };
+    // フレット別・特別・ポジションマークステージ
+    const gridMap = { fret:'ss-fret-grid', special:'ss-special-grid', posmark:'ss-posmark-grid' };
     STAGE_DEFS.forEach(st => {
         const grid = document.getElementById(gridMap[st.grid]);
         const hi = +localStorage.getItem(HI_KEY(st.id)) || 0;
@@ -986,6 +1000,7 @@ function selectMaouStage() {
 
 function showStageSelect() {
     document.getElementById('ss-string-grid').innerHTML = '';
+    document.getElementById('ss-posmark-grid').innerHTML = '';
     document.getElementById('ss-fret-grid').innerHTML = '';
     document.getElementById('ss-special-grid').innerHTML = '';
     document.getElementById('ss-maou-grid').innerHTML = '';
@@ -1240,7 +1255,7 @@ function startGame() {
     gFinalDragonPhase=false;
     gSFQueue=[];
     const sb = document.getElementById('streak-bar');
-    if (gStage.isStrStage) { sb.classList.add('visible'); updateStreakBar(); }
+    if (!gStage.isMaouStage) { sb.classList.add('visible'); updateStreakBar(); }
     else sb.classList.remove('visible');
     buildFretboard(); updateHUD(); spawnEnemy();
 }
@@ -1431,7 +1446,7 @@ function onAnswer(selected,btn) {
         enemyHit(); updateCombo(); updateHUD();
         gEnemyHP--; updateEnemyHP();
 
-        // 正解カウント（仕上げ / フレット別 / 特別 → 5問正解でドラゴン戦）
+        // 正解カウント（仕上げ / フレット別 / 特別 / ポジションマーク → 10問正解でドラゴン戦）
         if (!gFinalDragonPhase && (gStage.isFinalStage || !gStage.isStrStage)) {
             gQuizCount++; gQuizCorrect++;
             updateStreakBar();
@@ -1629,7 +1644,7 @@ function updateStreakBar() {
     const tgt  = document.getElementById('streak-target');
     dots.innerHTML = '';
     if (gStage.isFinalStage || !gStage.isStrStage) {
-        // 仕上げ・フレット別・特別：5問正解プログレス
+        // 仕上げ・フレット別・特別・ポジションマーク：10問正解プログレス
         for (let i=0; i<STR_FINAL_CNT; i++) {
             const d = document.createElement('div');
             d.className = 'streak-dot' + (i < gQuizCorrect ? ' filled' : '');
@@ -1637,7 +1652,7 @@ function updateStreakBar() {
         }
         tgt.textContent = `${gQuizCorrect}/${STR_FINAL_CNT}問正解`;
         document.getElementById('streak-label').textContent =
-            gStage.isFinalStage ? '仕上げ' : 'ステージ';
+            gStage.isFinalStage ? '仕上げ' : (gStage.isPosMarkStage ? 'ポジション' : 'ステージ');
     } else {
         for (let i=0; i<STR_CLEAR_TARGET; i++) {
             const d = document.createElement('div');
