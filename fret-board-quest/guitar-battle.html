@@ -598,7 +598,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.29</span>
+        <span class="version-tag">v1.30</span>
         <span class="app-title">⚔️ Fret Board Quest</span>
     </div>
     <div class="header-btns">
@@ -1108,8 +1108,8 @@ function spawnEnemy() {
     sprite.innerHTML=SVGS[gEnemy.svgKey];
 
     const isBoss=gEnemy.boss||gEnemy.mini;
-    const chipHtml=isBoss?`<span class="boss-chip">${gFinalDragonPhase?'FINAL BOSS':gEnemy.boss?'BOSS':'MINI BOSS'}</span>`:'';
-    document.getElementById('wave-badge').innerHTML=gFinalDragonPhase?`FINAL BOSS${chipHtml}`:`ENEMY #${gWave}${chipHtml}`;
+    const chipHtml=isBoss?`<span class="boss-chip">${gEnemy.boss?'BOSS':'MINI BOSS'}</span>`:'';
+    document.getElementById('wave-badge').innerHTML=`ENEMY #${gWave}${chipHtml}`;
     document.getElementById('enemy-name').textContent=gEnemy.name;
 
     const stage=document.getElementById('enemy-stage');
