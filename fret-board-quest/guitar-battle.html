@@ -1053,7 +1053,7 @@ const ENEMIES = [
         wrong: ['甘いわ！','魔法の前に消えよ！','フフフ…どうだ！'],
         defeat:['馬鹿な…わたしが…','次は負けぬ…'],
       }},
-    { name:'ドラゴン',   svgKey:'dragon',   hp:4, xp:500, base:1000, color:'#f87171', boss:true,
+    { name:'ドラゴン',   svgKey:'dragon',   hp:3, xp:500, base:1000, color:'#f87171', boss:true,
       lines:{
         appear:['GRAAWR！！','汝に試練を！','この炎で焼き尽くす！'],
         hit:   ['GGRRR…！','うぬ…！','少しは骨がある…！'],
@@ -1436,7 +1436,7 @@ function onAnswer(selected,btn) {
             if (gStage.isFinalStage) {
                 gQuizCount++; gQuizCorrect++;
                 updateStreakBar();
-                if (gQuizCount >= STR_FINAL_CNT) {
+                if (gQuizCorrect >= STR_FINAL_CNT) {
                     gBusy=true;
                     gFinalDragonPhase=true;
                     setTimeout(()=>{gBusy=false; spawnEnemy();}, 600);
@@ -1483,12 +1483,6 @@ function onAnswer(selected,btn) {
             if (gStage.isFinalStage) {
                 gQuizCount++;
                 updateStreakBar();
-                if (gQuizCount >= STR_FINAL_CNT) {
-                    gBusy=true;
-                    gFinalDragonPhase=true;
-                    setTimeout(()=>{gBusy=false; spawnEnemy();}, 1400);
-                    return;
-                }
             } else {
                 gConsecutive=0;
                 updateStreakBar();
@@ -1641,10 +1635,10 @@ function updateStreakBar() {
         for (let i=0; i<STR_FINAL_CNT; i++) {
             const d = document.createElement('div');
             // 回答済み判定は gQuizCount で、正解はgQuizCorrectで分からないので色分けは簡略化
-            d.className = 'streak-dot' + (i < gQuizCount ? ' filled' : '');
+            d.className = 'streak-dot' + (i < gQuizCorrect ? ' filled' : '');
             dots.appendChild(d);
         }
-        tgt.textContent = `${gQuizCount}/${STR_FINAL_CNT}問`;
+        tgt.textContent = `${gQuizCorrect}/${STR_FINAL_CNT}問正解`;
         document.getElementById('streak-label').textContent = '仕上げ';
     } else {
         for (let i=0; i<STR_CLEAR_TARGET; i++) {
