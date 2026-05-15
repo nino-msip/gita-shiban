@@ -699,7 +699,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.45</span>
+        <span class="version-tag">v1.46</span>
         <span class="app-title">⚔️ Fret Board Quest</span>
     </div>
     <div class="header-btns">
@@ -1563,6 +1563,7 @@ function onAnswer(selected,btn) {
             if (gQuizCorrect >= STR_FINAL_CNT) {
                 gBusy=true;
                 gFinalDragonPhase=true;
+                gCombo=0; updateCombo();
                 setTimeout(()=>{gBusy=false; spawnEnemy();}, 600);
                 return;
             }
@@ -1715,6 +1716,8 @@ function defeatEnemy() {
         }, d2);
     } else if (gFinalDragonPhase) {
         gFinalDragonPhase=false;
+        gQuizCorrect=0; gQuizCount=0; // ドラゴン再起動防止
+        gCombo=0; updateCombo();
         if (gStage.isStrStage) {
             setStrLv(gStage.strIdx, STR_FINAL_LV+1);
         }
@@ -1728,6 +1731,7 @@ function defeatEnemy() {
             setTimeout(()=>showStageSelect(), 2600);
         }, d2);
     } else if (gWave%10===0) {
+        gCombo=0; updateCombo();
         const d2=d+(leveled?1250:450);
         setTimeout(()=>{sfxStageClear();showOverlay(`STAGE ${gWave/10} CLEAR!`,'#4ade80','rgba(74,222,128,0.10)',()=>{});burstFireworks();},d2);
         setTimeout(()=>spawnEnemy(),d2+2000);
