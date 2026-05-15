@@ -883,10 +883,10 @@ const ENEMIES = [
 ];
 
 function pickEnemy(wave) {
-    if (gFinalDragonPhase) return ENEMIES[5];       // 仕上げ最終ボス
-    if (wave%5===0 && wave>0) return ENEMIES[5];   // ドラゴン（5波ごと）
-    if (wave%3===0 && wave>0) return ENEMIES[4];   // ウィザード（3波ごと）
-    return ENEMIES[Math.floor(Math.random()*4)];
+    if (gFinalDragonPhase) return ENEMIES[5];       // ドラゴン：FINAL BOSSのみ
+    if (wave%5===0 && wave>0) return ENEMIES[4];   // ウィザード（5波ごと）
+    if (wave%3===0 && wave>0) return ENEMIES[3];   // スケルトン（3波ごと）
+    return ENEMIES[Math.floor(Math.random()*3)];   // slime/bat/goblin
 }
 
 // ── 出題 ──────────────────────────────────────────────────────
