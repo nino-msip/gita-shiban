@@ -699,7 +699,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.40</span>
+        <span class="version-tag">v1.41</span>
         <span class="app-title">⚔️ Fret Board Quest</span>
     </div>
     <div class="header-btns">
@@ -715,18 +715,18 @@ body {
         <div class="ss-hero-sub">ステージごとにベストスコアが記録されます</div>
     </div>
 
+    <!-- ポジションマーク（レベル制） -->
+    <div class="ss-section">
+        <div class="ss-section-title">🎵 ポジションマークステージ（レベル制）</div>
+        <div class="ss-str-sub">3連続正解で次のレベルへ自動進行</div>
+        <div class="ss-grid ss-grid-3" id="ss-posmark-grid"></div>
+    </div>
+
     <!-- 弦別（レベル制） -->
     <div class="ss-section">
         <div class="ss-section-title">🎸 弦別ステージ（レベル制）</div>
         <div class="ss-str-sub">3連続正解で次のレベルへ自動進行</div>
         <div class="ss-grid ss-grid-3" id="ss-string-grid"></div>
-    </div>
-
-    <!-- ポジションマーク -->
-    <div class="ss-section">
-        <div class="ss-section-title">🎵 ポジションマークステージ</div>
-        <div class="ss-str-sub">3・5・7・9・12フレットの音を弦ごとに覚えよう</div>
-        <div class="ss-grid ss-grid-3" id="ss-posmark-grid"></div>
     </div>
 
     <!-- フレット別 -->
@@ -867,13 +867,6 @@ const STAGE_DEFS = [
     { id:'natural', grid:'special', label:'ナチュラル', sub:'C D E F G A B', color:'#f5d070', filter:(s,f)=>!getNote(s,f).includes('#') },
     { id:'sharp',   grid:'special', label:'シャープ',   sub:'C# D# F# G# A#', color:'#f87171', filter:(s,f)=>getNote(s,f).includes('#') },
     { id:'all',     grid:'special', label:'全域',       sub:'全弦・全フレット', color:'#e0a835', filter:()=>true },
-    // ── ポジションマーク弦別ステージ（3・5・7・9・12Fのみ） ──
-    { id:'pos_str0', grid:'posmark', label:'1弦', sub:'3・5・7・9・12F', color:'#e74c3c', isPosMarkStage:true, filter:(s,f)=>s===0&&DOT_FRETS.has(f) },
-    { id:'pos_str1', grid:'posmark', label:'2弦', sub:'3・5・7・9・12F', color:'#e8853d', isPosMarkStage:true, filter:(s,f)=>s===1&&DOT_FRETS.has(f) },
-    { id:'pos_str2', grid:'posmark', label:'3弦', sub:'3・5・7・9・12F', color:'#f1c40f', isPosMarkStage:true, filter:(s,f)=>s===2&&DOT_FRETS.has(f) },
-    { id:'pos_str3', grid:'posmark', label:'4弦', sub:'3・5・7・9・12F', color:'#2ecc71', isPosMarkStage:true, filter:(s,f)=>s===3&&DOT_FRETS.has(f) },
-    { id:'pos_str4', grid:'posmark', label:'5弦', sub:'3・5・7・9・12F', color:'#3498db', isPosMarkStage:true, filter:(s,f)=>s===4&&DOT_FRETS.has(f) },
-    { id:'pos_str5', grid:'posmark', label:'6弦', sub:'3・5・7・9・12F', color:'#9b59b6', isPosMarkStage:true, filter:(s,f)=>s===5&&DOT_FRETS.has(f) },
 ];
 
 // ── 弦ステージ（レベル制） ──────────────────────────────────
@@ -882,6 +875,31 @@ const STR_LV_LABELS  = ['開放〜3F','5〜7F','9〜12F','全F 仕上げ'];
 const STR_CLEAR_TARGET = 3;   // Lv1-3: 連続正解数
 const STR_FINAL_LV   = 3;     // Lv4（仕上げ）のインデックス
 const STR_FINAL_CNT  = 10;    // ドラゴン戦クリア問題数
+
+// ── ポジションマークステージ（レベル制） ────────────────────
+const POS_LV_FRETS  = [[5,7],[3,5,7],[3,5,7,9],[3,5,7,9,12]]; // Lv1〜4
+const POS_LV_LABELS = ['5F・7F','3〜7F','3〜9F','全ポジション 仕上げ'];
+const POS_FINAL_LV  = 3;
+const POS_LV_KEY    = i => `fbattle_poslv_${i}`;
+function getPosLv(i) { return Math.min(+localStorage.getItem(POS_LV_KEY(i))||0, 4); }
+function setPosLv(i,v){ localStorage.setItem(POS_LV_KEY(i), v); }
+
+function makePosStage(strIdx) {
+    const lv = getPosLv(strIdx);
+    const effectiveLv = Math.min(lv, POS_FINAL_LV);
+    const isFinal  = effectiveLv === POS_FINAL_LV;
+    const isMaster = lv > POS_FINAL_LV;
+    const fretSet  = new Set(POS_LV_FRETS[effectiveLv]);
+    return {
+        id: `pos_str${strIdx}`,
+        strIdx, isPosMarkStage: true, isFinalStage: isFinal,
+        label: STR_JP[strIdx],
+        sub: isMaster ? '★ 完全マスター' : `Lv${effectiveLv+1} ${POS_LV_LABELS[effectiveLv]}`,
+        color: STR_COLORS[strIdx],
+        filter: (s,f) => s===strIdx && fretSet.has(f),
+        lv, effectiveLv,
+    };
+}
 
 const STR_LV_KEY = i => `fbattle_strlv_${i}`;
 function getStrLv(i) { return Math.min(+localStorage.getItem(STR_LV_KEY(i))||0, 4); }
@@ -942,8 +960,38 @@ function buildStageSelect() {
         strGrid.appendChild(btn);
     }
 
-    // フレット別・特別・ポジションマークステージ
-    const gridMap = { fret:'ss-fret-grid', special:'ss-special-grid', posmark:'ss-posmark-grid' };
+    // ポジションマーク弦別ステージ（レベル制カード）
+    const posGrid = document.getElementById('ss-posmark-grid');
+    for (let i=5; i>=0; i--) {
+        const st = makePosStage(i);
+        const lv = getPosLv(i);
+        const hi = +localStorage.getItem(HI_KEY(st.id)) || 0;
+        const isMaster = lv > POS_FINAL_LV;
+        const eLv = Math.min(lv, POS_FINAL_LV);
+        let dotsHtml = '';
+        for (let d=0; d<4; d++) {
+            const cls = d < lv ? 'done' : (d === eLv ? 'current' : 'locked');
+            const sym = d === POS_FINAL_LV ? '★' : d+1;
+            dotsHtml += `<span class="ss-lv-dot ${cls}">${sym}</span>`;
+        }
+        const btn = document.createElement('button');
+        btn.className = 'ss-btn';
+        btn.style.setProperty('--c', st.color);
+        btn.innerHTML = `
+            <span class="ss-label">${st.label}</span>
+            <span class="ss-sub">${STR_OPEN[i]}</span>
+            <div class="ss-lv-dots">${dotsHtml}</div>
+            ${isMaster
+                ? `<span class="ss-lv-all-clear">★ 完全マスター</span>`
+                : `<span class="ss-lv-current">Lv${eLv+1}: ${POS_LV_LABELS[eLv]}</span>`
+            }
+            <span class="ss-best ${hi>0?'has-score':''}">${hi>0?'BEST '+hi.toLocaleString():'—'}</span>`;
+        btn.onclick = () => selectPosStage(i);
+        posGrid.appendChild(btn);
+    }
+
+    // フレット別・特別ステージ
+    const gridMap = { fret:'ss-fret-grid', special:'ss-special-grid' };
     STAGE_DEFS.forEach(st => {
         const grid = document.getElementById(gridMap[st.grid]);
         const hi = +localStorage.getItem(HI_KEY(st.id)) || 0;
@@ -972,6 +1020,14 @@ function buildStageSelect() {
         <span class="ss-best ${maouHi>0?'has-score':''}">${maouHi>0?'BEST '+maouHi.toLocaleString():'—'}</span>`;
     maouBtn.onclick = () => selectMaouStage();
     maouGrid.appendChild(maouBtn);
+}
+
+function selectPosStage(strIdx) {
+    gStage = makePosStage(strIdx);
+    document.getElementById('stage-bar-name').textContent = `${gStage.label}（${gStage.sub}）`;
+    document.getElementById('stage-select').style.display = 'none';
+    document.getElementById('game-area').style.display = 'flex';
+    startGame();
 }
 
 function selectStrStage(strIdx) {
@@ -1446,8 +1502,8 @@ function onAnswer(selected,btn) {
         enemyHit(); updateCombo(); updateHUD();
         gEnemyHP--; updateEnemyHP();
 
-        // 正解カウント（仕上げ / フレット別 / 特別 / ポジションマーク → 10問正解でドラゴン戦）
-        if (!gFinalDragonPhase && (gStage.isFinalStage || !gStage.isStrStage)) {
+        // 正解カウント（仕上げ弦・仕上げポジション・フレット別・特別 → 10問正解でドラゴン戦）
+        if (!gFinalDragonPhase && (gStage.isFinalStage || (!gStage.isStrStage && !gStage.isPosMarkStage))) {
             gQuizCount++; gQuizCorrect++;
             updateStreakBar();
             if (gQuizCorrect >= STR_FINAL_CNT) {
@@ -1483,6 +1539,31 @@ function onAnswer(selected,btn) {
             }
         }
 
+        // ポジションマークステージ Lv1〜3：連続正解カウント
+        if (gStage.isPosMarkStage && !gStage.isFinalStage && !gFinalDragonPhase) {
+            gConsecutive++;
+            updateStreakBar();
+            if (gConsecutive >= STR_CLEAR_TARGET) {
+                gBusy=true;
+                const nextLv = gStage.effectiveLv + 1;
+                const strIdx = gStage.strIdx;
+                setPosLv(strIdx, nextLv);
+                setTimeout(()=>{
+                    sfxStageClear();
+                    showOverlay(`Lv${nextLv+1} へ進む！`,'#4ade80','rgba(74,222,128,0.10)',()=>{});
+                    setTimeout(()=>{
+                        gStage = makePosStage(strIdx);
+                        document.getElementById('stage-bar-name').textContent = `${gStage.label}（${gStage.sub}）`;
+                        gConsecutive=0; gSFQueue=[];
+                        updateStreakBar();
+                        gBusy=false;
+                        askQuestion();
+                    }, 2200);
+                }, 480);
+                return;
+            }
+        }
+
         if (gEnemyHP<=0) {
             gBusy=true;
             setSpeechBubble(enemyLine('defeat'));
@@ -1494,8 +1575,8 @@ function onAnswer(selected,btn) {
             setTimeout(()=>askQuestion(), 900);
         }
     } else {
-        // 不正解：連続正解リセット（弦Lv1-3のみ）、カウントは増やさない
-        if (gStage.isStrStage && !gStage.isFinalStage && !gFinalDragonPhase) {
+        // 不正解：連続正解リセット（弦Lv1-3・ポジションLv1-3のみ）
+        if ((gStage.isStrStage || gStage.isPosMarkStage) && !gStage.isFinalStage && !gFinalDragonPhase) {
             gConsecutive=0;
             updateStreakBar();
         }
@@ -1560,8 +1641,10 @@ function defeatEnemy() {
     } else if (gFinalDragonPhase) {
         gFinalDragonPhase=false;
         if (gStage.isStrStage) {
-            const strIdx=gStage.strIdx;
-            setStrLv(strIdx, STR_FINAL_LV+1);
+            setStrLv(gStage.strIdx, STR_FINAL_LV+1);
+        }
+        if (gStage.isPosMarkStage) {
+            setPosLv(gStage.strIdx, POS_FINAL_LV+1);
         }
         const d2=d+(leveled?1250:450);
         setTimeout(()=>{
@@ -1643,8 +1726,8 @@ function updateStreakBar() {
     const dots = document.getElementById('streak-dots');
     const tgt  = document.getElementById('streak-target');
     dots.innerHTML = '';
-    if (gStage.isFinalStage || !gStage.isStrStage) {
-        // 仕上げ・フレット別・特別・ポジションマーク：10問正解プログレス
+    if (gStage.isFinalStage || (!gStage.isStrStage && !gStage.isPosMarkStage)) {
+        // 仕上げ・フレット別・特別：10問正解プログレス
         for (let i=0; i<STR_FINAL_CNT; i++) {
             const d = document.createElement('div');
             d.className = 'streak-dot' + (i < gQuizCorrect ? ' filled' : '');
@@ -1652,7 +1735,7 @@ function updateStreakBar() {
         }
         tgt.textContent = `${gQuizCorrect}/${STR_FINAL_CNT}問正解`;
         document.getElementById('streak-label').textContent =
-            gStage.isFinalStage ? '仕上げ' : (gStage.isPosMarkStage ? 'ポジション' : 'ステージ');
+            gStage.isFinalStage ? '仕上げ' : 'ステージ';
     } else {
         for (let i=0; i<STR_CLEAR_TARGET; i++) {
             const d = document.createElement('div');
