@@ -632,7 +632,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.31</span>
+        <span class="version-tag">v1.32</span>
         <span class="app-title">⚔️ Fret Board Quest</span>
     </div>
     <div class="header-btns">
@@ -917,13 +917,55 @@ dragon:`<img src="images/enemy-dragon.png" style="width:200px;height:auto;image-
 
 // ── 敵定義 ────────────────────────────────────────────────────
 const ENEMIES = [
-    { name:'スライム',   svgKey:'slime',    hp:1, xp:50,  base:100,  color:'#4ade80' },
-    { name:'コウモリ',   svgKey:'bat',      hp:1, xp:60,  base:120,  color:'#a78bfa' },
-    { name:'ゴブリン',   svgKey:'goblin',   hp:2, xp:100, base:200,  color:'#fb923c' },
-    { name:'スケルトン', svgKey:'skeleton', hp:2, xp:120, base:250,  color:'#94a3b8' },
-    { name:'ウィザード', svgKey:'wizard',   hp:3, xp:200, base:400,  color:'#818cf8', mini:true },
-    { name:'ドラゴン',   svgKey:'dragon',   hp:4, xp:500, base:1000, color:'#f87171', boss:true },
+    { name:'スライム',   svgKey:'slime',    hp:1, xp:50,  base:100,  color:'#4ade80',
+      lines:{
+        appear:['ぷるぷる…','ぷよ？','…ぷに'],
+        hit:   ['ぷぎゃ！','いた…','ぷよっ…'],
+        wrong: ['ぷにぷに！','やった！','ぷるるる！'],
+        defeat:['とけちゃう…','ぷぎゃあ…'],
+      }},
+    { name:'コウモリ',   svgKey:'bat',      hp:1, xp:60,  base:120,  color:'#a78bfa',
+      lines:{
+        appear:['キキィ！','やみからきた…','ギャア…'],
+        hit:   ['キッ！','ギャア！','くそ…！'],
+        wrong: ['キキキ！','ひっかいてやる！','ギャーハ！'],
+        defeat:['ギャアア…','つばさが…'],
+      }},
+    { name:'ゴブリン',   svgKey:'goblin',   hp:2, xp:100, base:200,  color:'#fb923c',
+      lines:{
+        appear:['ゲヘヘ…','みつけたぞ！','やっつけてやる！'],
+        hit:   ['ぐぬぬ！','いててっ！','やりやがって！'],
+        wrong: ['ゲヘヘ！','ざまあみろ！','ばーか！'],
+        defeat:['くそー！','おぼえてろ…'],
+      }},
+    { name:'スケルトン', svgKey:'skeleton', hp:2, xp:120, base:250,  color:'#94a3b8',
+      lines:{
+        appear:['ガタガタ…','よみがえりし者…','骨まで戦う！'],
+        hit:   ['カタカタ…！','ガシャン！','骨が…ひびく…！'],
+        wrong: ['ガハハ！','それだけか！','くたばれ！'],
+        defeat:['ガラガラ…','また骨になる…'],
+      }},
+    { name:'ウィザード', svgKey:'wizard',   hp:3, xp:200, base:400,  color:'#818cf8', mini:true,
+      lines:{
+        appear:['愚か者め…','魔力を見せよう','フフ…来るがよい'],
+        hit:   ['くっ…魔法が…！','まさか…','集中が乱れた！'],
+        wrong: ['甘いわ！','魔法の前に消えよ！','フフフ…どうだ！'],
+        defeat:['馬鹿な…わたしが…','次は負けぬ…'],
+      }},
+    { name:'ドラゴン',   svgKey:'dragon',   hp:4, xp:500, base:1000, color:'#f87171', boss:true,
+      lines:{
+        appear:['GRAAWR！！','汝に試練を！','この炎で焼き尽くす！'],
+        hit:   ['GGRRR…！','うぬ…！','少しは骨がある…！'],
+        wrong: ['RAAAR！！','炎で焼け！','弱いやつめ！'],
+        defeat:['まさか…敗れるとは…','貴様…なかなかやる…'],
+      }},
 ];
+
+function enemyLine(situation) {
+    const pool = gEnemy?.lines?.[situation];
+    if (!pool || pool.length === 0) return '…';
+    return pool[Math.floor(Math.random() * pool.length)];
+}
 
 function pickEnemy(wave) {
     if (gFinalDragonPhase) return ENEMIES[5];       // ドラゴン：FINAL BOSSのみ
@@ -1163,7 +1205,7 @@ function spawnEnemy() {
         stage.style.borderColor=''; stage.style.boxShadow='';
     }
 
-    setSpeechBubble('…');
+    setSpeechBubble(enemyLine('appear'));
     setTimeout(()=>{
         sprite.style.transition='transform 0.55s cubic-bezier(0.34,1.56,0.64,1)';
         sprite.style.transform='scale(1) translateY(0)';
@@ -1287,11 +1329,11 @@ function onAnswer(selected,btn) {
 
         if (gEnemyHP<=0) {
             gBusy=true;
-            setSpeechBubble('やられた…！');
+            setSpeechBubble(enemyLine('defeat'));
             setResult('✨ 撃破！','ok');
             setTimeout(()=>defeatEnemy(),480);
         } else {
-            setSpeechBubble('ぐっ…！');
+            setSpeechBubble(enemyLine('hit'));
             setResult(`正解！ ${(elapsed/1000).toFixed(1)}秒`,'ok');
             setTimeout(()=>askQuestion(), 900);
         }
@@ -1314,7 +1356,7 @@ function onAnswer(selected,btn) {
         }
         gCombo=0; gLives=Math.max(0,gLives-1);
         updateCombo(); updateHUD(); sfxMiss(); playerHit();
-        setSpeechBubble('フハハ！ 違うぞ！');
+        setSpeechBubble(enemyLine('wrong'));
         if (gLives===0) {
             gBusy=true;
             setTimeout(()=>showContinueModal(), 900);
