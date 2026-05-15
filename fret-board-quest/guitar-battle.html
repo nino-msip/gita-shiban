@@ -271,6 +271,47 @@ body {
 .enemy-sprite svg { display: block; }
 .enemy-sprite.idle { animation: enemy-bob 2.7s ease-in-out infinite; }
 @keyframes enemy-bob { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-11px) scale(1.03)} }
+
+/* ── 魔王ステージ演出 ── */
+.enemy-stage.maou-stage {
+    background: radial-gradient(ellipse at 50% 30%, #1a0050 0%, #0d0030 45%, #050012 100%);
+    border-color: #9333ea88;
+    box-shadow: inset 0 0 0 1px #9333ea44, 0 8px 36px rgba(0,0,0,0.9), 0 0 80px #9333ea22;
+    animation: maou-stage-pulse 3s ease-in-out infinite;
+}
+@keyframes maou-stage-pulse {
+    0%,100% { box-shadow: inset 0 0 0 1px #9333ea44, 0 8px 36px rgba(0,0,0,0.9), 0 0 60px #9333ea22; }
+    50%      { box-shadow: inset 0 0 0 1px #9333ea88, 0 8px 36px rgba(0,0,0,0.9), 0 0 120px #7e22ce44; }
+}
+.enemy-stage.maou-stage::before { display: none; }
+.maou-stage .enemy-sprite { margin-top: 0; filter: none; }
+.maou-stage .enemy-sprite.idle { animation: maou-float 3.5s ease-in-out infinite; }
+@keyframes maou-float {
+    0%,100% { transform: translateY(0);    filter: drop-shadow(0 0 18px #9333eacc) drop-shadow(0 0 40px #7e22ce66); }
+    50%      { transform: translateY(-10px); filter: drop-shadow(0 0 40px #c026d3ee) drop-shadow(0 0 80px #9333eaaa); }
+}
+.maou-stage .enemy-sprite img { width: 100%; max-width: 460px; height: auto; display: block; }
+
+/* 魔王ステージ選択カード */
+.ss-maou-card {
+    border: 2px solid #9333ea88 !important;
+    background: linear-gradient(135deg, #150040 0%, #0a0025 60%, #150040 100%) !important;
+    animation: maou-card-pulse 2.2s ease-in-out infinite;
+    position: relative; overflow: hidden;
+}
+.ss-maou-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent 40%, #9333ea18 100%);
+    pointer-events: none;
+}
+@keyframes maou-card-pulse {
+    0%,100% { box-shadow: 0 0 14px #9333ea44; border-color: #9333ea66 !important; }
+    50%      { box-shadow: 0 0 32px #9333eaaa, 0 0 60px #7e22ce44; border-color: #9333eacc !important; }
+}
+.ss-maou-title { font-size: 1.1rem; color: #c084fc; letter-spacing: 0.1em; text-shadow: 0 0 12px #9333ea; }
+.ss-maou-sub   { font-size: 0.62rem; color: #7c3aed; letter-spacing: 0.08em; }
+.ss-maou-lock  { font-size: 0.58rem; color: #f87171; letter-spacing: 0.06em; margin-top: 2px; }
+.ss-maou-test  { font-size: 0.5rem; color: #6366f1; background: #1e1b4b; padding: 2px 6px; border-radius: 2px; }
 .enemy-sprite.hit { animation: enemy-hit 0.55s ease-out forwards; }
 @keyframes enemy-hit {
     0%  {transform:translateX(0) scale(1); filter:drop-shadow(0 10px 35px rgba(0,0,0,0.85)) brightness(1)}
@@ -632,7 +673,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.32</span>
+        <span class="version-tag">v1.33</span>
         <span class="app-title">⚔️ Fret Board Quest</span>
     </div>
     <div class="header-btns">
@@ -665,6 +706,12 @@ body {
     <div class="ss-section">
         <div class="ss-section-title">✨ 特別ステージ</div>
         <div class="ss-grid ss-grid-3" id="ss-special-grid"></div>
+    </div>
+
+    <!-- FINAL STAGE -->
+    <div class="ss-section" id="ss-maou-section">
+        <div class="ss-section-title">👑 FINAL STAGE</div>
+        <div class="ss-grid ss-grid-1" id="ss-maou-grid"></div>
     </div>
 
     <!-- 苦手分析 -->
@@ -869,6 +916,21 @@ function buildStageSelect() {
         btn.onclick = () => selectStage(st.id);
         grid.appendChild(btn);
     });
+
+    // 魔王ステージカード
+    const maouGrid = document.getElementById('ss-maou-grid');
+    const cleared = allStringsCleared();
+    const maouHi = +localStorage.getItem(HI_KEY(MAOU_STAGE.id)) || 0;
+    const maouBtn = document.createElement('button');
+    maouBtn.className = 'ss-btn ss-maou-card';
+    maouBtn.innerHTML = `
+        <span class="ss-maou-title">👑 魔王城</span>
+        <span class="ss-maou-sub">全弦制覇者への最終試練</span>
+        ${cleared ? '' : '<span class="ss-maou-lock">🔒 全弦ステージ完全マスターで解放</span>'}
+        <span class="ss-maou-test">▶ テスト運用中（選択可）</span>
+        <span class="ss-best ${maouHi>0?'has-score':''}">${maouHi>0?'BEST '+maouHi.toLocaleString():'—'}</span>`;
+    maouBtn.onclick = () => selectMaouStage();
+    maouGrid.appendChild(maouBtn);
 }
 
 function selectStrStage(strIdx) {
@@ -887,10 +949,20 @@ function selectStage(id) {
     startGame();
 }
 
+function selectMaouStage() {
+    gStage = MAOU_STAGE;
+    document.getElementById('stage-bar-name').textContent = `${gStage.label}（${gStage.sub}）`;
+    document.getElementById('stage-select').style.display = 'none';
+    document.getElementById('game-area').style.display = 'flex';
+    startGame();
+}
+
 function showStageSelect() {
     document.getElementById('ss-string-grid').innerHTML = '';
     document.getElementById('ss-fret-grid').innerHTML = '';
     document.getElementById('ss-special-grid').innerHTML = '';
+    document.getElementById('ss-maou-grid').innerHTML = '';
+    document.getElementById('enemy-stage').classList.remove('maou-stage');
     buildStageSelect();
     renderWeaknessStats();
     document.getElementById('game-area').style.display = 'none';
@@ -911,7 +983,9 @@ skeleton:`<img src="images/enemy-skeleton.png" width="150" height="150" style="i
 
 wizard:`<img src="images/enemy-wizard.png" style="width:140px;height:auto;display:block;">`,
 
-dragon:`<img src="images/enemy-dragon.png" style="width:200px;height:auto;image-rendering:pixelated;image-rendering:crisp-edges;display:block;">`
+dragon:`<img src="images/enemy-dragon.png" style="width:200px;height:auto;image-rendering:pixelated;image-rendering:crisp-edges;display:block;">`,
+
+maou:`<img src="images/enemy-maou.png" style="width:100%;max-width:460px;height:auto;display:block;image-rendering:pixelated;image-rendering:crisp-edges;">`
 
 };
 
@@ -959,7 +1033,28 @@ const ENEMIES = [
         wrong: ['RAAAR！！','炎で焼け！','弱いやつめ！'],
         defeat:['まさか…敗れるとは…','貴様…なかなかやる…'],
       }},
+    { name:'魔王',       svgKey:'maou',     hp:12, xp:5000, base:20000, color:'#9333ea', boss:true,
+      lines:{
+        appear:['クハハ…！全弦制覇したとて…命はない！','貴様がここまで来るとは…面白い！','我が魔力の前に跪け！'],
+        hit:   ['ぐ…！なぜだ…！','き、貴様…！','ぬぅ…力が…！'],
+        wrong: ['フハハ！！魔力を喰らえ！','この程度か！','滅びよ！消えろ！'],
+        defeat:['ば…馬鹿な…！わ、私が…敗れる…！?','あ、ありえぬ…これほどの使い手が…'],
+      }},
 ];
+
+// ── 魔王ステージ定義 ───────────────────────────────────────────
+const MAOU_STAGE = {
+    id: 'maou', label: '魔王城', sub: '全弦・全フレット',
+    color: '#9333ea', isMaouStage: true,
+    filter: () => true,
+};
+
+function allStringsCleared() {
+    for (let i = 0; i < 6; i++) {
+        if (getStrLv(i) <= STR_FINAL_LV) return false;
+    }
+    return true;
+}
 
 function enemyLine(situation) {
     const pool = gEnemy?.lines?.[situation];
@@ -968,7 +1063,8 @@ function enemyLine(situation) {
 }
 
 function pickEnemy(wave) {
-    if (gFinalDragonPhase) return ENEMIES[5];       // ドラゴン：FINAL BOSSのみ
+    if (gStage.isMaouStage)  return ENEMIES[6];    // 魔王：常に
+    if (gFinalDragonPhase)   return ENEMIES[5];    // ドラゴン：FINAL BOSSのみ
     if (wave%5===0 && wave>0) return ENEMIES[4];   // ウィザード（5波ごと）
     if (wave%3===0 && wave>0) return ENEMIES[3];   // スケルトン（3波ごと）
     return ENEMIES[Math.floor(Math.random()*3)];   // slime/bat/goblin
@@ -1198,11 +1294,17 @@ function spawnEnemy() {
     document.getElementById('enemy-name').textContent=gEnemy.name;
 
     const stage=document.getElementById('enemy-stage');
-    if (isBoss) {
-        stage.style.borderColor=gEnemy.color+'66';
-        stage.style.boxShadow=`0 0 0 1px rgba(0,0,0,0.9),0 10px 50px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.03),0 0 60px ${gEnemy.color}20`;
-    } else {
+    if (gStage.isMaouStage) {
+        stage.classList.add('maou-stage');
         stage.style.borderColor=''; stage.style.boxShadow='';
+    } else {
+        stage.classList.remove('maou-stage');
+        if (isBoss) {
+            stage.style.borderColor=gEnemy.color+'66';
+            stage.style.boxShadow=`0 0 0 1px rgba(0,0,0,0.9),0 10px 50px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.03),0 0 60px ${gEnemy.color}20`;
+        } else {
+            stage.style.borderColor=''; stage.style.boxShadow='';
+        }
     }
 
     setSpeechBubble(enemyLine('appear'));
@@ -1385,7 +1487,16 @@ function defeatEnemy() {
     const d=leveled?650:0;
     if (leveled) setTimeout(()=>{sfxLevelUp();showOverlay('LEVEL UP!','#f5d070','rgba(245,208,112,0.12)',()=>{});},d);
 
-    if (gFinalDragonPhase) {
+    if (gStage.isMaouStage) {
+        document.getElementById('enemy-stage').classList.remove('maou-stage');
+        const d2=d+(leveled?1250:600);
+        setTimeout(()=>{
+            sfxStageClear(); burstFireworks();
+            showOverlay('★ 魔王討伐！ 真の覇者！','#c084fc','rgba(147,51,234,0.18)',()=>{});
+            setTimeout(()=>{ burstFireworks(); }, 800);
+            setTimeout(()=>showStageSelect(), 3400);
+        }, d2);
+    } else if (gFinalDragonPhase) {
         gFinalDragonPhase=false;
         const strIdx=gStage.strIdx;
         setStrLv(strIdx, STR_FINAL_LV+1);
