@@ -379,10 +379,21 @@ body {
 .string-row:nth-child(6) .fret-cells::before { height: 4px;   background: #9b59b6; }
 .fret-cell { flex: 1; height: 44px; display: flex; align-items: center; justify-content: center; position: relative; border-right: 2px solid #b08040; z-index: 1; }
 .fret-cell.open-col { flex: 0.6; border-right: 5px solid #888; }
-.dot-row { display: flex; margin-top: 4px; height: 14px; }
-.dot-cell { flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.dot-row { display: flex; margin-top: 2px; height: 18px; }
+.dot-cell { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; }
 .dot-cell.open-col { flex: 0.6; }
-.fret-dot { width: 7px; height: 7px; border-radius: 50%; background: #684a14; }
+.fret-dot { width: 10px; height: 10px; border-radius: 50%; background: #d4a84b; box-shadow: 0 0 4px #b08040aa; }
+/* フレット内インレイ（中段弦行のドット） */
+.fret-cell.inlay-single::after, .fret-cell.inlay-double::after, .fret-cell.inlay-double2::after {
+    content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+    width: 8px; height: 8px; border-radius: 50%;
+    background: radial-gradient(circle, #e8c46a 0%, #9a6820 100%);
+    box-shadow: 0 0 6px #d4a84b99; pointer-events: none; z-index: 0; opacity: 0.75;
+}
+.fret-cell.inlay-double::after  { left: 33%; }
+.fret-cell.inlay-double2::after { left: 67%; }
+/* フレット番号（ポジション位置を金色強調） */
+.fret-num-cell.dot-num { color: #c8963a; font-weight: 700; }
 
 /* ══ Note Indicator ═══════════════════════════════════════════ */
 .note-ind {
@@ -570,6 +581,10 @@ body {
     to   { transform: translateY(0);    opacity: 1; }
 }
 .explain-modal-result { font-size: 1.05rem; font-weight: 700; text-align: center; }
+.explain-enemy-speech {
+    font-size: 0.72rem; color: #8888cc; text-align: center; font-style: italic;
+    padding: 4px 8px; border-left: 2px solid #33337a; line-height: 1.5;
+}
 .explain-modal-title {
     font-size: 0.52rem; color: #33337a; font-weight: 700;
     letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 5px;
@@ -658,7 +673,8 @@ body {
     .fret-cell.open-col { border-right-width: 3px; }
     .note-ind   { width: 16px; height: 16px; font-size: 0.38rem; }
     .dot-row { height: 6px; margin-top: 1px; }
-    .fret-dot { width: 4px; height: 4px; }
+    .fret-dot { width: 6px; height: 6px; }
+    .fret-cell.inlay-single::after, .fret-cell.inlay-double::after, .fret-cell.inlay-double2::after { width: 5px; height: 5px; }
     /* 選択ボタン */
     .choices-grid { gap: 4px; max-width: 100%; }
     .choice-btn { padding: 7px 2px; font-size: 0.8rem; min-height: 38px; border-radius: 2px; border-width: 2px; }
@@ -683,7 +699,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.38</span>
+        <span class="version-tag">v1.39</span>
         <span class="app-title">⚔️ Fret Board Quest</span>
     </div>
     <div class="header-btns">
@@ -815,6 +831,7 @@ body {
 <div id="explain-modal" class="explain-modal">
     <div class="explain-modal-box">
         <div class="explain-modal-result" id="explain-modal-result"></div>
+        <div class="explain-enemy-speech" id="explain-enemy-speech"></div>
         <div>
             <div class="explain-modal-title">💡 音の導き方</div>
             <div class="exp-chain" id="explain-modal-body"></div>
@@ -1161,18 +1178,26 @@ function buildFretboard() {
     const numRow=document.createElement('div'); numRow.className='fret-num-row';
     for (let f=0; f<=NUM_FRETS; f++) {
         const d=document.createElement('div');
-        d.className='fret-num-cell'+(f===0?' open-col':'');
+        let cls='fret-num-cell'+(f===0?' open-col':'');
+        if (DOT_FRETS.has(f)) cls+=' dot-num';
+        d.className=cls;
         d.textContent=f===0?'開放':f;
         numRow.appendChild(d);
     }
     root.appendChild(numRow);
     const grid=document.createElement('div'); grid.className='fretboard-grid';
+    const MID = 2; // 3弦（中段）にインレイを配置
     for (let s=0; s<6; s++) {
         const row=document.createElement('div'); row.className='string-row';
         const cells=document.createElement('div'); cells.className='fret-cells';
         for (let f=0; f<=NUM_FRETS; f++) {
             const cell=document.createElement('div');
-            cell.className='fret-cell'+(f===0?' open-col':'');
+            let cls='fret-cell'+(f===0?' open-col':'');
+            if (s===MID && DOT_FRETS.has(f)) {
+                cls += f===12 ? ' inlay-double' : ' inlay-single';
+            }
+            if (s===MID+1 && f===12) cls += ' inlay-double2';
+            cell.className=cls;
             const ind=document.createElement('div');
             ind.className='note-ind'; ind.id=`ni-${s}-${f}`;
             cell.appendChild(ind); cells.appendChild(cell);
@@ -1716,6 +1741,10 @@ function showExplainModal(isOk, nextFn) {
         ? `<span style="color:var(--ok)">✓ 正解！</span>`
         : `<span style="color:var(--ng)">✗ 不正解… 正解は <span style="color:var(--gold);font-weight:900">${gQ.note}</span></span>`;
     document.getElementById('explain-modal-body').innerHTML = buildIntervalExplanation(gQ.s, gQ.f);
+    const speech = document.getElementById('speech-text')?.textContent || '';
+    const speechEl = document.getElementById('explain-enemy-speech');
+    speechEl.textContent = speech ? `${gEnemy?.name ?? ''}「${speech}」` : '';
+    speechEl.style.display = speech ? '' : 'none';
     gNextAction = nextFn;
     document.getElementById('explain-modal').classList.add('open');
 }
