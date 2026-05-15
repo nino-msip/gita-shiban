@@ -699,7 +699,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.44</span>
+        <span class="version-tag">v1.45</span>
         <span class="app-title">⚔️ Fret Board Quest</span>
     </div>
     <div class="header-btns">
@@ -1113,7 +1113,9 @@ wizard:`<img src="images/enemy-wizard.png" style="width:140px;height:auto;displa
 
 dragon:`<img src="images/enemy-dragon.png" style="width:200px;height:auto;image-rendering:pixelated;image-rendering:crisp-edges;display:block;">`,
 
-maou:`<img src="images/enemy-maou.png" style="width:62%;max-width:300px;height:auto;display:block;image-rendering:pixelated;image-rendering:crisp-edges;">`
+maou:`<img src="images/enemy-maou.png" style="width:62%;max-width:300px;height:auto;display:block;image-rendering:pixelated;image-rendering:crisp-edges;">`,
+
+pos_maou:`<img src="images/enemy-pos-maou.png" style="width:62%;max-width:300px;height:auto;display:block;image-rendering:pixelated;image-rendering:crisp-edges;">`
 
 };
 
@@ -1169,6 +1171,14 @@ const ENEMIES = [
         recover:['フハハ…！全快だ！12問…連続で正解できるかな？','傷よ癒えよ…！途切れなき12問、それが条件よ！','くだらん！ミスるたびに儂は蘇る！連続12問が条件だ！'],
         defeat: ['ば…馬鹿な…！わ、私が…敗れる…！?','あ、ありえぬ…これほどの使い手が…'],
       }},
+    { name:'ポジション魔王', svgKey:'pos_maou', hp:12, xp:8000, base:40000, color:'#c026d3', boss:true,
+      lines:{
+        appear:   ['ポジションマークなど…幻に過ぎぬ！','12連続正解できるか…？さあ始めよう…','一度でも誤れば即座に消し飛ばすぞ！'],
+        hit:      ['ぐ…！だが連続など途絶えるわ！','当たった…しかし続けられるか！','くっ…まだ終わっておらぬ！'],
+        wrong:    ['必殺だ…！消えよ！！','愚か者め…！覚悟！！','終わりだ…魔法陣よ発動せよ！！'],
+        instakill:['フハハ…！必殺！！消し飛べ！！','連続が途絶えた…これで終わりだ！！','必殺魔法陣…発動！！さらばだ！！'],
+        defeat:   ['ば…馬鹿な…12連続とは…','ありえぬ…ポジションを…完全に…制した…！'],
+      }},
 ];
 
 // ── 魔王ステージ定義 ───────────────────────────────────────────
@@ -1180,7 +1190,7 @@ const MAOU_STAGE = {
 
 const POS_MAOU_STAGE = {
     id: 'pos_maou', label: 'ポジション魔王', sub: '全弦・ポジションマーク',
-    color: '#9333ea', isMaouStage: true,
+    color: '#c026d3', isMaouStage: true, isPosMaouStage: true,
     filter: (s,f) => DOT_FRETS.has(f),
 };
 
@@ -1205,8 +1215,9 @@ function enemyLine(situation) {
 }
 
 function pickEnemy(wave) {
-    if (gStage.isMaouStage)  return ENEMIES[6];    // 魔王：常に
-    if (gFinalDragonPhase)   return ENEMIES[5];    // ドラゴン：FINAL BOSSのみ
+    if (gStage.isPosMaouStage) return ENEMIES[7];  // ポジション魔王：常に
+    if (gStage.isMaouStage)    return ENEMIES[6];  // 魔王：常に
+    if (gFinalDragonPhase)     return ENEMIES[5];  // ドラゴン：FINAL BOSSのみ
     if (wave%5===0 && wave>0) return ENEMIES[4];   // ウィザード（5波ごと）
     if (wave%3===0 && wave>0) return ENEMIES[3];   // スケルトン（3波ごと）
     return ENEMIES[Math.floor(Math.random()*3)];   // slime/bat/goblin
@@ -1618,8 +1629,29 @@ function onAnswer(selected,btn) {
             setTimeout(()=>askQuestion(), 900);
         }
     } else {
-        gCombo=0; gLives=Math.max(0,gLives-1);
-        updateCombo(); updateHUD();
+        gCombo=0; updateCombo();
+
+        // ポジション魔王：必殺技→即死強制退場（ライフ無関係）
+        if (gStage.isPosMaouStage) {
+            gBusy=true;
+            sfxMaouAttack();
+            const atk=document.createElement('div'); atk.className='maou-damage-flash';
+            document.body.appendChild(atk); setTimeout(()=>atk.remove(), 1200);
+            const sr2=document.getElementById('enemy-sprite').getBoundingClientRect();
+            if (sr2.width>0) {
+                setSpeechBubble(enemyLine('instakill'));
+                setTimeout(()=>floatText('必殺！！',sr2.left+sr2.width/2,sr2.bottom+10,'#c026d3','1.6rem'),200);
+            }
+            setResult('💀 必殺技…！強制退場！！','miss');
+            setTimeout(()=>{
+                document.getElementById('enemy-stage').classList.remove('maou-stage');
+                showStageSelect();
+            }, 2600);
+            return;
+        }
+
+        gLives=Math.max(0,gLives-1);
+        updateHUD();
 
         if (gStage.isMaouStage) {
             // 魔王攻撃：専用サウンド＋紫フラッシュ
@@ -1667,9 +1699,14 @@ function defeatEnemy() {
 
     if (gStage.isMaouStage) {
         const d2=d+(leveled?1250:600);
+        const victoryText = gStage.isPosMaouStage
+            ? '🎵★ ポジション魔王討伐！完全制覇！'
+            : '★ 魔王討伐！ 真の覇者！';
+        const victoryColor = gStage.isPosMaouStage ? '#e879f9' : '#c084fc';
+        const victoryBg    = gStage.isPosMaouStage ? 'rgba(232,121,249,0.18)' : 'rgba(147,51,234,0.18)';
         setTimeout(()=>{
             sfxStageClear(); burstFireworks();
-            showOverlay('★ 魔王討伐！ 真の覇者！','#c084fc','rgba(147,51,234,0.18)',()=>{});
+            showOverlay(victoryText, victoryColor, victoryBg, ()=>{});
             setTimeout(()=>{ burstFireworks(); }, 800);
             setTimeout(()=>{
                 document.getElementById('enemy-stage').classList.remove('maou-stage');
