@@ -312,6 +312,45 @@ body {
 .ss-maou-sub   { font-size: 0.62rem; color: #7c3aed; letter-spacing: 0.08em; }
 .ss-maou-lock  { font-size: 0.58rem; color: #f87171; letter-spacing: 0.06em; margin-top: 2px; }
 .ss-maou-test  { font-size: 0.5rem; color: #6366f1; background: #1e1b4b; padding: 2px 6px; border-radius: 2px; }
+/* ハードモードカード */
+.ss-hard-card {
+    border: 2px solid #f59e0b88 !important;
+    background: linear-gradient(135deg, #1c0a00 0%, #0a0800 60%, #1c0a00 100%) !important;
+    animation: hard-card-pulse 2.4s ease-in-out infinite;
+    position: relative; overflow: hidden;
+}
+@keyframes hard-card-pulse {
+    0%,100% { box-shadow: 0 0 12px #f59e0b44; border-color: #f59e0b66 !important; }
+    50%      { box-shadow: 0 0 28px #f59e0baa, 0 0 50px #d9770044; border-color: #f59e0bcc !important; }
+}
+.ss-hard-title { font-size: 1.0rem; color: #fbbf24; letter-spacing: 0.08em; text-shadow: 0 0 10px #f59e0b; }
+.ss-hard-sub   { font-size: 0.62rem; color: #92400e; letter-spacing: 0.06em; }
+/* 度数魔王カード */
+.ss-dosu-card {
+    border: 2px solid #06b6d488 !important;
+    background: linear-gradient(135deg, #001a1c 0%, #000d10 60%, #001a1c 100%) !important;
+    animation: dosu-card-pulse 2.6s ease-in-out infinite;
+    position: relative; overflow: hidden;
+}
+@keyframes dosu-card-pulse {
+    0%,100% { box-shadow: 0 0 14px #06b6d444; border-color: #06b6d466 !important; }
+    50%      { box-shadow: 0 0 32px #06b6d4aa, 0 0 60px #0e749044; border-color: #06b6d4cc !important; }
+}
+.ss-dosu-title { font-size: 1.1rem; color: #22d3ee; letter-spacing: 0.1em; text-shadow: 0 0 12px #06b6d4; }
+.ss-dosu-sub   { font-size: 0.62rem; color: #0e7490; letter-spacing: 0.08em; }
+/* 大魔王カード */
+.ss-dai-card {
+    border: 2px solid #ef444488 !important;
+    background: linear-gradient(135deg, #1c0000 0%, #0a0000 60%, #1c0000 100%) !important;
+    animation: dai-card-pulse 2.0s ease-in-out infinite;
+    position: relative; overflow: hidden;
+}
+@keyframes dai-card-pulse {
+    0%,100% { box-shadow: 0 0 14px #ef444444; border-color: #ef444466 !important; }
+    50%      { box-shadow: 0 0 36px #ef4444aa, 0 0 70px #b9191944; border-color: #ef4444cc !important; }
+}
+.ss-dai-title { font-size: 1.1rem; color: #f87171; letter-spacing: 0.1em; text-shadow: 0 0 12px #ef4444; }
+.ss-dai-sub   { font-size: 0.62rem; color: #991b1b; letter-spacing: 0.08em; }
 .enemy-sprite.hit { animation: enemy-hit 0.55s ease-out forwards; }
 @keyframes enemy-hit {
     0%  {transform:translateX(0) scale(1); filter:drop-shadow(0 10px 35px rgba(0,0,0,0.85)) brightness(1)}
@@ -699,7 +738,7 @@ body {
 <!-- ── 共通ヘッダー ── -->
 <div class="app-header">
     <div class="title-wrap">
-        <span class="version-tag">v1.46</span>
+        <span class="version-tag">v1.47</span>
         <span class="app-title">⚔️ Fret Board Quest</span>
     </div>
     <div class="header-btns">
@@ -735,6 +774,30 @@ body {
         <div class="ss-grid ss-grid-3" id="ss-string-grid"></div>
     </div>
 
+    <!-- 弦魔王 -->
+    <div class="ss-section" id="ss-maou-section">
+        <div class="ss-section-title">⚔️ 弦魔王城</div>
+        <div class="ss-grid ss-grid-1" id="ss-maou-grid"></div>
+    </div>
+
+    <!-- ハードモードステージ -->
+    <div class="ss-section" id="ss-hard-section">
+        <div class="ss-section-title">🔥 ハードモードステージ（度数2問コンボ）</div>
+        <div class="ss-grid ss-grid-3" id="ss-hard-grid"></div>
+    </div>
+
+    <!-- 度数魔王 -->
+    <div class="ss-section" id="ss-dosu-maou-section">
+        <div class="ss-section-title">🎯👑 度数魔王</div>
+        <div class="ss-grid ss-grid-1" id="ss-dosu-maou-grid"></div>
+    </div>
+
+    <!-- 大魔王 -->
+    <div class="ss-section" id="ss-dai-maou-section">
+        <div class="ss-section-title">💀👑 大魔王</div>
+        <div class="ss-grid ss-grid-1" id="ss-dai-maou-grid"></div>
+    </div>
+
     <!-- フレット別 -->
     <div class="ss-section">
         <div class="ss-section-title">🎯 フレット別ステージ</div>
@@ -745,12 +808,6 @@ body {
     <div class="ss-section">
         <div class="ss-section-title">✨ 特別ステージ</div>
         <div class="ss-grid ss-grid-3" id="ss-special-grid"></div>
-    </div>
-
-    <!-- FINAL STAGE -->
-    <div class="ss-section" id="ss-maou-section">
-        <div class="ss-section-title">👑 FINAL STAGE</div>
-        <div class="ss-grid ss-grid-1" id="ss-maou-grid"></div>
     </div>
 
     <!-- 苦手分析 -->
@@ -873,6 +930,16 @@ const STAGE_DEFS = [
     { id:'natural', grid:'special', label:'ナチュラル', sub:'C D E F G A B', color:'#f5d070', filter:(s,f)=>!getNote(s,f).includes('#') },
     { id:'sharp',   grid:'special', label:'シャープ',   sub:'C# D# F# G# A#', color:'#f87171', filter:(s,f)=>getNote(s,f).includes('#') },
     { id:'all',     grid:'special', label:'全域',       sub:'全弦・全フレット', color:'#e0a835', filter:()=>true },
+];
+
+// ── 度数定義 ─────────────────────────────────────────────────
+const INTERVALS = [
+    {name:'短2度', semi:1},  {name:'長2度', semi:2},
+    {name:'短3度', semi:3},  {name:'長3度', semi:4},
+    {name:'完全4度',semi:5}, {name:'増4度', semi:6},
+    {name:'完全5度',semi:7}, {name:'短6度', semi:8},
+    {name:'長6度', semi:9},  {name:'短7度', semi:10},
+    {name:'長7度', semi:11}, {name:'オクターブ',semi:12},
 ];
 
 // ── 弦ステージ（レベル制） ──────────────────────────────────
@@ -1027,20 +1094,69 @@ function buildStageSelect() {
     posmaouBtn.onclick = () => selectPosMaouStage();
     posmaouGrid.appendChild(posmaouBtn);
 
-    // 魔王ステージカード
+    // 弦魔王ステージカード
     const maouGrid = document.getElementById('ss-maou-grid');
     const cleared = allStringsCleared();
     const maouHi = +localStorage.getItem(HI_KEY(MAOU_STAGE.id)) || 0;
     const maouBtn = document.createElement('button');
     maouBtn.className = 'ss-btn ss-maou-card';
     maouBtn.innerHTML = `
-        <span class="ss-maou-title">👑 魔王城</span>
+        <span class="ss-maou-title">⚔️ 弦魔王城</span>
         <span class="ss-maou-sub">全弦制覇者への最終試練</span>
         ${cleared ? '' : '<span class="ss-maou-lock">🔒 全弦ステージ完全マスターで解放</span>'}
         <span class="ss-maou-test">▶ テスト運用中（選択可）</span>
         <span class="ss-best ${maouHi>0?'has-score':''}">${maouHi>0?'BEST '+maouHi.toLocaleString():'—'}</span>`;
     maouBtn.onclick = () => selectMaouStage();
     maouGrid.appendChild(maouBtn);
+
+    // ハードモードステージカード
+    const hardGrid = document.getElementById('ss-hard-grid');
+    for (let i=5; i>=0; i--) {
+        const st = makeHardStage(i);
+        const hardCleared = getHardCleared(i);
+        const hardHi = +localStorage.getItem(HI_KEY(st.id)) || 0;
+        const hBtn = document.createElement('button');
+        hBtn.className = 'ss-btn ss-hard-card';
+        hBtn.style.setProperty('--c', st.color);
+        hBtn.innerHTML = `
+            <span class="ss-hard-title">🔥 ${st.label}</span>
+            <span class="ss-hard-sub">度数→音名→フレット 2問コンボ</span>
+            ${hardCleared ? '<span style="font-size:0.55rem;color:#fbbf24">★ 制覇済み</span>' : ''}
+            <span class="ss-maou-test">▶ テスト運用中（選択可）</span>
+            <span class="ss-best ${hardHi>0?'has-score':''}">${hardHi>0?'BEST '+hardHi.toLocaleString():'—'}</span>`;
+        hBtn.onclick = () => selectHardStage(i);
+        hardGrid.appendChild(hBtn);
+    }
+
+    // 度数魔王カード
+    const dosuGrid = document.getElementById('ss-dosu-maou-grid');
+    const hardAllClear = allHardCleared();
+    const dosuHi = +localStorage.getItem(HI_KEY(DOSU_MAOU_STAGE.id)) || 0;
+    const dosuBtn = document.createElement('button');
+    dosuBtn.className = 'ss-btn ss-dosu-card';
+    dosuBtn.innerHTML = `
+        <span class="ss-dosu-title">🎯👑 度数魔王</span>
+        <span class="ss-dosu-sub">10ペア連続正解でHP1削れる。不正解=HP全回復</span>
+        ${hardAllClear ? '' : '<span class="ss-maou-lock">🔒 全ハードステージ制覇で解放</span>'}
+        <span class="ss-maou-test">▶ テスト運用中（選択可）</span>
+        <span class="ss-best ${dosuHi>0?'has-score':''}">${dosuHi>0?'BEST '+dosuHi.toLocaleString():'—'}</span>`;
+    dosuBtn.onclick = () => selectDosuMaouStage();
+    dosuGrid.appendChild(dosuBtn);
+
+    // 大魔王カード
+    const daiGrid = document.getElementById('ss-dai-maou-grid');
+    const dosuCleared = getDosuCleared();
+    const daiHi = +localStorage.getItem(HI_KEY(DAI_MAOU_STAGE.id)) || 0;
+    const daiBtn = document.createElement('button');
+    daiBtn.className = 'ss-btn ss-dai-card';
+    daiBtn.innerHTML = `
+        <span class="ss-dai-title">💀👑 大魔王</span>
+        <span class="ss-dai-sub">混合20問連続正解。不正解=HP20に即リセット</span>
+        ${dosuCleared ? '' : '<span class="ss-maou-lock">🔒 度数魔王討伐で解放</span>'}
+        <span class="ss-maou-test">▶ テスト運用中（選択可）</span>
+        <span class="ss-best ${daiHi>0?'has-score':''}">${daiHi>0?'BEST '+daiHi.toLocaleString():'—'}</span>`;
+    daiBtn.onclick = () => selectDaiMaouStage();
+    daiGrid.appendChild(daiBtn);
 }
 
 function selectPosMaouStage() {
@@ -1090,11 +1206,38 @@ function showStageSelect() {
     document.getElementById('ss-fret-grid').innerHTML = '';
     document.getElementById('ss-special-grid').innerHTML = '';
     document.getElementById('ss-maou-grid').innerHTML = '';
+    document.getElementById('ss-hard-grid').innerHTML = '';
+    document.getElementById('ss-dosu-maou-grid').innerHTML = '';
+    document.getElementById('ss-dai-maou-grid').innerHTML = '';
     document.getElementById('enemy-stage').classList.remove('maou-stage');
     buildStageSelect();
     renderWeaknessStats();
     document.getElementById('game-area').style.display = 'none';
     document.getElementById('stage-select').style.display = 'flex';
+}
+
+function selectHardStage(strIdx) {
+    gStage = makeHardStage(strIdx);
+    document.getElementById('stage-bar-name').textContent = `${gStage.label}（${gStage.sub}）`;
+    document.getElementById('stage-select').style.display = 'none';
+    document.getElementById('game-area').style.display = 'flex';
+    startGame();
+}
+
+function selectDosuMaouStage() {
+    gStage = DOSU_MAOU_STAGE;
+    document.getElementById('stage-bar-name').textContent = `${gStage.label}（${gStage.sub}）`;
+    document.getElementById('stage-select').style.display = 'none';
+    document.getElementById('game-area').style.display = 'flex';
+    startGame();
+}
+
+function selectDaiMaouStage() {
+    gStage = DAI_MAOU_STAGE;
+    document.getElementById('stage-bar-name').textContent = `${gStage.label}（${gStage.sub}）`;
+    document.getElementById('stage-select').style.display = 'none';
+    document.getElementById('game-area').style.display = 'flex';
+    startGame();
 }
 
 // ── SVG キャラクター ──────────────────────────────────────────
@@ -1115,7 +1258,11 @@ dragon:`<img src="images/enemy-dragon.png" style="width:200px;height:auto;image-
 
 maou:`<img src="images/enemy-maou.png" style="width:62%;max-width:300px;height:auto;display:block;image-rendering:pixelated;image-rendering:crisp-edges;">`,
 
-pos_maou:`<img src="images/enemy-pos-maou.png" style="width:62%;max-width:300px;height:auto;display:block;image-rendering:pixelated;image-rendering:crisp-edges;">`
+pos_maou:`<img src="images/enemy-pos-maou.png" style="width:62%;max-width:300px;height:auto;display:block;image-rendering:pixelated;image-rendering:crisp-edges;">`,
+
+dosu_maou:`<img src="images/enemy-pos-maou.png" style="width:62%;max-width:300px;height:auto;display:block;image-rendering:pixelated;image-rendering:crisp-edges;filter:hue-rotate(160deg) brightness(1.15) saturate(1.3);">`,
+
+dai_maou:`<img src="images/enemy-maou.png" style="width:62%;max-width:300px;height:auto;display:block;image-rendering:pixelated;image-rendering:crisp-edges;filter:hue-rotate(190deg) brightness(0.85) contrast(1.3) saturate(1.5);">`
 
 };
 
@@ -1163,7 +1310,7 @@ const ENEMIES = [
         wrong: ['RAAAR！！','炎で焼け！','弱いやつめ！'],
         defeat:['まさか…敗れるとは…','貴様…なかなかやる…'],
       }},
-    { name:'魔王',       svgKey:'maou',     hp:12, xp:5000, base:20000, color:'#9333ea', boss:true,
+    { name:'弦魔王',     svgKey:'maou',     hp:12, xp:5000, base:20000, color:'#9333ea', boss:true,
       lines:{
         appear: ['クハハ…！全弦制覇したとて…命はない！','貴様がここまで来るとは…面白い！','我が魔力の前に跪け！'],
         hit:    ['ぐ…！なぜだ…！','き、貴様…！','ぬぅ…力が…！'],
@@ -1179,11 +1326,36 @@ const ENEMIES = [
         instakill:['フハハ…！必殺！！消し飛べ！！','連続が途絶えた…これで終わりだ！！','必殺魔法陣…発動！！さらばだ！！'],
         defeat:   ['ば…馬鹿な…12連続とは…','ありえぬ…ポジションを…完全に…制した…！'],
       }},
+    { name:'ハード魔人', svgKey:'wizard', hp:8, xp:400, base:900, color:'#f59e0b', boss:true,
+      lines:{
+        appear:['2問セットで正解しなければ攻撃は当たらないぞ！','度数の問題だ！2問連続で答えよ！','フフフ…音名と指板、両方分かるかな？'],
+        hit:   ['ぐ…！2問コンボか…！','度数まで使いおる！','くっ…続けられるか見物だ！'],
+        wrong: ['甘い！2問クリアしないと無意味だ！','フハハ！一問でも違えば我の勝ちよ！','ミスったな…！覚悟しろ！'],
+        defeat:['2問コンボ…ありえぬ…！','度数をマスターしおった…！','くそ…音名も指板も…完璧だ…！'],
+      }},
+    { name:'度数魔王', svgKey:'dosu_maou', hp:10, xp:10000, base:50000, color:'#06b6d4', boss:true,
+      lines:{
+        appear: ['度数…分かるかな？2問コンボを10連続だ！','ミスれば即全回復！挑んでみよ！','フフ…度数の真髄を見せてやろう…'],
+        hit:    ['ぐ…！度数コンボとは…！','くっ…続けてみよ！','ぬう…なかなかやる…！'],
+        wrong:  ['甘い！回復するぞ！！','ミスったな！全回復だ！','フハハ！また最初からだ！！'],
+        recover:['全快！10コンボ連続が条件だ！忘れるな！','傷が癒えた…！2問コンボを10連続せよ！','フフ…また振り出しよ！10連続コンボを示せ！'],
+        defeat: ['ば…馬鹿な…度数を…完全に…','ありえぬ…度数2問コンボを10連続…！'],
+        finalAppear: ['最終試練だ…！6弦から1弦、各1問！一問でも誤れば6弦から再開！','フフフ…最後の試練だ。6弦→1弦…間違えたら最初からぞ！'],
+        finalWrong:  ['戻れ！6弦からやり直しだ！！','フハハ！最初からだ！甘い！！'],
+      }},
+    { name:'大魔王', svgKey:'dai_maou', hp:20, xp:30000, base:100000, color:'#ef4444', boss:true,
+      lines:{
+        appear: ['大魔王だ…！20問連続正解できるか？一問でもミスれば振り出しよ！','貴様…度数魔王まで倒したとは…だが私は次元が違う！','20連続…フフフ、できるものならやってみよ！'],
+        hit:    ['ぐ…！連続とは…！','くっ…まだ続けられるか！','ぬう…侮れぬ…！'],
+        wrong:  ['甘い！振り出しだ！！','ミスったな！またゼロからだ！！','フハハ！全回復！！どうした！！'],
+        recover:['全快！20連続正解が条件だ！！','また振り出し！20問ノーミス…できるかな？','フフフ…さあ再挑戦だ！20連続を見せてみよ！'],
+        defeat: ['ば…馬鹿な…20連続とは…！','あ、ありえぬ…大魔王の私が…敗れるとは…！！'],
+      }},
 ];
 
 // ── 魔王ステージ定義 ───────────────────────────────────────────
 const MAOU_STAGE = {
-    id: 'maou', label: '魔王城', sub: '全弦・全フレット',
+    id: 'maou', label: '弦魔王城', sub: '全弦・全フレット',
     color: '#9333ea', isMaouStage: true,
     filter: () => true,
 };
@@ -1192,6 +1364,39 @@ const POS_MAOU_STAGE = {
     id: 'pos_maou', label: 'ポジション魔王', sub: '全弦・ポジションマーク',
     color: '#c026d3', isMaouStage: true, isPosMaouStage: true,
     filter: (s,f) => DOT_FRETS.has(f),
+};
+
+// ── ハードモードステージ定義 ─────────────────────────────────
+const HARD_STR_KEY = i => `fbattle_hardcleared_${i}`;
+function getHardCleared(i) { return localStorage.getItem(HARD_STR_KEY(i)) === '1'; }
+function setHardCleared(i) { localStorage.setItem(HARD_STR_KEY(i), '1'); }
+function allHardCleared() { for (let i=0; i<6; i++) if (!getHardCleared(i)) return false; return true; }
+
+const DOSU_MAOU_CLEARED_KEY = 'fbattle_dosumaou_cleared';
+function getDosuCleared() { return localStorage.getItem(DOSU_MAOU_CLEARED_KEY) === '1'; }
+function setDosuCleared() { localStorage.setItem(DOSU_MAOU_CLEARED_KEY, '1'); }
+
+function makeHardStage(strIdx) {
+    return {
+        id: `hard_str${strIdx}`,
+        strIdx, isHardStage: true,
+        label: `${STR_JP[strIdx]} ハード`,
+        sub: '度数2問コンボ',
+        color: STR_COLORS[strIdx],
+        filter: (s,f) => s === strIdx && f >= 1,
+    };
+}
+
+const DOSU_MAOU_STAGE = {
+    id: 'dosu_maou', label: '度数魔王', sub: '度数2問コンボ10連',
+    color: '#06b6d4', isDosuMaouStage: true, isMaouStage: true,
+    filter: () => true,
+};
+
+const DAI_MAOU_STAGE = {
+    id: 'dai_maou', label: '大魔王', sub: '混合20連続正解',
+    color: '#ef4444', isDaiMaouStage: true, isMaouStage: true,
+    filter: () => true,
 };
 
 function allStringsCleared() {
@@ -1215,12 +1420,15 @@ function enemyLine(situation) {
 }
 
 function pickEnemy(wave) {
-    if (gStage.isPosMaouStage) return ENEMIES[7];  // ポジション魔王：常に
-    if (gStage.isMaouStage)    return ENEMIES[6];  // 魔王：常に
-    if (gFinalDragonPhase)     return ENEMIES[5];  // ドラゴン：FINAL BOSSのみ
-    if (wave%5===0 && wave>0) return ENEMIES[4];   // ウィザード（5波ごと）
-    if (wave%3===0 && wave>0) return ENEMIES[3];   // スケルトン（3波ごと）
-    return ENEMIES[Math.floor(Math.random()*3)];   // slime/bat/goblin
+    if (gStage.isDaiMaouStage)  return ENEMIES[10]; // 大魔王
+    if (gStage.isDosuMaouStage) return ENEMIES[9];  // 度数魔王
+    if (gStage.isHardStage)     return ENEMIES[8];  // ハード魔人
+    if (gStage.isPosMaouStage)  return ENEMIES[7];  // ポジション魔王：常に
+    if (gStage.isMaouStage)     return ENEMIES[6];  // 弦魔王：常に
+    if (gFinalDragonPhase)      return ENEMIES[5];  // ドラゴン：FINAL BOSSのみ
+    if (wave%5===0 && wave>0)   return ENEMIES[4];  // ウィザード（5波ごと）
+    if (wave%3===0 && wave>0)   return ENEMIES[3];  // スケルトン（3波ごと）
+    return ENEMIES[Math.floor(Math.random()*3)];    // slime/bat/goblin
 }
 
 // ── 出題 ──────────────────────────────────────────────────────
@@ -1249,6 +1457,12 @@ let gBusy=false, gAnswered=false, gQ=null;
 let gConsecutive=0, gQuizCount=0, gQuizCorrect=0;
 let gQuestionTime=0;
 let gFinalDragonPhase=false;
+let gHardPhase=0;    // 0=Q1(音名), 1=Q2(フレット番号)
+let gHardQ=null;     // {strIdx,rootFret,rootNote,interval,targetNote,targetFret}
+let gDosuConsec=0;   // 度数魔王の連続成功ペア数
+let gDosuFinalPhase=false; // 度数魔王ファイナルフェーズ
+let gDosuStrIdx=5;   // 度数魔王ファイナルの現在弦（5=6弦→0=1弦）
+let gDaiConsec=0;    // 大魔王の連続正解数
 let gTimerAF=null;
 const TIME_LIMIT=10000;
 
@@ -1363,9 +1577,12 @@ function startGame() {
     gLives=5; gCombo=0; gWave=0; gBusy=false;
     gConsecutive=0; gQuizCount=0; gQuizCorrect=0;
     gFinalDragonPhase=false;
+    gHardPhase=0; gHardQ=null;
+    gDosuConsec=0; gDosuFinalPhase=false; gDosuStrIdx=5;
+    gDaiConsec=0;
     gSFQueue=[];
     const sb = document.getElementById('streak-bar');
-    if (!gStage.isMaouStage) { sb.classList.add('visible'); updateStreakBar(); }
+    if (!gStage.isMaouStage && !gStage.isHardStage) { sb.classList.add('visible'); updateStreakBar(); }
     else sb.classList.remove('visible');
     buildFretboard(); updateHUD(); spawnEnemy();
 }
@@ -1493,6 +1710,9 @@ function spawnEnemy() {
 
 function askQuestion() {
     if (gBusy) return;
+    if (gDosuFinalPhase) { askDosuFinalQ(); return; }
+    if (gStage.isHardStage || gStage.isDosuMaouStage) { askHardQ1(); return; }
+    if (gStage.isDaiMaouStage && Math.random() < 0.5) { askHardQ1(true); return; }
     gAnswered=false; clearInds();
     const [s,f] = randomSF();
     gQ={s, f, note:getNote(s,f)};
@@ -1500,6 +1720,75 @@ function askQuestion() {
     setInd(s,f,'target pop');
     renderChoices(makeChoices(gQ.note));
     setTimeout(()=>playNote(s,f), 120);
+    startTimerBar();
+}
+
+function makeHardChoices_fret(strIdx, targetNote, targetFret) {
+    const pool = [];
+    for (let f=0; f<=12; f++) {
+        if (f !== targetFret && getNote(strIdx,f) !== targetNote) pool.push(f);
+    }
+    shuffle(pool);
+    const arr = [targetFret, ...pool.slice(0,3)]; shuffle(arr); return arr;
+}
+
+function askHardQ1(randomStr=false) {
+    if (gBusy) return;
+    gAnswered=false; gHardPhase=0; clearInds();
+    const strIdx = randomStr ? Math.floor(Math.random()*6) : gStage.strIdx;
+    const rootFret = Math.floor(Math.random()*12)+1;
+    const rootNote = getNote(strIdx, rootFret);
+    const interval = INTERVALS[Math.floor(Math.random()*INTERVALS.length)];
+    const targetNoteIdx = (OPEN_NOTES[strIdx]+rootFret+interval.semi)%12;
+    const targetNote = NOTES[targetNoteIdx];
+    let targetFret = (rootFret+interval.semi);
+    while (targetFret > 12) targetFret -= 12;
+    while (targetFret < 0)  targetFret += 12;
+    gHardQ = {strIdx, rootFret, rootNote, interval, targetNote, targetFret};
+    gQ = {s:strIdx, f:rootFret, note:targetNote};
+    const text = `${STR_JP[strIdx]}${rootFret}フレット(${rootNote})をルートとする${interval.name}の音は？`;
+    setSpeechBubble(text);
+    setInd(strIdx, rootFret, 'target pop');
+    renderChoices(makeChoices(targetNote));
+    setTimeout(()=>playNote(strIdx, rootFret), 120);
+    startTimerBar();
+}
+
+function askHardQ2() {
+    if (gBusy) return;
+    gAnswered=false; gHardPhase=1; clearInds();
+    const {strIdx, targetNote, targetFret, rootNote, interval} = gHardQ;
+    gQ = {s:strIdx, f:targetFret, note:String(targetFret), isHardQ2:true};
+    const text = `では${targetNote}は${STR_JP[strIdx]}の何フレット？`;
+    setSpeechBubble(text);
+    setInd(strIdx, targetFret, 'target pop');
+    const choices = makeHardChoices_fret(strIdx, targetNote, targetFret);
+    renderChoices(choices.map(String));
+    setTimeout(()=>playNote(strIdx, targetFret), 120);
+    startTimerBar();
+}
+
+function askDosuFinalQ() {
+    if (gBusy) return;
+    gAnswered=false; clearInds();
+    const strIdx = gDosuStrIdx;
+    const rootFret = Math.floor(Math.random()*12)+1;
+    const rootNote = getNote(strIdx, rootFret);
+    const interval = INTERVALS[Math.floor(Math.random()*INTERVALS.length)];
+    let targetFret = rootFret+interval.semi;
+    while (targetFret>12) targetFret-=12;
+    const targetNote = getNote(strIdx, targetFret);
+    gHardQ = {strIdx, rootFret, rootNote, interval, targetNote, targetFret};
+    gQ = {s:strIdx, f:rootFret, note:interval.name, isIntervalQ:true,
+          _rootNote:rootNote, _targetFret:targetFret, _targetNote:targetNote};
+    const text = `${STR_JP[strIdx]}${rootFret}F(${rootNote})→${STR_JP[strIdx]}${targetFret}F(${targetNote})は何度？`;
+    setSpeechBubble(text);
+    setInd(strIdx, rootFret, 'target pop');
+    const wrongIntervals = INTERVALS.filter(iv=>iv.name!==interval.name);
+    shuffle(wrongIntervals);
+    const choices = [interval.name, ...wrongIntervals.slice(0,3).map(iv=>iv.name)]; shuffle(choices);
+    renderChoices(choices);
+    setTimeout(()=>{ playNote(strIdx,rootFret); setTimeout(()=>playNote(strIdx,targetFret),400); }, 120);
     startTimerBar();
 }
 
@@ -1531,6 +1820,155 @@ function onAnswer(selected,btn) {
     });
     if (!isOk) btn.classList.add('ng');
     setInd(gQ.s,gQ.f,isOk?'correct pop':'wrong pop',gQ.note);
+
+    // ── 度数魔王ファイナルフェーズ ──────────────────────────────
+    if (gDosuFinalPhase) {
+        if (isOk) {
+            sfxHit();
+            gDosuStrIdx--;
+            gEnemyHP = Math.max(0, gDosuStrIdx+1); updateEnemyHP();
+            if (gDosuStrIdx < 0) {
+                gBusy=true;
+                setSpeechBubble(enemyLine('defeat'));
+                setResult('✨ 全弦制覇！完全勝利！！','ok');
+                setTimeout(()=>defeatEnemy(), 480);
+            } else {
+                setSpeechBubble(`残り${gDosuStrIdx+1}弦！続けろ！`);
+                setResult(`正解！ ${STR_JP[gDosuStrIdx]}へ！`,'ok');
+                setTimeout(()=>askDosuFinalQ(), 1000);
+            }
+        } else {
+            gCombo=0; updateCombo();
+            sfxMaouAttack(); playerHit();
+            const atkF=document.createElement('div'); atkF.className='maou-damage-flash';
+            document.body.appendChild(atkF); setTimeout(()=>atkF.remove(), 900);
+            gLives=Math.max(0,gLives-1); updateHUD();
+            gDosuStrIdx=5; gEnemyHP=6; gEnemyMaxHP=6; updateEnemyHP();
+            if (gLives===0) { gBusy=true; setTimeout(()=>showContinueModal(),900); return; }
+            const pF=gEnemy.lines?.finalWrong||gEnemy.lines.wrong;
+            setSpeechBubble(pF[Math.floor(Math.random()*pF.length)]);
+            setResult('不正解！6弦から再開！','miss');
+            const bodyF=`<div style="padding:4px 0;color:#f87171">正解の度数：<strong style="color:var(--gold)">${gQ.note}</strong></div>`
+                +`<div class="exp-steps">${STR_JP[gQ.s]}${gQ.f}F(${getNote(gQ.s,gQ.f)}) → ${STR_JP[gQ.s]}${gQ._targetFret}F(${gQ._targetNote})</div>`;
+            showExplainModal(false, ()=>askDosuFinalQ(), bodyF);
+        }
+        return;
+    }
+
+    // ── ハードモード / 度数魔王 / 大魔王 ──────────────────────
+    if (gStage.isHardStage || gStage.isDosuMaouStage || gStage.isDaiMaouStage) {
+        const isBoss2 = gStage.isDosuMaouStage || gStage.isDaiMaouStage;
+        const doScore = () => {
+            gCombo++;
+            const mult=Math.min(1+(gCombo-1)*0.3,3.5);
+            const crit=Math.random()<0.12;
+            const pts=Math.floor(gEnemy.base/gEnemy.hp*mult)*(crit?2:1);
+            gScore+=pts; const hi=getStageHi();
+            if (gScore>hi) { setStageHi(gScore); setTimeout(sfxLevelUp,250); }
+            sfxHit(); if (gCombo>=3) sfxCombo(Math.min(gCombo,12));
+            const sr=document.getElementById('enemy-sprite').getBoundingClientRect();
+            const cx=sr.left+sr.width/2;
+            floatText(`+${pts.toLocaleString()}`,cx,sr.top-8,crit?'#f87171':'var(--gold)',crit?'2rem':'1.8rem');
+            if (crit) floatText('CRITICAL!!',cx,sr.top-46,'#fb923c','1.2rem');
+            enemyHit(); updateCombo(); updateHUD();
+            gEnemyHP--; updateEnemyHP();
+        };
+        const doMaouWrong = (bodyHtml) => {
+            gCombo=0; updateCombo();
+            sfxMaouAttack(); playerHit();
+            const atk2=document.createElement('div'); atk2.className='maou-damage-flash';
+            document.body.appendChild(atk2); setTimeout(()=>atk2.remove(), 900);
+            gLives=Math.max(0,gLives-1); updateHUD();
+            gEnemyHP=gEnemyMaxHP; if (gStage.isDosuMaouStage) gDosuConsec=0;
+            updateEnemyHP();
+            if (gLives===0) { gBusy=true; setTimeout(()=>showContinueModal(),900); return true; }
+            setSpeechBubble(enemyLine('wrong'));
+            showExplainModal(false, maouRecoverThenAsk, bodyHtml);
+            return false;
+        };
+        const doHardWrong = (bodyHtml) => {
+            gCombo=0; updateCombo();
+            sfxMiss(); playerHit();
+            gLives=Math.max(0,gLives-1); updateHUD();
+            if (gLives===0) { gBusy=true; setTimeout(()=>showContinueModal(),900); return true; }
+            setSpeechBubble(enemyLine('wrong'));
+            showExplainModal(false, ()=>{ gHardPhase=0; askQuestion(); }, bodyHtml);
+            return false;
+        };
+
+        if (gHardPhase === 0) {
+            // Q1: 音名識別（またはhardQ1なし＝大魔王の通常問）
+            if (isOk) {
+                if (gStage.isDaiMaouStage) {
+                    // 大魔王：2問コンボなし、直接HP-1
+                    doScore(); gHardQ=null;
+                    if (gEnemyHP<=0) {
+                        gBusy=true; setSpeechBubble(enemyLine('defeat'));
+                        setResult('✨ 撃破！大魔王討伐！！','ok');
+                        setTimeout(()=>defeatEnemy(), 480);
+                    } else {
+                        const sr3=document.getElementById('enemy-sprite').getBoundingClientRect();
+                        const cx3=sr3.left+sr3.width/2;
+                        floatText(`残り${gEnemyHP}`,cx3,sr3.top-28,'#ef4444','1rem');
+                        setSpeechBubble(enemyLine('hit'));
+                        setResult(`正解！ あと${gEnemyHP}問連続！`,'ok');
+                        setTimeout(()=>askQuestion(), 900);
+                    }
+                } else {
+                    // ハード・度数魔王：Q2へ
+                    setResult('正解！ 次：フレット番号は？','ok');
+                    setSpeechBubble(`正解！では${gHardQ.targetNote}は${STR_JP[gHardQ.strIdx]}の何フレット？`);
+                    setTimeout(()=>askHardQ2(), 800);
+                }
+            } else {
+                const body1 = gHardQ
+                    ? `<div style="padding:4px 0;color:#f87171">正解の音：<strong style="color:var(--gold)">${gHardQ.targetNote}</strong></div>`
+                      +`<div class="exp-steps">${STR_JP[gHardQ.strIdx]}${gHardQ.rootFret}F(${gHardQ.rootNote}) + ${gHardQ.interval.name}(${gHardQ.interval.semi}半音) = ${gHardQ.targetNote}</div>`
+                    : null;
+                if (isBoss2) { if (doMaouWrong(body1)) return; setResult('不正解！HP全回復！','miss'); }
+                else         { if (doHardWrong(body1)) return; setResult(`不正解… 正解は ${gQ.note}`,'miss'); }
+            }
+        } else {
+            // Q2: フレット番号識別
+            if (isOk) {
+                doScore();
+                if (gStage.isDosuMaouStage) {
+                    gDosuConsec++;
+                    const sr4=document.getElementById('enemy-sprite').getBoundingClientRect();
+                    floatText(`コンボ ${gDosuConsec}/10`,sr4.left+sr4.width/2,sr4.top-30,'#22d3ee','0.9rem');
+                }
+                if (gEnemyHP<=0) {
+                    gBusy=true;
+                    if (gStage.isDosuMaouStage) {
+                        // 度数魔王通常フェーズ突破→ファイナルへ
+                        gDosuFinalPhase=true; gDosuStrIdx=5;
+                        gEnemyHP=6; gEnemyMaxHP=6; updateEnemyHP();
+                        sfxBossWarn();
+                        const pFA=gEnemy.lines?.finalAppear||gEnemy.lines.appear;
+                        setSpeechBubble(pFA[Math.floor(Math.random()*pFA.length)]);
+                        showOverlay('★ 最終試練！6弦→1弦！','#22d3ee','rgba(6,182,212,0.18)',()=>{});
+                        setTimeout(()=>{ gBusy=false; askDosuFinalQ(); }, 2200);
+                    } else {
+                        setSpeechBubble(enemyLine('defeat'));
+                        setResult('✨ 撃破！','ok');
+                        setTimeout(()=>defeatEnemy(), 480);
+                    }
+                } else {
+                    gHardPhase=0;
+                    setSpeechBubble(enemyLine('hit'));
+                    setResult(`コンボ成功！ ${(elapsed/1000).toFixed(1)}秒`,'ok');
+                    setTimeout(()=>askQuestion(), 900);
+                }
+            } else {
+                const body2 = `<div style="padding:4px 0;color:#f87171">正解のフレット：<strong style="color:var(--gold)">${gHardQ.targetFret}フレット</strong></div>`
+                    +`<div class="exp-steps">${STR_JP[gHardQ.strIdx]}${gHardQ.targetFret}F = ${gHardQ.targetNote}</div>`;
+                gHardPhase=0;
+                if (isBoss2) { if (doMaouWrong(body2)) return; setResult('不正解！HP全回復！','miss'); }
+                else         { if (doHardWrong(body2)) return; setResult(`不正解… ${gHardQ.targetFret}フレット`,'miss'); }
+            }
+        }
+        return;
+    }
 
     if (isOk) {
         gCombo++;
@@ -1698,13 +2136,30 @@ function defeatEnemy() {
     const d=leveled?650:0;
     if (leveled) setTimeout(()=>{sfxLevelUp();showOverlay('LEVEL UP!','#f5d070','rgba(245,208,112,0.12)',()=>{});},d);
 
-    if (gStage.isMaouStage) {
+    if (gStage.isHardStage) {
+        setHardCleared(gStage.strIdx);
+        const d2=d+(leveled?1250:500);
+        setTimeout(()=>{
+            sfxStageClear(); burstFireworks();
+            showOverlay(`🔥 ${gStage.label} 制覇！`,'#fbbf24','rgba(245,158,11,0.18)',()=>{});
+            setTimeout(()=>showStageSelect(), 2800);
+        }, d2);
+    } else if (gStage.isMaouStage) {
+        // 度数魔王・大魔王の討伐記録
+        if (gStage.isDosuMaouStage) { setDosuCleared(); gDosuFinalPhase=false; }
         const d2=d+(leveled?1250:600);
-        const victoryText = gStage.isPosMaouStage
-            ? '🎵★ ポジション魔王討伐！完全制覇！'
-            : '★ 魔王討伐！ 真の覇者！';
-        const victoryColor = gStage.isPosMaouStage ? '#e879f9' : '#c084fc';
-        const victoryBg    = gStage.isPosMaouStage ? 'rgba(232,121,249,0.18)' : 'rgba(147,51,234,0.18)';
+        const victoryText = gStage.isPosMaouStage ? '🎵★ ポジション魔王討伐！完全制覇！'
+            : gStage.isDosuMaouStage ? '🎯★ 度数魔王討伐！度数を完全習得！'
+            : gStage.isDaiMaouStage  ? '💀★ 大魔王討伐！最高の称号を得た！'
+            : '⚔️★ 弦魔王討伐！真の覇者！';
+        const victoryColor = gStage.isPosMaouStage ? '#e879f9'
+            : gStage.isDosuMaouStage ? '#22d3ee'
+            : gStage.isDaiMaouStage  ? '#f87171'
+            : '#c084fc';
+        const victoryBg = gStage.isPosMaouStage ? 'rgba(232,121,249,0.18)'
+            : gStage.isDosuMaouStage ? 'rgba(6,182,212,0.18)'
+            : gStage.isDaiMaouStage  ? 'rgba(239,68,68,0.18)'
+            : 'rgba(147,51,234,0.18)';
         setTimeout(()=>{
             sfxStageClear(); burstFireworks();
             showOverlay(victoryText, victoryColor, victoryBg, ()=>{});
@@ -1905,11 +2360,12 @@ function onRestart() {
     showStageSelect();
 }
 
-function showExplainModal(isOk, nextFn) {
+function showExplainModal(isOk, nextFn, customBody=null) {
+    const answerText = gQ.isIntervalQ ? `度数：${gQ.note}` : `${gQ.note}`;
     document.getElementById('explain-modal-result').innerHTML = isOk
         ? `<span style="color:var(--ok)">✓ 正解！</span>`
-        : `<span style="color:var(--ng)">✗ 不正解… 正解は <span style="color:var(--gold);font-weight:900">${gQ.note}</span></span>`;
-    document.getElementById('explain-modal-body').innerHTML = buildIntervalExplanation(gQ.s, gQ.f);
+        : `<span style="color:var(--ng)">✗ 不正解… 正解は <span style="color:var(--gold);font-weight:900">${answerText}</span></span>`;
+    document.getElementById('explain-modal-body').innerHTML = customBody ?? buildIntervalExplanation(gQ.s, gQ.f);
     const speech = document.getElementById('speech-text')?.textContent || '';
     const speechEl = document.getElementById('explain-enemy-speech');
     speechEl.textContent = speech ? `${gEnemy?.name ?? ''}「${speech}」` : '';
