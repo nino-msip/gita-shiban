@@ -216,9 +216,19 @@
       border-radius: 10px;
     }
 
-    @media (max-width: 600px) {
-      .card-header { flex-direction: column; gap: 10px; }
+    @media (max-width: 640px) {
+      .hero { padding: 48px 16px; }
+      .hero .subtitle { font-size: 15px; }
+      .hero .warning { font-size: 13px; padding: 10px 16px; }
+      .container { padding: 32px 16px; }
+      .intro-box { padding: 20px 16px; }
+      .card-header { flex-direction: column; gap: 10px; padding: 18px 16px 14px; }
       .card-number { width: 32px; height: 32px; font-size: 12px; }
+      .card-body { padding: 16px; }
+      .prompt-box pre { font-size: 12px; padding: 14px; overflow-x: auto; }
+      .category-header h2 { font-size: 20px; }
+      .closing-box { padding: 28px 16px; }
+      .use-case { padding: 10px 12px; }
     }
 
     .use-case {
@@ -242,6 +252,36 @@
       font-size: 14px;
       color: #8090b8;
       margin: 0;
+    }
+
+    .prompt-box-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .copy-btn {
+      background: rgba(79, 127, 255, 0.15);
+      border: 1px solid rgba(79, 127, 255, 0.3);
+      color: #4f7fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.3px;
+    }
+
+    .copy-btn:hover {
+      background: rgba(79, 127, 255, 0.28);
+      border-color: rgba(79, 127, 255, 0.6);
+    }
+
+    .copy-btn.copied {
+      background: rgba(50, 200, 120, 0.15);
+      border-color: rgba(50, 200, 120, 0.4);
+      color: #32c878;
     }
   </style>
 </head>
@@ -1100,5 +1140,27 @@ LinkedIn見出し＋サマリーの5バージョンを作成（各300文字以�
   </div>
 
 </div>
+<script>
+  document.querySelectorAll('.prompt-box').forEach(box => {
+    const header = box.querySelector('.prompt-box-header');
+    const pre = box.querySelector('pre');
+
+    const btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = 'コピー';
+    header.appendChild(btn);
+
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(pre.innerText).then(() => {
+        btn.textContent = 'コピー完了 ✓';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'コピー';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    });
+  });
+</script>
 </body>
 </html>
