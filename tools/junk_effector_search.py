@@ -122,7 +122,7 @@ def _get_with_retry(
 ) -> requests.Response | None:
     for attempt in range(max_retries + 1):
         try:
-            resp = session.get(url, timeout=REQUEST_TIMEOUT)
+            resp = session.get(url, timeout=REQUEST_TIMEOUT, verify=False)
             resp.raise_for_status()
             return resp
         except requests.exceptions.HTTPError as e:
@@ -447,12 +447,26 @@ async def main() -> None:
 
     if PLAYWRIGHT_AVAILABLE:
         try:
+            # 既知のフォールバック実行パス（環境依存）
+            _fallback_paths = [
+                "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
+                "/usr/bin/chromium-browser",
+                "/usr/bin/chromium",
+                "/usr/bin/google-chrome",
+            ]
+            _exe = next((p for p in _fallback_paths if Path(p).exists()), None)
+            _launch_opts: dict = {"headless": True}
+            if _exe:
+                logger.info(f"Chromium 実行パス: {_exe}")
+                _launch_opts["executable_path"] = _exe
+
             async with async_playwright() as pw:
-                browser = await pw.chromium.launch(headless=True)
+                browser = await pw.chromium.launch(**_launch_opts)
                 ctx = await browser.new_context(
                     user_agent=BASE_HEADERS["User-Agent"],
                     locale="ja-JP",
                     extra_http_headers={"Accept-Language": "ja-JP,ja;q=0.9"},
+                    ignore_https_errors=True,
                 )
                 logger.info("=== メルカリ・ラクマ 同時検索開始 ===")
                 mercari_items, rakuma_items = await asyncio.gather(
