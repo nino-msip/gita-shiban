@@ -1,0 +1,132 @@
+name: ジャンクエフェクター 定期リサーチ
+
+on:
+  schedule:
+    - cron: '0 23 * * *'   # 毎日 08:00 JST (= 23:00 UTC 前日)
+    - cron: '30 8 * * *'   # 毎日 17:30 JST (= 08:30 UTC)
+  workflow_dispatch:         # 手動実行ボタン
+
+permissions:
+  contents: write            # report.md をリポジトリにコミットするため
+
+env:
+  TZ: Asia/Tokyo
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: tools/requirements_junk_search.txt
+
+      - name: Install Python dependencies
+        run: pip install -r tools/requirements_junk_search.txt
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: pw-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ hashFiles('tools/requirements_junk_search.txt') }}
+
+      - name: Install Playwright Chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: playwright install chromium --with-deps
+
+      - name: Install Chromium deps (キャッシュヒット時)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: playwright install-deps chromium
+
+      - name: Run scraper
+        run: python tools/junk_effector_search.py
+
+      - name: Commit updated report
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
+          git add tools/report.md tools/report_summary.json
+          if git diff --cached --quiet; then
+            echo "変更なし。コミットをスキップ。"
+          else
+            git commit -m "chore: update junk effector report $(date +'%Y-%m-%d %H:%M JST')"
+            git push
+          fi
+
+      - name: Send LINE notification (success)
+        if: success()
+        env:
+          LINE_NOTIFY_TOKEN: ${{ secrets.LINE_NOTIFY_TOKEN }}
+        run: |
+          python - <<'PYEOF'
+          import json, os, sys, urllib.request, urllib.parse
+
+          token = os.environ.get("LINE_NOTIFY_TOKEN", "")
+          if not token:
+              print("LINE_NOTIFY_TOKEN が未設定のためスキップ")
+              sys.exit(0)
+
+          with open("tools/report_summary.json", encoding="utf-8") as f:
+              data = json.load(f)
+
+          sep = "─" * 22
+          lines = [
+              "",
+              "\U0001f3b8 ジャンクエフェクター リサーチ完了",
+              sep,
+              f"⏰ {data['generated_at']}",
+          ]
+          for site, count in data["sites"].items():
+              lines.append(f"  {site}: {count} 件")
+          lines += [sep, f"合計: {data['total']} 件"]
+
+          msg = "\n".join(lines)
+          body = urllib.parse.urlencode({"message": msg}).encode()
+          req = urllib.request.Request(
+              "https://notify-api.line.me/api/notify",
+              data=body,
+              headers={"Authorization": f"Bearer {token}"},
+              method="POST",
+          )
+          with urllib.request.urlopen(req) as resp:
+              print(f"LINE status: {resp.status}")
+          PYEOF
+
+      - name: Send LINE notification (failure)
+        if: failure()
+        env:
+          LINE_NOTIFY_TOKEN: ${{ secrets.LINE_NOTIFY_TOKEN }}
+        run: |
+          python - <<'PYEOF'
+          import os, sys, urllib.request, urllib.parse
+          from datetime import datetime
+
+          token = os.environ.get("LINE_NOTIFY_TOKEN", "")
+          if not token:
+              print("LINE_NOTIFY_TOKEN が未設定のためスキップ")
+              sys.exit(0)
+
+          now = datetime.now().strftime("%Y-%m-%d %H:%M")
+          msg = (
+              f"\n⚠️ ジャンクエフェクター リサーチ 失敗\n"
+              f"⏰ {now}\n"
+              "GitHub Actions を確認してください。"
+          )
+          body = urllib.parse.urlencode({"message": msg}).encode()
+          req = urllib.request.Request(
+              "https://notify-api.line.me/api/notify",
+              data=body,
+              headers={"Authorization": f"Bearer {token}"},
+              method="POST",
+          )
+          with urllib.request.urlopen(req) as resp:
+              print(f"LINE status: {resp.status}")
+          PYEOF
