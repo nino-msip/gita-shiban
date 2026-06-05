@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import re
 import sys
@@ -474,11 +475,21 @@ async def main() -> None:
         results["ラクマ"]   = []
 
     # レポート生成
-    report_path = Path(__file__).parent / "report.md"
-    report_path.write_text(build_report(results), encoding="utf-8")
+    base_dir = Path(__file__).parent
+    base_dir.joinpath("report.md").write_text(build_report(results), encoding="utf-8")
 
     elapsed = time.time() - t0
     total   = sum(len(v) for v in results.values())
+
+    # LINE 通知用サマリー JSON
+    summary = {
+        "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "sites": {site: len(items) for site, items in results.items()},
+        "total": total,
+    }
+    base_dir.joinpath("report_summary.json").write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
     logger.info("=" * 52)
     logger.info(f"完了（{elapsed:.1f}秒）→ report.md を生成しました")
