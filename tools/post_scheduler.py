@@ -72,7 +72,7 @@ def main():
     today = now_jst.date()
     current_hour = now_jst.hour
 
-    posts = load_all_posts()
+    posts = load_all_posts("marketing/posts")
 
     targets = [
         p for p in posts
