@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ペダルボード・プランナー — 国産エフェクター対応</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --bg:     #17181c;
+  --panel:  #212228;
+  --panel2: #2a2b33;
+  --line:   #3a3c46;
+  --text:   #e8e8ee;
+  --muted:  #9a9cab;
+  --accent: #f0a437;
+  --accent2:#4fa3e0;
+  --danger: #e0564f;
+  --ok:     #57c47a;
+}
+
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex; flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+  user-select: none; -webkit-user-select: none;
+}
+
+/* ── header ── */
+header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  padding-top: max(8px, env(safe-area-inset-top));
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+header h1 { font-size: 15px; font-weight: 700; letter-spacing: .02em; white-space: nowrap; }
+header h1 .sub { color: var(--accent); }
+select, button, input {
+  font-family: inherit; font-size: 13px; color: var(--text);
+  background: var(--panel2); border: 1px solid var(--line);
+  border-radius: 8px; padding: 6px 10px;
+}
+button { cursor: pointer; }
+button:active { transform: translateY(1px); }
+button.primary { background: var(--accent); color: #1a1205; border-color: var(--accent); font-weight: 700; }
+button.ghost { background: transparent; }
+#boardSelect { max-width: 46vw; }
+.spacer { flex: 1; }
+.iconbtn { min-width: 36px; text-align: center; padding: 6px 8px; }
+
+/* ── stage ── */
+#stageWrap {
+  flex: 1; overflow: auto;
+  display: flex;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.04), transparent 60%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.015) 0 2px, transparent 2px 90px),
+    var(--bg);
+  touch-action: pan-x pan-y;
+}
+#stageInner { margin: auto; padding: 26px; }
+#board {
+  position: relative;
+  background: linear-gradient(180deg, #26272c, #1e1f24);
+  border-radius: 10px;
+  box-shadow: 0 14px 34px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06);
+  border: 1px solid #000;
+}
+.rail {
+  position: absolute; left: 0; right: 0;
+  background: linear-gradient(180deg, #3c3e45, #2e3037 55%, #26282e);
+  border-top: 1px solid #4d505a; border-bottom: 1px solid #14151a;
+  border-radius: 3px;
+}
+#boardLabel {
+  position: absolute; bottom: -20px; right: 2px;
+  font-size: 11px; color: var(--muted); white-space: nowrap;
+}
+
+/* ── pedals ── */
+.pedal { position: absolute; touch-action: none; cursor: grab; }
+.pedal.dragging { cursor: grabbing; z-index: 30 !important; }
+.pedal .body {
+  position: absolute; top: 50%; left: 50%;
+  border-radius: 8%/6%;
+  box-shadow: 0 4px 10px rgba(0,0,0,.55), inset 0 2px 3px rgba(255,255,255,.28), inset 0 -3px 5px rgba(0,0,0,.35);
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,.5);
+}
+.pedal .knobs { display: flex; gap: 12%; justify-content: center; width: 100%; padding-top: 7%; }
+.pedal .knob {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #666, #1c1c1f 70%);
+  border: 1px solid rgba(0,0,0,.6);
+  box-shadow: 0 1px 2px rgba(0,0,0,.5);
+}
+.pedal .pname {
+  font-weight: 700; text-align: center; line-height: 1.15;
+  padding: 0 4%; width: 100%;
+  text-shadow: 0 1px 1px rgba(0,0,0,.35);
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+}
+.pedal .fsw {
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #f2f2f2, #9a9aa2 55%, #55555c);
+  border: 2px solid rgba(0,0,0,.55);
+  margin-bottom: 8%;
+  box-shadow: 0 2px 3px rgba(0,0,0,.5);
+}
+.pedal.selected .body { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* ── selection toolbar ── */
+#selBar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  background: var(--panel); border-top: 1px solid var(--line);
+}
+#selBar:not(.on) button { opacity: .35; pointer-events: none; }
+#selBar:not(.on) #selName { color: var(--muted); font-weight: 400; }
+#selName { font-size: 12px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--accent); font-weight: 700; }
+
+/* ── info bar ── */
+#infoBar {
+  display: flex; gap: 14px; align-items: center;
+  padding: 6px 12px; font-size: 12px; color: var(--muted);
+  background: var(--panel); border-top: 1px solid var(--line);
+  overflow-x: auto; white-space: nowrap;
+}
+#infoBar b { color: var(--text); }
+#infoBar .warn { color: var(--danger); font-weight: 700; }
+
+/* ── library ── */
+#libToggle {
+  position: fixed; right: 14px; bottom: calc(96px + env(safe-area-inset-bottom));
+  z-index: 40;
+  width: 54px; height: 54px; border-radius: 50%;
+  background: var(--accent); color: #1a1205; border: none;
+  font-size: 26px; font-weight: 700;
+  box-shadow: 0 6px 18px rgba(0,0,0,.5);
+}
+#library {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  border-radius: 16px 16px 0 0;
+  max-height: 62dvh;
+  display: none; flex-direction: column;
+  box-shadow: 0 -10px 30px rgba(0,0,0,.5);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+#library.on { display: flex; }
+#libHead { display: flex; gap: 8px; padding: 10px 12px 6px; align-items: center; }
+#libSearch { flex: 1; }
+#brandChips {
+  display: flex; gap: 6px; overflow-x: auto; padding: 4px 12px 8px;
+  scrollbar-width: none;
+}
+#brandChips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: 0 0 auto; font-size: 12px; padding: 5px 11px; border-radius: 999px;
+  background: var(--panel2); border: 1px solid var(--line); color: var(--muted);
+}
+.chip.on { background: var(--accent); border-color: var(--accent); color: #1a1205; font-weight: 700; }
+#libList { overflow-y: auto; padding: 4px 12px 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 8px; }
+.card {
+  background: var(--panel2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 8px 10px; cursor: pointer; display: flex; flex-direction: column; gap: 3px;
+}
+.card:active { background: #34363f; }
+.card .cb { display: flex; align-items: center; gap: 6px; }
+.card .sw { width: 12px; height: 12px; border-radius: 3px; flex: 0 0 auto; border: 1px solid rgba(0,0,0,.4); }
+.card .nm { font-size: 12px; font-weight: 700; line-height: 1.25; }
+.card .mt { font-size: 10.5px; color: var(--muted); }
+.card.custom { border-style: dashed; border-color: var(--accent); color: var(--accent); align-items: center; justify-content: center; font-weight: 700; }
+
+/* ── dialogs ── */
+.overlay {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(0,0,0,.55); display: none;
+  align-items: center; justify-content: center; padding: 18px;
+}
+.overlay.on { display: flex; }
+.dialog {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 16px; width: 100%; max-width: 380px; max-height: 84dvh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.dialog h2 { font-size: 15px; }
+.dialog label { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+.dialog .row { display: flex; gap: 8px; }
+.dialog .row > * { flex: 1; }
+.dialog .menuItem {
+  text-align: left; padding: 11px 12px; font-size: 14px; background: var(--panel2);
+}
+.saveItem { display: flex; gap: 8px; align-items: center; }
+.saveItem .nm { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; }
+
+#toast {
+  position: fixed; left: 50%; bottom: calc(120px + env(safe-area-inset-bottom));
+  transform: translateX(-50%); z-index: 99;
+  background: #000c; color: #fff; font-size: 13px;
+  padding: 9px 16px; border-radius: 999px;
+  opacity: 0; transition: opacity .25s; pointer-events: none; white-space: nowrap;
+}
+#toast.on { opacity: 1; }
+
+input[type=color] { padding: 2px; height: 34px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎛 ペダルボード<span class="sub">・プランナー</span></h1>
+  <select id="boardSelect"></select>
+  <div class="spacer"></div>
+  <button class="iconbtn" id="zoomOut">−</button>
+  <button class="iconbtn" id="zoomIn">＋</button>
+  <button class="iconbtn" id="menuBtn">☰</button>
+</header>
+
+<div id="stageWrap">
+  <div id="stageInner">
+    <div id="board">
+      <div id="boardLabel"></div>
+    </div>
+  </div>
+</div>
+
+<div id="selBar">
+  <span id="selName"></span>
+  <button id="rotBtn">⟳ 90°</button>
+  <button id="dupBtn">複製</button>
+  <button id="delBtn" style="color:var(--danger)">削除</button>
+</div>
+
+<div id="infoBar">
+  <span>🎛 <b id="statCount">0</b> 台</span>
+  <span>⚡ 合計 <b id="statMa">0</b> mA <span style="font-size:10px">(目安)</span></span>
+  <span>📐 占有 <b id="statOcc">0</b>%</span>
+</div>
+
+<button id="libToggle">＋</button>
+
+<div id="library">
+  <div id="libHead">
+    <input id="libSearch" type="search" placeholder="ペダルを検索…">
+    <button id="libClose" class="ghost">閉じる</button>
+  </div>
+  <div id="brandChips"></div>
+  <div id="libList"></div>
+</div>
+
+<!-- menu -->
+<div class="overlay" id="menuOverlay">
+  <div class="dialog">
+    <h2>メニュー</h2>
+    <button class="menuItem" id="mSave">💾 名前を付けて保存</button>
+    <button class="menuItem" id="mLoad">📂 保存したボードを開く</button>
+    <button class="menuItem" id="mShare">🔗 共有URLをコピー</button>
+    <button class="menuItem" id="mPng">🖼 PNG画像で書き出し</button>
+    <button class="menuItem" id="mJson">📄 JSONで書き出し</button>
+    <button class="menuItem" id="mImport">📥 JSONを読み込み</button>
+    <button class="menuItem" id="mClear" style="color:var(--danger)">🗑 ボードを空にする</button>
+    <div style="font-size:11px;color:var(--muted);line-height:1.5">
+      ※ 寸法・消費電流はカタログ値等をもとにした目安です。実際の製品と異なる場合があります。
+    </div>
+    <button id="menuClose">閉じる</button>
+  </div>
+</div>
+
+<!-- custom pedal -->
+<div class="overlay" id="customOverlay">
+  <div class="dialog">
+    <h2>カスタムペダルを追加</h2>
+    <label>名前<input id="cName" placeholder="例: 自作ファズ"></label>
+    <div class="row">
+      <label>幅 (mm)<input id="cW" type="number" value="73" min="20" max="600"></label>
+      <label>奥行 (mm)<input id="cD" type="number" value="129" min="20" max="600"></label>
+    </div>
+    <div class="row">
+      <label>消費電流 (mA)<input id="cMa" type="number" value="20" min="0" max="3000"></label>
+      <label>色<input id="cColor" type="color" value="#7a5ec4"></label>
+    </div>
+    <div class="row">
+      <button id="cCancel">キャンセル</button>
+      <button id="cAdd" class="primary">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- custom board -->
+<div class="overlay" id="cbOverlay">
+  <div class="dialog">
+    <h2>カスタムボードサイズ</h2>
+    <div class="row">
+      <label>幅 (mm)<input id="cbW" type="number" value="500" min="100" max="2000"></label>
+      <label>奥行 (mm)<input id="cbD" type="number" value="300" min="80" max="1000"></label>
+    </div>
+    <div class="row">
+      <button id="cbCancel">キャンセル</button>
+      <button id="cbOk" class="primary">変更する</button>
+    </div>
+  </div>
+</div>
+
+<!-- saves -->
+<div class="overlay" id="saveOverlay">
+  <div class="dialog">
+    <h2>保存したボード</h2>
+    <div id="saveList" style="display:flex;flex-direction:column;gap:8px"></div>
+    <button id="saveClose">閉じる</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<input type="file" id="fileInput" accept=".json,application/json" style="display:none">
+
+<script>
+'use strict';
+
+/* ═══════════ ボード定義 [name, W(mm), D(mm)] ═══════════ */
+const BOARDS = [
+  ['Pedaltrain Nano',      356, 140],
+  ['Pedaltrain Nano+',     457, 140],
+  ['Pedaltrain Metro 16',  406, 203],
+  ['Pedaltrain Metro 20',  508, 203],
+  ['Pedaltrain Metro 24',  610, 203],
+  ['Pedaltrain Classic JR',457, 318],
+  ['Pedaltrain Classic 1', 559, 318],
+  ['Pedaltrain Classic 2', 610, 318],
+  ['Pedaltrain Novo 18',   457, 368],
+  ['Pedaltrain Novo 24',   610, 368],
+  ['Pedaltrain Terra 42',  1067,368],
+  ['すのこ風 40×30cm',      400, 300],
+  ['エフェクターケース EC45', 450, 320],
+];
+
+/* ═══════════ ペダルDB [brand, name, type, W, D, mA, color] ═══════════
+   寸法(mm)・消費電流(mA)はカタログ値等をもとにした概算値 */
+const PEDALS = [
+  // ── BOSS コンパクト (73×129) ──
+  ['BOSS','SD-1 Super OverDrive','OD',73,129,5,'#e8c020'],
+  ['BOSS','BD-2 Blues Driver','OD',73,129,15,'#3a6fc4'],
+  ['BOSS','BD-2W Blues Driver 技','OD',73,129,30,'#2f5da8'],
+  ['BOSS','OD-3 OverDrive','OD',73,129,25,'#d8a818'],
+  ['BOSS','OD-1X OverDrive','OD',73,129,60,'#c89010'],
+  ['BOSS','DS-1 Distortion','DS',73,129,4,'#e07818'],
+  ['BOSS','MT-2 Metal Zone','DS',73,129,20,'#a83028'],
+  ['BOSS','ML-2 Metal Core','DS',73,129,30,'#333338'],
+  ['BOSS','HM-2W Heavy Metal 技','DS',73,129,35,'#d0d0d4'],
+  ['BOSS','FZ-5 Fuzz','FZ',73,129,25,'#b8b8be'],
+  ['BOSS','CS-3 Compression Sustainer','COMP',73,129,12,'#4a90d0'],
+  ['BOSS','GE-7 Equalizer','EQ',73,129,10,'#e8e8ec'],
+  ['BOSS','NS-2 Noise Suppressor','NR',73,129,20,'#e8e8ec'],
+  ['BOSS','TU-3 Chromatic Tuner','TUNER',73,129,30,'#e8e8ec'],
+  ['BOSS','CE-2W Chorus 技','MOD',73,129,65,'#68a8e0'],
+  ['BOSS','CH-1 Super Chorus','MOD',73,129,20,'#58b8e8'],
+  ['BOSS','DC-2W Dimension C 技','MOD',73,129,55,'#8898a8'],
+  ['BOSS','PH-3 Phase Shifter','MOD',73,129,18,'#48a058'],
+  ['BOSS','BF-3 Flanger','MOD',73,129,38,'#9058c0'],
+  ['BOSS','TR-2 Tremolo','MOD',73,129,15,'#48b878'],
+  ['BOSS','DD-3T Digital Delay','DLY',73,129,90,'#e8e8ec'],
+  ['BOSS','DD-8 Digital Delay','DLY',73,129,105,'#e8e8ec'],
+  ['BOSS','DM-2W Delay 技','DLY',73,129,35,'#d05878'],
+  ['BOSS','RV-6 Reverb','RVB',73,129,90,'#484858'],
+  ['BOSS','OC-5 Octave','PITCH',73,129,60,'#a87848'],
+  ['BOSS','AW-3 Dynamic Wah','FILTER',73,129,30,'#c0a030'],
+  ['BOSS','SY-1 Synthesizer','SYNTH',73,129,150,'#3888c8'],
+  ['BOSS','RC-1 Loop Station','LOOP',73,129,85,'#d04848'],
+  ['BOSS','RC-5 Loop Station','LOOP',73,129,170,'#c04040'],
+  // ── BOSS 200/500/マルチ ──
+  ['BOSS','DD-200 Digital Delay','DLY',101,138,200,'#404048'],
+  ['BOSS','RV-200 Reverb','RVB',101,138,200,'#404048'],
+  ['BOSS','EQ-200 Graphic EQ','EQ',101,138,170,'#404048'],
+  ['BOSS','OD-200 Hybrid Drive','OD',101,138,140,'#404048'],
+  ['BOSS','MD-200 Modulation','MOD',101,138,190,'#404048'],
+  ['BOSS','RC-500 Loop Station','LOOP',170,138,300,'#b03838'],
+  ['BOSS','MS-3 Multi Effects Switcher','SW',173,135,450,'#38383e'],
+  ['BOSS','GT-1000CORE','MULTI',173,135,1000,'#28282e'],
+  // ── Ibanez / Maxon ──
+  ['Ibanez','TS9 Tube Screamer','OD',74,124,8,'#3a9a58'],
+  ['Ibanez','TS808 Tube Screamer','OD',74,124,8,'#2f8a4c'],
+  ['Ibanez','TS Mini','OD',44,90,8,'#3a9a58'],
+  ['Maxon','OD808 Overdrive','OD',74,124,6,'#3a9a58'],
+  ['Maxon','OD-9 Overdrive','OD',74,124,6,'#3a9a58'],
+  ['Maxon','CP101 Compressor','COMP',74,124,8,'#5878b0'],
+  ['Maxon','AD-9 Pro Analog Delay','DLY',74,124,30,'#b04898'],
+  // ── One Control (ミニ 39×100) ──
+  ['One Control','Persian Green Screamer','OD',39,100,5,'#1a8a7a'],
+  ['One Control','Strawberry Red Overdrive','OD',39,100,5,'#c83848'],
+  ['One Control','Lingonberry OverDrive','OD',39,100,5,'#a03050'],
+  ['One Control','Anodized Brown Distortion','DS',39,100,5,'#8a5a2a'],
+  ['One Control','Baltic Blue Fuzz','FZ',39,100,1,'#2858a0'],
+  ['One Control','Granith Grey Booster','BST',39,100,3,'#787880'],
+  ['One Control','Sonic Blue Twanger','AMP',39,100,5,'#4888c8'],
+  ['One Control','Purple Humper','AMP',39,100,5,'#7848a8'],
+  ['One Control','Little Copper Chorus','MOD',39,100,20,'#b87838'],
+  ['One Control','Dimension Blue Monger','MOD',39,100,20,'#3868b0'],
+  ['One Control','Sea Turquoise Delay','DLY',39,100,25,'#28a0a8'],
+  ['One Control','Prussian Blue Reverb','RVB',39,100,30,'#204878'],
+  ['One Control','Lemon Yellow Compressor','COMP',39,100,5,'#d8c030'],
+  ['One Control','Sonic Silver Peg','AMP',39,100,10,'#a8a8b0'],
+  ['One Control','Minimal Series A/B Box','SW',39,100,0,'#c0c0c8'],
+  ['One Control','Crocodile Tail Loop OC10','SW',260,90,80,'#487848'],
+  // ── Free The Tone ──
+  ['Free The Tone','String Slinger SS-1V','OD',72,116,12,'#c0a060'],
+  ['Free The Tone','Red Jasper RJ-2V','OD',72,116,12,'#a83838'],
+  ['Free The Tone','Fire Mist FM-1V','DS',72,116,12,'#b05030'],
+  ['Free The Tone','Flight Time FT-2Y','DLY',120,93,300,'#282830'],
+  ['Free The Tone','Ambi Space AS-1R','RVB',100,90,150,'#303038'],
+  ['Free The Tone','Tri Avatar TA-2H','MOD',100,90,120,'#3858a0'],
+  ['Free The Tone','ARC-53M Audio Router','SW',235,95,200,'#303036'],
+  // ── Vemuram ──
+  ['Vemuram','Jan Ray','OD',64,112,28,'#c8a858'],
+  ['Vemuram','Shanks ODS-1','OD',64,112,30,'#b89848'],
+  ['Vemuram','Myriad Fuzz','FZ',64,112,10,'#c8a858'],
+  ['Vemuram','TSV808 (×Ibanez)','OD',64,112,10,'#3a9a58'],
+  // ── Providence ──
+  ['Providence','Sonic Drive SDR-5F','OD',72,120,10,'#d8b830'],
+  ['Providence','Stampede DT SDT-2','DS',72,120,15,'#c04030'],
+  ['Providence','Anadime Chorus ADC-4','MOD',72,120,25,'#3878b8'],
+  ['Providence','Velvet Comp VLC-1','COMP',72,120,10,'#8858a8'],
+  ['Providence','Chrono Delay DLY-4','DLY',110,130,100,'#284878'],
+  // ── Leqtique / Limetone / Ovaltone ──
+  ['Leqtique','Maestoso','OD',60,111,10,'#d0c8b8'],
+  ['Leqtique','Redemptionist','OD',60,111,10,'#b04838'],
+  ['Leqtique','9/9','DS',60,111,15,'#383840'],
+  ['Limetone Audio','FOCUS','COMP',64,112,8,'#a8c838'],
+  ['Limetone Audio','irodori','OD',64,112,10,'#e08838'],
+  ['Limetone Audio','JACKAL','DS',64,112,12,'#484850'],
+  ['Ovaltone','GD-013','OD',74,120,30,'#c8b048'],
+  ['Ovaltone','Q.O.O. Blue Edition','OD',74,120,20,'#3868b8'],
+  // ── Effects Bakery / Bananana ──
+  ['Effects Bakery','Melon Pan Chorus','MOD',39,93,20,'#88c858'],
+  ['Effects Bakery','An Butter Bagel OverDrive','OD',39,93,10,'#d8a048'],
+  ['Effects Bakery','Plain Bread Compressor','COMP',39,93,10,'#e8d8a8'],
+  ['Bananana Effects','TARABA','SYNTH',60,112,25,'#e05878'],
+  ['Bananana Effects','MANDALA','MOD',60,112,25,'#8848b8'],
+  ['Bananana Effects','MATRYOSHKA','SYNTH',60,112,25,'#c84848'],
+  // ── Sobbat / Xotic ──
+  ['Sobbat','Drive Breaker DB-1','DS',74,120,10,'#b83858'],
+  ['Sobbat','Drive Breaker DB-2','OD',74,120,10,'#3888b8'],
+  ['Xotic','EP Booster','BST',38,89,5,'#888890'],
+  ['Xotic','SL Drive','OD',38,89,5,'#6a3a20'],
+  ['Xotic','SP Compressor','COMP',44,90,10,'#3a5a8a'],
+  ['Xotic','BB Preamp','OD',60,111,6,'#c0a030'],
+  // ── ZOOM / KORG ──
+  ['ZOOM','MS-50G+ MultiStomp','MULTI',77,130,150,'#303038'],
+  ['ZOOM','MS-70CDR+ MultiStomp','MULTI',77,130,150,'#3a4a68'],
+  ['KORG','Pitchblack Advance','TUNER',68,112,30,'#202026'],
+  ['KORG','Pitchblack mini','TUNER',40,93,25,'#202026'],
+  // ── ワウ / ボリューム ──
+  ['VOX','V847 Wah','WAH',102,252,1,'#28282e'],
+  ['Jim Dunlop','GCB95 Cry Baby','WAH',102,252,1,'#28282e'],
+  ['BOSS','FV-30H Volume','VOL',77,225,0,'#38383e'],
+  ['Ernie Ball','VP Jr','VOL',89,254,0,'#585860'],
+  // ── 海外定番 ──
+  ['MXR','Phase 90','MOD',60,111,5,'#e07820'],
+  ['MXR','Dyna Comp','COMP',60,111,3,'#c83838'],
+  ['MXR','Carbon Copy','DLY',60,111,26,'#286848'],
+  ['ProCo','RAT 2','DS',69,110,5,'#28282e'],
+  ['Electro-Harmonix','Big Muff Pi','FZ',119,170,5,'#d8d8de'],
+  ['tc electronic','Hall of Fame 2','RVB',72,122,100,'#b8a888'],
+  ['tc electronic','Flashback 2','DLY',72,122,100,'#c8b048'],
+  ['tc electronic','Polytune 3','TUNER',72,122,100,'#e8e8ec'],
+  ['tc electronic','Polytune 3 Mini','TUNER',48,93,100,'#e8e8ec'],
+  ['Klon','KTR','OD',62,123,10,'#c83828'],
+  ['Strymon','Timeline','DLY',171,129,300,'#3858a8'],
+  ['Strymon','BigSky','RVB',171,129,300,'#4878b8'],
+  ['Strymon','blueSky','RVB',102,118,250,'#68a0d8'],
+  // ── パワーサプライ ──
+  ['Vital Audio','POWER CARRIER VA-08 MkII','PSU',150,62,0,'#28282e'],
+  ['Free The Tone','PT-3D Power Supply','PSU',156,70,0,'#303036'],
+  ['One Control','Micro Distro','PSU',39,100,0,'#c0c0c8'],
+  ['Strymon','Ojai','PSU',101,64,0,'#48484e'],
+  ['Strymon','Zuma','PSU',203,83,0,'#48484e'],
+  ['CIOKS','DC7','PSU',152,88,0,'#282830'],
+];
+
+const TYPE_LABEL = {
+  OD:'オーバードライブ', DS:'ディストーション', FZ:'ファズ', BST:'ブースター',
+  COMP:'コンプ', EQ:'イコライザー', NR:'ノイズリダクション', TUNER:'チューナー',
+  MOD:'モジュレーション', DLY:'ディレイ', RVB:'リバーブ', PITCH:'ピッチ',
+  FILTER:'フィルター', SYNTH:'シンセ', LOOP:'ルーパー', MULTI:'マルチ',
+  SW:'スイッチャー', PSU:'パワーサプライ', WAH:'ワウ', VOL:'ボリューム',
+  AMP:'アンプ系', CUSTOM:'カスタム'
+};
+
+/* ═══════════ 状態 ═══════════ */
+const LS_CUR = 'pbp_current', LS_SAVES = 'pbp_saves';
+let state = { board: 5, cw: 500, cd: 300, items: [] }; // board: index or 'custom'
+let zoom = 1, scale = 1, selected = null, uidSeq = 1;
+
+const $ = id => document.getElementById(id);
+const boardEl = $('board');
+
+function boardSize() {
+  if (state.board === 'custom') return { name: `カスタム ${state.cw}×${state.cd}mm`, w: state.cw, d: state.cd };
+  const b = BOARDS[state.board] || BOARDS[5];
+  return { name: b[0], w: b[1], d: b[2] };
+}
+function itemDef(it) {
+  if (it.pid === -1) return { brand:'カスタム', name: it.c.name, type:'CUSTOM', w: it.c.w, d: it.c.d, mA: it.c.mA, color: it.c.color };
+  const p = PEDALS[it.pid];
+  return { brand: p[0], name: p[1], type: p[2], w: p[3], d: p[4], mA: p[5], color: p[6] };
+}
+function itemBox(it) {
+  const d = itemDef(it);
+  const rot90 = it.rot % 180 !== 0;
+  return { bw: rot90 ? d.d : d.w, bh: rot90 ? d.w : d.d };
+}
+
+/* ═══════════ 描画 ═══════════ */
+function fitScale() {
+  const bs = boardSize();
+  const availW = $('stageWrap').clientWidth - 52;
+  const availH = $('stageWrap').clientHeight - 60;
+  return Math.min(availW / bs.w, availH / bs.d, 2.2);
+}
+function render() {
+  const bs = boardSize();
+  scale = fitScale() * zoom;
+  boardEl.style.width = bs.w * scale + 'px';
+  boardEl.style.height = bs.d * scale + 'px';
+  $('boardLabel').textContent = `${bs.name} — ${bs.w}×${bs.d}mm`;
+
+  boardEl.querySelectorAll('.rail, .pedal').forEach(e => e.remove());
+
+  // レール描画
+  const rails = bs.d <= 160 ? 2 : bs.d <= 230 ? 2 : bs.d <= 330 ? 4 : 5;
+  const railH = 38 * scale;
+  for (let i = 0; i < rails; i++) {
+    const r = document.createElement('div');
+    r.className = 'rail';
+    const gap = (bs.d * scale - rails * railH) / (rails + 1);
+    r.style.top = (gap + i * (railH + gap)) + 'px';
+    r.style.height = railH + 'px';
+    boardEl.appendChild(r);
+  }
+
+  state.items.forEach(renderItem);
+  updateInfo();
+  updateSelBar();
+}
+
+function renderItem(it) {
+  const d = itemDef(it), { bw, bh } = itemBox(it);
+  const el = document.createElement('div');
+  el.className = 'pedal' + (selected === it.uid ? ' selected' : '');
+  el.dataset.uid = it.uid;
+  el.style.width = bw * scale + 'px';
+  el.style.height = bh * scale + 'px';
+  el.style.left = it.x * scale + 'px';
+  el.style.top = it.y * scale + 'px';
+  el.style.zIndex = 10;
+
+  const body = document.createElement('div');
+  body.className = 'body';
+  body.style.width = d.w * scale + 'px';
+  body.style.height = d.d * scale + 'px';
+  body.style.background = `linear-gradient(165deg, ${shade(d.color, 30)}, ${d.color} 45%, ${shade(d.color, -35)})`;
+  body.style.transform = `translate(-50%,-50%) rotate(${it.rot}deg)`;
+  body.style.color = textColorFor(d.color);
+
+  // ノブ
+  const knobWrap = document.createElement('div');
+  knobWrap.className = 'knobs';
+  const nKnobs = d.w < 45 ? 1 : d.w < 80 ? 3 : 4;
+  const ks = Math.max(4, Math.min(d.w * 0.18, 16) * scale);
+  for (let i = 0; i < nKnobs; i++) {
+    const k = document.createElement('div');
+    k.className = 'knob';
+    k.style.width = k.style.height = ks + 'px';
+    knobWrap.appendChild(k);
+  }
+  // 名前
+  const nm = document.createElement('div');
+  nm.className = 'pname';
+  nm.textContent = d.name;
+  nm.style.fontSize = Math.max(6, Math.min(11, d.w * 0.11) * scale) + 'px';
+  // フットスイッチ
+  const fs = document.createElement('div');
+  fs.className = 'fsw';
+  const fss = Math.max(5, Math.min(d.w * 0.28, 22) * scale);
+  fs.style.width = fs.style.height = fss + 'px';
+
+  if (['PSU','SW','VOL','WAH'].includes(d.type)) {
+    body.append(nm);
+    body.style.justifyContent = 'center';
+  } else {
+    body.append(knobWrap, nm, fs);
+  }
+  el.appendChild(body);
+  boardEl.appendChild(el);
+  attachDrag(el, it);
+}
+
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16);
+  const f = v => Math.max(0, Math.min(255, v + amt));
+  return `rgb(${f(n>>16)},${f((n>>8)&255)},${f(n&255)})`;
+}
+function textColorFor(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const lum = 0.299*(n>>16) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  return lum > 150 ? '#1a1a20' : '#f4f4f8';
+}
+
+function updateInfo() {
+  const bs = boardSize();
+  let ma = 0, area = 0;
+  state.items.forEach(it => {
+    const d = itemDef(it);
+    if (d.type !== 'PSU') ma += d.mA;
+    area += d.w * d.d;
+  });
+  $('statCount').textContent = state.items.length;
+  $('statMa').textContent = ma;
+  const occ = Math.round(area / (bs.w * bs.d) * 100);
+  $('statOcc').textContent = occ;
+  $('statOcc').className = occ > 100 ? 'warn' : '';
+}
+function updateSelBar() {
+  const it = state.items.find(i => i.uid === selected);
+  $('selBar').classList.toggle('on', !!it);
+  if (it) {
+    const d = itemDef(it);
+    $('selName').textContent = `${d.brand} ${d.name} (${d.w}×${d.d}mm)`;
+  } else {
+    $('selName').textContent = 'ペダルをタップして選択';
+  }
+}
+
+/* ═══════════ ドラッグ ═══════════ */
+function attachDrag(el, it) {
+  el.addEventListener('pointerdown', ev => {
+    ev.preventDefault();
+    el.setPointerCapture(ev.pointerId);
+    selected = it.uid;
+    boardEl.querySelectorAll('.pedal.selected').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    el.classList.add('dragging');
+    updateSelBar();
+
+    const startX = ev.clientX, startY = ev.clientY;
+    const origX = it.x, origY = it.y;
+    const bs = boardSize(), { bw, bh } = itemBox(it);
+    const OVER = 30; // はみ出し許容 mm
+
+    const move = e => {
+      it.x = Math.max(-OVER, Math.min(bs.w - bw + OVER, origX + (e.clientX - startX) / scale));
+      it.y = Math.max(-OVER, Math.min(bs.d - bh + OVER, origY + (e.clientY - startY) / scale));
+      el.style.left = it.x * scale + 'px';
+      el.style.top = it.y * scale + 'px';
+    };
+    const up = () => {
+      el.classList.remove('dragging');
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerup', up);
+      el.removeEventListener('pointercancel', up);
+      persist();
+    };
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+  });
+}
+
+boardEl.addEventListener('pointerdown', ev => {
+  if (ev.target === boardEl || ev.target.classList.contains('rail')) {
+    selected = null;
+    boardEl.querySelectorAll('.pedal.selected').forEach(e => e.classList.remove('selected'));
+    updateSelBar();
+  }
+});
+
+/* ═══════════ アイテム操作 ═══════════ */
+function addItem(pid, custom) {
+  const it = { uid: uidSeq++, pid, rot: 0, x: 0, y: 0 };
+  if (custom) it.c = custom;
+  const bs = boardSize(), { bw, bh } = itemBox(it);
+  it.x = (bs.w - bw) / 2 + (state.items.length % 5) * 8;
+  it.y = (bs.d - bh) / 2 + (state.items.length % 5) * 6;
+  state.items.push(it);
+  selected = it.uid;
+  render(); persist();
+  toast(`${itemDef(it).name} を追加しました`);
+}
+
+$('rotBtn').onclick = () => {
+  const it = state.items.find(i => i.uid === selected);
+  if (!it) return;
+  it.rot = (it.rot + 90) % 360;
+  render(); persist();
+};
+$('dupBtn').onclick = () => {
+  const it = state.items.find(i => i.uid === selected);
+  if (!it) return;
+  const cp = JSON.parse(JSON.stringify(it));
+  cp.uid = uidSeq++; cp.x += 15; cp.y += 15;
+  state.items.push(cp);
+  selected = cp.uid;
+  render(); persist();
+};
+$('delBtn').onclick = () => {
+  state.items = state.items.filter(i => i.uid !== selected);
+  selected = null;
+  render(); persist();
+};
+
+/* ═══════════ ライブラリ ═══════════ */
+let curBrand = 'すべて';
+const brands = ['すべて', ...new Set(PEDALS.map(p => p[0]))];
+
+function buildChips() {
+  $('brandChips').innerHTML = '';
+  brands.forEach(b => {
+    const c = document.createElement('button');
+    c.className = 'chip' + (b === curBrand ? ' on' : '');
+    c.textContent = b;
+    c.onclick = () => { curBrand = b; buildChips(); buildList(); };
+    $('brandChips').appendChild(c);
+  });
+}
+function buildList() {
+  const q = $('libSearch').value.trim().toLowerCase();
+  const list = $('libList');
+  list.innerHTML = '';
+
+  const cc = document.createElement('div');
+  cc.className = 'card custom';
+  cc.textContent = '＋ カスタムペダル';
+  cc.onclick = () => $('customOverlay').classList.add('on');
+  list.appendChild(cc);
+
+  PEDALS.forEach((p, i) => {
+    if (curBrand !== 'すべて' && p[0] !== curBrand) return;
+    if (q && !(p[0] + ' ' + p[1] + ' ' + (TYPE_LABEL[p[2]]||'')).toLowerCase().includes(q)) return;
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="cb"><span class="sw" style="background:${p[6]}"></span><span class="nm">${p[1]}</span></div>
+      <div class="mt">${p[0]} ・ ${TYPE_LABEL[p[2]]||p[2]}</div>
+      <div class="mt">${p[3]}×${p[4]}mm ・ ${p[5]}mA</div>`;
+    card.onclick = () => addItem(i);
+    list.appendChild(card);
+  });
+}
+$('libSearch').addEventListener('input', buildList);
+$('libToggle').onclick = () => { $('library').classList.add('on'); $('libToggle').style.display = 'none'; };
+$('libClose').onclick = () => { $('library').classList.remove('on'); $('libToggle').style.display = ''; };
+
+/* カスタムペダル */
+$('cCancel').onclick = () => $('customOverlay').classList.remove('on');
+$('cAdd').onclick = () => {
+  const name = $('cName').value.trim() || 'カスタム';
+  const w = +$('cW').value || 73, d = +$('cD').value || 129;
+  const mA = +$('cMa').value || 0, color = $('cColor').value;
+  $('customOverlay').classList.remove('on');
+  addItem(-1, { name, w, d, mA, color });
+};
+
+/* ═══════════ ボード選択 / ズーム ═══════════ */
+function buildBoardSelect() {
+  const s = $('boardSelect');
+  s.innerHTML = '';
+  BOARDS.forEach((b, i) => {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = `${b[0]} (${b[1]}×${b[2]})`;
+    s.appendChild(o);
+  });
+  const oc = document.createElement('option');
+  oc.value = 'custom';
+  oc.textContent = 'カスタムサイズ…';
+  s.appendChild(oc);
+  s.value = state.board;
+}
+$('boardSelect').onchange = e => {
+  if (e.target.value === 'custom') {
+    $('cbW').value = state.cw; $('cbD').value = state.cd;
+    $('cbOverlay').classList.add('on');
+  } else {
+    state.board = +e.target.value;
+    render(); persist();
+  }
+};
+$('cbCancel').onclick = () => {
+  $('cbOverlay').classList.remove('on');
+  $('boardSelect').value = state.board;
+};
+$('cbOk').onclick = () => {
+  state.cw = Math.max(100, +$('cbW').value || 500);
+  state.cd = Math.max(80, +$('cbD').value || 300);
+  state.board = 'custom';
+  $('cbOverlay').classList.remove('on');
+  render(); persist();
+};
+$('zoomIn').onclick = () => { zoom = Math.min(3, zoom * 1.25); render(); };
+$('zoomOut').onclick = () => { zoom = Math.max(0.5, zoom / 1.25); render(); };
+
+/* ═══════════ 保存 / 共有 ═══════════ */
+function serialize() {
+  return {
+    v: 1, board: state.board, cw: state.cw, cd: state.cd,
+    items: state.items.map(it => {
+      const o = { pid: it.pid, x: Math.round(it.x), y: Math.round(it.y), rot: it.rot };
+      if (it.c) o.c = it.c;
+      return o;
+    })
+  };
+}
+function deserialize(d) {
+  if (!d || !Array.isArray(d.items)) return false;
+  state.board = d.board === 'custom' ? 'custom' : Math.min(BOARDS.length - 1, +d.board || 0);
+  state.cw = d.cw || 500; state.cd = d.cd || 300;
+  state.items = d.items
+    .filter(it => it.pid === -1 ? it.c : PEDALS[it.pid])
+    .map(it => ({ uid: uidSeq++, pid: it.pid, x: +it.x || 0, y: +it.y || 0, rot: +it.rot || 0, c: it.c }));
+  return true;
+}
+let persistT;
+function persist() {
+  clearTimeout(persistT);
+  persistT = setTimeout(() => {
+    try { localStorage.setItem(LS_CUR, JSON.stringify(serialize())); } catch (e) {}
+  }, 300);
+}
+
+/* メニュー */
+$('menuBtn').onclick = () => $('menuOverlay').classList.add('on');
+$('menuClose').onclick = () => $('menuOverlay').classList.remove('on');
+
+$('mSave').onclick = () => {
+  const name = prompt('ボード名を入力', 'マイボード ' + new Date().toLocaleDateString('ja-JP'));
+  if (!name) return;
+  const saves = JSON.parse(localStorage.getItem(LS_SAVES) || '[]');
+  saves.unshift({ name, date: Date.now(), data: serialize() });
+  localStorage.setItem(LS_SAVES, JSON.stringify(saves.slice(0, 30)));
+  $('menuOverlay').classList.remove('on');
+  toast('保存しました: ' + name);
+};
+$('mLoad').onclick = () => {
+  const saves = JSON.parse(localStorage.getItem(LS_SAVES) || '[]');
+  const list = $('saveList');
+  list.innerHTML = saves.length ? '' : '<div style="color:var(--muted);font-size:13px">保存されたボードはありません</div>';
+  saves.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'saveItem';
+    const nm = document.createElement('span');
+    nm.className = 'nm';
+    nm.textContent = `${s.name} (${s.data.items.length}台)`;
+    const bo = document.createElement('button');
+    bo.textContent = '開く'; bo.className = 'primary';
+    bo.onclick = () => {
+      deserialize(s.data);
+      $('saveOverlay').classList.remove('on');
+      buildBoardSelect(); render(); persist();
+      toast('読み込みました');
+    };
+    const bd = document.createElement('button');
+    bd.textContent = '削除'; bd.style.color = 'var(--danger)';
+    bd.onclick = () => {
+      saves.splice(i, 1);
+      localStorage.setItem(LS_SAVES, JSON.stringify(saves));
+      $('mLoad').onclick();
+    };
+    row.append(nm, bo, bd);
+    list.appendChild(row);
+  });
+  $('menuOverlay').classList.remove('on');
+  $('saveOverlay').classList.add('on');
+};
+$('saveClose').onclick = () => $('saveOverlay').classList.remove('on');
+
+$('mShare').onclick = () => {
+  const url = location.origin + location.pathname + '#d=' +
+    btoa(unescape(encodeURIComponent(JSON.stringify(serialize()))));
+  (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject())
+    .then(() => toast('共有URLをコピーしました'))
+    .catch(() => prompt('このURLをコピーしてください', url));
+  $('menuOverlay').classList.remove('on');
+};
+$('mJson').onclick = () => {
+  download('pedalboard.json', JSON.stringify(serialize(), null, 2), 'application/json');
+  $('menuOverlay').classList.remove('on');
+};
+$('mImport').onclick = () => { $('fileInput').click(); $('menuOverlay').classList.remove('on'); };
+$('fileInput').onchange = e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      if (deserialize(JSON.parse(r.result))) {
+        buildBoardSelect(); render(); persist();
+        toast('読み込みました');
+      } else toast('形式が不正です');
+    } catch (err) { toast('読み込みに失敗しました'); }
+  };
+  r.readAsText(f);
+  e.target.value = '';
+};
+$('mClear').onclick = () => {
+  if (!confirm('ボード上のペダルをすべて削除しますか？')) return;
+  state.items = []; selected = null;
+  render(); persist();
+  $('menuOverlay').classList.remove('on');
+};
+
+function download(name, content, mime) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+
+/* ═══════════ PNG書き出し ═══════════ */
+$('mPng').onclick = () => {
+  const bs = boardSize();
+  const S = Math.min(3, 1600 / bs.w); // px per mm
+  const pad = 40;
+  const cv = document.createElement('canvas');
+  cv.width = bs.w * S + pad * 2;
+  cv.height = bs.d * S + pad * 2 + 46;
+  const ctx = cv.getContext('2d');
+
+  ctx.fillStyle = '#17181c';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+
+  // ボード
+  rr(ctx, pad, pad, bs.w * S, bs.d * S, 10);
+  ctx.fillStyle = '#222327'; ctx.fill();
+  const rails = bs.d <= 230 ? 2 : bs.d <= 330 ? 4 : 5;
+  const railH = 38 * S, gap = (bs.d * S - rails * railH) / (rails + 1);
+  ctx.fillStyle = '#33353c';
+  for (let i = 0; i < rails; i++)
+    ctx.fillRect(pad, pad + gap + i * (railH + gap), bs.w * S, railH);
+
+  // ペダル
+  state.items.forEach(it => {
+    const d = itemDef(it), { bw, bh } = itemBox(it);
+    ctx.save();
+    ctx.translate(pad + (it.x + bw / 2) * S, pad + (it.y + bh / 2) * S);
+    ctx.rotate(it.rot * Math.PI / 180);
+    const w = d.w * S, h = d.d * S;
+    rr(ctx, -w / 2, -h / 2, w, h, Math.min(8, w * .08));
+    ctx.fillStyle = d.color; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.stroke();
+    // フットスイッチ
+    ctx.beginPath();
+    ctx.arc(0, h / 2 - Math.min(w * .22, 20) - 4, Math.min(w * .14, 11), 0, Math.PI * 2);
+    ctx.fillStyle = '#c8c8ce'; ctx.fill();
+    // 名前
+    ctx.fillStyle = textColorFor(d.color);
+    const fs = Math.max(8, Math.min(13, w * .12));
+    ctx.font = `bold ${fs}px sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    wrapText(ctx, d.name, 0, -h * .08, w * .9, fs + 2);
+    ctx.restore();
+  });
+
+  // フッター
+  let ma = 0;
+  state.items.forEach(it => { const d = itemDef(it); if (d.type !== 'PSU') ma += d.mA; });
+  ctx.fillStyle = '#9a9cab';
+  ctx.font = '13px sans-serif';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText(`${bs.name} ${bs.w}×${bs.d}mm ／ ${state.items.length}台 ／ 合計 約${ma}mA — ペダルボード・プランナー`, pad, cv.height - 22);
+
+  cv.toBlob(b => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = 'pedalboard.png';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  });
+  $('menuOverlay').classList.remove('on');
+  toast('PNGを書き出しました');
+};
+function rr(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function wrapText(ctx, text, x, y, maxW, lh) {
+  const words = text.split(' ');
+  let line = '', lines = [];
+  words.forEach(w => {
+    if (ctx.measureText(line + w).width > maxW && line) { lines.push(line.trim()); line = w + ' '; }
+    else line += w + ' ';
+  });
+  lines.push(line.trim());
+  lines = lines.slice(0, 3);
+  lines.forEach((l, i) => ctx.fillText(l, x, y + (i - (lines.length - 1) / 2) * lh));
+}
+
+/* ═══════════ トースト / 初期化 ═══════════ */
+let toastT;
+function toast(msg) {
+  $('toast').textContent = msg;
+  $('toast').classList.add('on');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => $('toast').classList.remove('on'), 1800);
+}
+
+function init() {
+  // URL共有 > localStorage > デフォルト
+  let loaded = false;
+  if (location.hash.startsWith('#d=')) {
+    try {
+      loaded = deserialize(JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(3))))));
+      if (loaded) history.replaceState(null, '', location.pathname);
+    } catch (e) {}
+  }
+  if (!loaded) {
+    try {
+      const cur = localStorage.getItem(LS_CUR);
+      if (cur) loaded = deserialize(JSON.parse(cur));
+    } catch (e) {}
+  }
+  buildBoardSelect();
+  buildChips();
+  buildList();
+  render();
+}
+window.addEventListener('resize', render);
+init();
+</script>
+</body>
+</html>
