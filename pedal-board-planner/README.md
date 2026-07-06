@@ -1,7 +1,7 @@
 # ペダルボード・プランナー
 
 Pedaltrain の Pedalboard Planner のような、仮想エフェクターボードを実寸スケールで組めるWebアプリ。
-本家に少ない**国産エフェクター**(BOSS / Ibanez / Maxon / One Control / Free The Tone / Vemuram / Providence / Leqtique / Limetone Audio / Ovaltone / Effects Bakery / Bananana Effects / Sobbat など)を中心に約120種を収録。
+本家に少ない**国産エフェクター**(BOSS / Ibanez / Maxon / One Control / Free The Tone / Vemuram / Providence / Leqtique / Limetone Audio / Ovaltone / Effects Bakery / Bananana Effects / Sobbat など)を中心に、海外定番ブランド(MXR / EHX / Strymon / EarthQuaker / Walrus Audio / Line 6 / Eventide など)も含め約155種を収録。
 
 ## URL
 
@@ -21,7 +21,8 @@ https://nino-msip.github.io/gita-shiban/pedal-board-planner/
 ## データについて
 
 寸法(W×D mm)・消費電流(mA)はカタログ値等をもとにした**概算値**です。
-ペダルの追加は `index.html` 内の `PEDALS` 配列に1行足すだけ:
+ペダルの追加は `index.html` 内の `PEDALS` 配列に1行足すだけ。
+**ただし保存データ(共有URL・localStorage)は配列のインデックスを参照するため、必ず末尾に追記すること**(途中に挿入すると既存の保存レイアウトが壊れます):
 
 ```js
 // [ブランド, 名前, タイプ, 幅mm, 奥行mm, 消費電流mA, 色]
