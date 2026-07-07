@@ -1,7 +1,7 @@
 # ペダルボード・プランナー
 
 Pedaltrain の Pedalboard Planner のような、仮想エフェクターボードを実寸スケールで組めるWebアプリ。
-本家に少ない**国産エフェクター**(BOSS / Ibanez / Maxon / One Control / Free The Tone / Vemuram / Providence / Leqtique / Limetone Audio / Ovaltone / Effects Bakery / Bananana Effects / Sobbat / Shigemori など)を中心に、海外定番ブランド(MXR / EHX / Strymon / EarthQuaker / Walrus Audio / Line 6 / Eventide など)も含め約155種を収録。
+本家に少ない**国産エフェクター**(BOSS / Ibanez / Maxon / One Control / Free The Tone / Vemuram / Providence / Leqtique / Limetone Audio / Ovaltone / Effects Bakery / Bananana Effects / Sobbat / Shigemori など)を中心に、海外定番ブランド(MXR / EHX / Strymon / EarthQuaker / Walrus Audio / Line 6 / Eventide など)も含め約180種を収録。
 
 ## URL
 
