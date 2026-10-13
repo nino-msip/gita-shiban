@@ -1,7 +1,7 @@
 # ジャンクエフェクター リサーチレポート
 
 **検索キーワード:** ジャンク エフェクター
-**生成日時:** 2026-10-13 03:08
+**生成日時:** 2026-10-13 12:17
 
 ---
 
@@ -15,65 +15,65 @@ _取得件数 0 件（エラー、対象なし、またはアクセス制限）_
 
 ## メルカリ（10 件）
 
-### 【ジャンク】Strymon FLINT v2電源入りません 修理出来る方のみ
+### Limetone Audio JCB-2S ジャンクションボックス
 - 価格: 
 - サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m45346311974
-- 取得日時: 2026-10-13 03:08
-
-### Empress Effects Buffer バッファー ジャンクションボックス
-- 価格: 
-- サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m20294727833
-- 取得日時: 2026-10-13 03:08
+- リンク: https://jp.mercari.com/item/m20209257787
+- 取得日時: 2026-10-13 12:17
 
 ### エフェクター用ジャンクションボックス
 - 価格: 
 - サイト: メルカリ
 - リンク: https://jp.mercari.com/item/m89993447913
-- 取得日時: 2026-10-13 03:08
+- 取得日時: 2026-10-13 12:17
 
-### 【ジャンク品】LINE 6 POD EXPRESS ギターエフェクター
+### 【ジャンク】Strymon FLINT v2電源入りません 修理出来る方のみ
 - 価格: 
 - サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m22056508099
-- 取得日時: 2026-10-13 03:08
+- リンク: https://jp.mercari.com/item/m45346311974
+- 取得日時: 2026-10-13 12:17
 
-### 《ジャンク品》 mini Mod delay ギターエフェクター
+### Studio Daydream JCTBX2 ジャンクションボックス
 - 価格: 
 - サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m63774434273
-- 取得日時: 2026-10-13 03:08
+- リンク: https://jp.mercari.com/item/m58568304722
+- 取得日時: 2026-10-13 12:17
 
-### Studio Daydream JCTBx2 ジャンクションボックス
+### Empress Effects Buffer バッファー ジャンクションボックス
 - 価格: 
 - サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m63896852823
-- 取得日時: 2026-10-13 03:08
+- リンク: https://jp.mercari.com/item/m20294727833
+- 取得日時: 2026-10-13 12:17
+
+### EXFORM PDS-1 PCDJ SWITCHER DJスイッチャー
+- 価格: 
+- サイト: メルカリ
+- リンク: https://jp.mercari.com/item/m61512275290
+- 取得日時: 2026-10-13 12:17
 
 ### KORG nanoシリーズ 3点セット nanoPAD KEY KONTROL
 - 価格: 
 - サイト: メルカリ
 - リンク: https://jp.mercari.com/item/m84202133284
-- 取得日時: 2026-10-13 03:08
+- 取得日時: 2026-10-13 12:17
 
-### ベース用 HPF/LPF＋EQ
+### BOSS HYPER FUZZ FZ-2
 - 価格: 
 - サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m55142228697
-- 取得日時: 2026-10-13 03:08
+- リンク: https://jp.mercari.com/item/m15024341506
+- 取得日時: 2026-10-13 12:17
 
-### BOSS Compression Sustainer CS-2 （ジャンク）
+### 《ジャンク品》 mini Mod delay ギターエフェクター
 - 価格: 
 - サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m29524682998
-- 取得日時: 2026-10-13 03:08
+- リンク: https://jp.mercari.com/item/m63774434273
+- 取得日時: 2026-10-13 12:17
 
-### Limetone Audio JCB-4SM ジャンクションボックス
+### Studio Daydream JCTBx2 ジャンクションボックス
 - 価格: 
 - サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m20987977860
-- 取得日時: 2026-10-13 03:08
+- リンク: https://jp.mercari.com/item/m63896852823
+- 取得日時: 2026-10-13 12:17
 
 ## ラクマ（0 件）
 
