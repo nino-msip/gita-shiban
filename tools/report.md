@@ -1,7 +1,7 @@
 # ジャンクエフェクター リサーチレポート
 
 **検索キーワード:** ジャンク エフェクター
-**生成日時:** 2026-11-14 11:50
+**生成日時:** 2026-11-15 00:16
 
 ---
 
@@ -15,59 +15,59 @@ _取得件数 0 件（エラー、対象なし、またはアクセス制限）_
 
 ## メルカリ（9 件）
 
-### IK Multimedia TONEX Pedal【ライセンス付き・ジャンク】
+### ジャンク VOX ToneLab ST マルチエフェクター
 - 価格: 
 - サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m68296181044
-- 取得日時: 2026-11-14 11:49
-
-### Maxon POWER BOOSTER FOR AMP. 本体 ジャンク
-- 価格: 
-- サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m21817383172
-- 取得日時: 2026-11-14 11:49
-
-### LINE6 POD Version 2.0 ギターアンプシミュレーター
-- 価格: 
-- サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m82668591846
-- 取得日時: 2026-11-14 11:49
-
-### 【ジャンク品】BOSS TU-2 Chromatic Tuner 本体
-- 価格: 
-- サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m15749994264
-- 取得日時: 2026-11-14 11:49
-
-### ✤KORG AX3G マルチエフェクター&チューナー．週末値下げ✤
-- 価格: 
-- サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m36008413714
-- 取得日時: 2026-11-14 11:49
+- リンク: https://jp.mercari.com/item/m40062507998
+- 取得日時: 2026-11-15 00:16
 
 ### Maxon TREBLE BOOSTER プラグインタイプ ギターエフェクター
 - 価格: 
 - サイト: メルカリ
 - リンク: https://jp.mercari.com/item/m85515954014
-- 取得日時: 2026-11-14 11:49
+- 取得日時: 2026-11-15 00:16
 
-### KORG TONEWORKS AX10B 本体
+### IK Multimedia TONEX Pedal【ライセンス付き・ジャンク】
 - 価格: 
 - サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m38791261352
-- 取得日時: 2026-11-14 11:49
+- リンク: https://jp.mercari.com/item/m68296181044
+- 取得日時: 2026-11-15 00:16
 
-### KORG ToneWorks AX5G マルチエフェクター 本体　動作未確認
+### エフェクターセット　ジャンク
 - 価格: 
 - サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m77090421557
-- 取得日時: 2026-11-14 11:49
+- リンク: https://jp.mercari.com/item/m87136815708
+- 取得日時: 2026-11-15 00:16
 
-### KORG KAOSS PAD QUAD 本体　通電OK
+### ZOOM 505 GUITAR マルチエフェクター ジャンク品
 - 価格: 
 - サイト: メルカリ
-- リンク: https://jp.mercari.com/item/m46390102719
-- 取得日時: 2026-11-14 11:49
+- リンク: https://jp.mercari.com/item/m64122656638
+- 取得日時: 2026-11-15 00:16
+
+### ZOOM G2.1u ギターエフェクター 本体
+- 価格: 
+- サイト: メルカリ
+- リンク: https://jp.mercari.com/item/m47475277217
+- 取得日時: 2026-11-15 00:16
+
+### ✤KORG AX3G マルチエフェクター&チューナー．週末値下げ✤
+- 価格: 
+- サイト: メルカリ
+- リンク: https://jp.mercari.com/item/m36008413714
+- 取得日時: 2026-11-15 00:16
+
+### 【ジャンク品】 ZOOM ズーム GUITAR EFFECTS PEDAL ギターエフェクツペダル G2.1u
+- 価格: 
+- サイト: メルカリ
+- リンク: https://jp.mercari.com/shops/product/2JTTFDBB5oPjNLKqpypmtv
+- 取得日時: 2026-11-15 00:16
+
+### エフェクター用ジャンクションボックス Junction Box JC-01
+- 価格: 
+- サイト: メルカリ
+- リンク: https://jp.mercari.com/item/m71705154436
+- 取得日時: 2026-11-15 00:16
 
 ## ラクマ（0 件）
 
